@@ -1,4 +1,4 @@
-import { Lightbulb, Snowflake, SunMedium } from "lucide-react";
+import { BadgeCheck, ExternalLink, Lightbulb, Snowflake, SunMedium } from "lucide-react";
 import clsx from "clsx";
 import { formatCOP } from "@/lib/format";
 import type { AlternativaResultado } from "@/lib/savings/types";
@@ -56,6 +56,39 @@ export function ResultCard({
         </span>
         <h4 className="text-base font-bold text-ink-950">{alternativa.nombre}</h4>
       </div>
+
+      {alternativa.proveedorRecomendado ? (
+        <div className="mt-4 flex items-start gap-2 rounded-xl border border-leaf-500/25 bg-leaf-500/6 px-3.5 py-3">
+          <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-leaf-600" />
+          <div className="text-xs leading-relaxed text-ink-900/75">
+            <p className="font-semibold text-ink-950">
+              {alternativa.proveedorRecomendado.producto}
+              {alternativa.proveedorRecomendado.marca &&
+                ` · ${alternativa.proveedorRecomendado.marca}`}
+            </p>
+            <p>
+              Cotización real de{" "}
+              <span className="font-medium">
+                {alternativa.proveedorRecomendado.proveedor}
+              </span>
+              {alternativa.proveedorRecomendado.url && (
+                <a
+                  href={alternativa.proveedorRecomendado.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-1 inline-flex items-center gap-0.5 font-medium text-leaf-700 hover:underline"
+                >
+                  ver ficha <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <p className="mt-4 text-xs text-ink-800/40">
+          Precio de referencia del mercado (aún sin proveedor cotizado para tu zona).
+        </p>
+      )}
 
       <div className="mt-5 grid grid-cols-2 gap-4">
         <div>

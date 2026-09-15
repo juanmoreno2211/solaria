@@ -16,12 +16,16 @@ function construirResumenParaIA(
   resultado: AnalisisResultado
 ): string {
   const aplicables = resultado.alternativas.filter((a) => a.aplica);
-  const lineas = aplicables.map(
-    (a) =>
-      `- ${a.nombre}: inversión ${formatCOP(a.inversionEstimadaMin)}-${formatCOP(
-        a.inversionEstimadaMax
-      )}, ahorro mensual ${formatCOP(a.ahorroMensualEstimado)} (${a.ahorroPorcentual}%), retorno ${a.retornoMeses ?? "N/D"} meses.`
-  );
+  const lineas = aplicables.map((a) => {
+    const proveedor = a.proveedorRecomendado
+      ? ` Proveedor real disponible: ${a.proveedorRecomendado.producto}${
+          a.proveedorRecomendado.marca ? ` (${a.proveedorRecomendado.marca})` : ""
+        } de ${a.proveedorRecomendado.proveedor}.`
+      : "";
+    return `- ${a.nombre}: inversión ${formatCOP(a.inversionEstimadaMin)}-${formatCOP(
+      a.inversionEstimadaMax
+    )}, ahorro mensual ${formatCOP(a.ahorroMensualEstimado)} (${a.ahorroPorcentual}%), retorno ${a.retornoMeses ?? "N/D"} meses.${proveedor}`;
+  });
 
   return `Tipo de predio: ${input.predio.tipoPredio}. Región: ${input.predio.region}. Conexión: ${input.predio.conexionRed}.
 Consumo mensual: ${resultado.consumoMensualKwh} kWh. Valor pagado: ${formatCOP(resultado.valorPagadoMensual)}.
@@ -48,6 +52,12 @@ function generarInsightPlantilla(
   let texto = `Con un consumo de ${resultado.consumoMensualKwh} kWh al mes, la alternativa con mayor impacto para ti es ${mejor.nombre.toLowerCase()}, con un ahorro estimado de ${formatCOP(
     mejor.ahorroMensualEstimado
   )} al mes (${mejor.ahorroPorcentual}%) y un retorno de inversión cercano a ${mejor.retornoMeses ?? "varios"} meses.`;
+
+  if (mejor.proveedorRecomendado) {
+    texto += ` Para tu caso, ${mejor.proveedorRecomendado.proveedor} tiene disponible ${mejor.proveedorRecomendado.producto}${
+      mejor.proveedorRecomendado.marca ? ` (${mejor.proveedorRecomendado.marca})` : ""
+    } a ese precio.`;
+  }
 
   const margenCombinado =
     resultado.ahorroCombinadoPorcentual - mejor.ahorroPorcentual;

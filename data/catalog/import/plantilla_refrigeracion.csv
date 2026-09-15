@@ -1,0 +1,2 @@
+proveedor,marca,nombre,capacidadLitrosMin,capacidadLitrosMax,precioCOP,autonomiaHoras,regiones,url,telefono,notas
+PLANTILLA - ELIMINA ESTA FILA ANTES DE IMPORTAR,MarcaEjemplo,Nevera solar 300L con batería,200,600,9500000,24,nacional,https://proveedor-ejemplo.com/nevera,3000000000,Fila de ejemplo del formato; bórrala y agrega tus proveedores reales

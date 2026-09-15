@@ -1,0 +1,2 @@
+proveedor,marca,nombreSistema,kwpMin,kwpMax,precioPorKwpCOP,regiones,url,telefono,notas
+PLANTILLA - ELIMINA ESTA FILA ANTES DE IMPORTAR,MarcaEjemplo,Sistema residencial 2-5kWp,2,5,6000000,nacional,https://proveedor-ejemplo.com/sistema,3000000000,Fila de ejemplo del formato; bórrala y agrega tus proveedores reales

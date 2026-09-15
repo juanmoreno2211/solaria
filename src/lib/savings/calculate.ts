@@ -7,6 +7,11 @@ import {
   REFRIGERACION_SOLAR,
   TARIFA_ESTIMADA_COP_KWH,
 } from "@/lib/config/pricing";
+import {
+  buscarMejorIluminacion,
+  buscarMejorPanelSistema,
+  buscarMejorRefrigeracion,
+} from "@/lib/catalog/lookup";
 import type {
   AlternativaResultado,
   AnalisisInput,
@@ -55,15 +60,18 @@ function calcularPaneles(
   valorPagadoMensual: number
 ): AlternativaResultado {
   const hsp = HORAS_SOL_PICO[input.predio.region];
-  const costoPorKwp =
-    input.predio.conexionRed === "zona_no_interconectada"
-      ? COSTO_PANELES_POR_KWP.zona_no_interconectada
-      : COSTO_PANELES_POR_KWP.interconectado;
 
   // kWp necesarios para cubrir el consumo mensual, limitado a una cobertura máxima realista.
   const produccionDiariaObjetivoKwh =
     (consumoMensualKwh * COBERTURA_MAXIMA) / DIAS_MES;
   const kwpRequeridos = produccionDiariaObjetivoKwh / (hsp * PERFORMANCE_RATIO);
+
+  const matchCatalogo = buscarMejorPanelSistema(kwpRequeridos, input.predio.region);
+  const costoPorKwp =
+    matchCatalogo?.precioPorKwpCOP ??
+    (input.predio.conexionRed === "zona_no_interconectada"
+      ? COSTO_PANELES_POR_KWP.zona_no_interconectada
+      : COSTO_PANELES_POR_KWP.interconectado);
 
   const inversion = Math.round(kwpRequeridos * costoPorKwp);
   const produccionMensualKwh =
@@ -95,6 +103,16 @@ function calcularPaneles(
         ? "Predios sin conexión a la red interconectada"
         : "Casas y negocios conectados a la red",
     ],
+    fuentePrecio: matchCatalogo ? "catalogo" : "estimado",
+    proveedorRecomendado: matchCatalogo
+      ? {
+          proveedor: matchCatalogo.proveedor,
+          producto: matchCatalogo.nombreSistema,
+          marca: matchCatalogo.marca,
+          url: matchCatalogo.url,
+          telefono: matchCatalogo.telefono,
+        }
+      : undefined,
   };
 }
 
@@ -107,9 +125,11 @@ function calcularIluminacion(
   const puntos =
     puntosIluminacionAprox ??
     ILUMINACION_SOLAR.puntosSugeridos[tipoPredio];
-  const inversion = Math.round(
-    puntos * ILUMINACION_SOLAR.costoPromedioPorPunto
-  );
+  const matchCatalogo = buscarMejorIluminacion(input.predio.region);
+  const costoPorPunto =
+    matchCatalogo?.precioPorUnidadCOP ??
+    ILUMINACION_SOLAR.costoPromedioPorPunto;
+  const inversion = Math.round(puntos * costoPorPunto);
   const fraccion =
     ILUMINACION_SOLAR.fraccionConsumoIluminacionExterior[tipoPredio];
   const ahorroMensual = Math.round(valorPagadoMensual * fraccion);
@@ -135,6 +155,16 @@ function calcularIluminacion(
       "Zonas rurales o con cortes frecuentes de energía",
       "Inversión inicial baja y resultados inmediatos",
     ],
+    fuentePrecio: matchCatalogo ? "catalogo" : "estimado",
+    proveedorRecomendado: matchCatalogo
+      ? {
+          proveedor: matchCatalogo.proveedor,
+          producto: matchCatalogo.nombre,
+          marca: matchCatalogo.marca,
+          url: matchCatalogo.url,
+          telefono: matchCatalogo.telefono,
+        }
+      : undefined,
   };
 }
 
@@ -147,10 +177,16 @@ function calcularRefrigeracion(
   const fraccion = REFRIGERACION_SOLAR.fraccionConsumoPorTamano[tamano];
   const litrosEstimados =
     tamano === "pequena" ? 150 : tamano === "grande" ? 800 : 400;
-  const inversion = Math.round(
-    REFRIGERACION_SOLAR.costoBase +
-      litrosEstimados * REFRIGERACION_SOLAR.costoPorLitroCapacidad
+  const matchCatalogo = buscarMejorRefrigeracion(
+    litrosEstimados,
+    input.predio.region
   );
+  const inversion =
+    matchCatalogo?.precioCOP ??
+    Math.round(
+      REFRIGERACION_SOLAR.costoBase +
+        litrosEstimados * REFRIGERACION_SOLAR.costoPorLitroCapacidad
+    );
   const ahorroMensual = Math.round(valorPagadoMensual * fraccion);
   const retornoMeses =
     ahorroMensual > 0 ? Math.round(inversion / ahorroMensual) : null;
@@ -174,6 +210,16 @@ function calcularRefrigeracion(
       "Zonas con cortes de luz frecuentes",
       "Evitar pérdidas de inventario por daño de la cadena de frío",
     ],
+    fuentePrecio: matchCatalogo ? "catalogo" : "estimado",
+    proveedorRecomendado: matchCatalogo
+      ? {
+          proveedor: matchCatalogo.proveedor,
+          producto: matchCatalogo.nombre,
+          marca: matchCatalogo.marca,
+          url: matchCatalogo.url,
+          telefono: matchCatalogo.telefono,
+        }
+      : undefined,
   };
 }
 

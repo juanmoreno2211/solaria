@@ -1,4 +1,5 @@
 import type { Region } from "@/lib/config/pricing";
+import type { ProveedorRecomendado } from "@/lib/catalog/types";
 
 export type TipoPredio = "casa" | "negocio" | "finca";
 export type ConexionRed = "interconectado" | "zona_no_interconectada";
@@ -44,6 +45,8 @@ export interface AlternativaResultado {
   ahorro5Anios: number;
   ahorro10Anios: number;
   idealPara: string[];
+  proveedorRecomendado?: ProveedorRecomendado;
+  fuentePrecio: "catalogo" | "estimado";
 }
 
 export interface AnalisisResultado {
