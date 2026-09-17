@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/Button";
 import { formatCOP, formatNumber } from "@/lib/format";
 import type { AnalisisResultado } from "@/lib/savings/types";
 import { ResultCard } from "./ResultCard";
+import { SavingsCharts } from "./SavingsCharts";
+import { FinancingSimulator } from "./FinancingSimulator";
 
 export function ResultsView({
   resultado,
@@ -16,6 +18,9 @@ export function ResultsView({
   onReset: () => void;
 }) {
   const aplicables = resultado.alternativas.filter((a) => a.aplica);
+  const mejor = resultado.alternativas.find(
+    (a) => a.id === resultado.mejorAlternativaId
+  );
 
   return (
     <div>
@@ -70,6 +75,8 @@ export function ResultsView({
         )}
       </div>
 
+      {aplicables.length > 0 && <SavingsCharts resultado={resultado} />}
+
       {aplicables.length > 0 ? (
         <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {aplicables.map((a) => (
@@ -87,6 +94,8 @@ export function ResultsView({
           mostramos el potencial de paneles solares para tu consumo.
         </p>
       )}
+
+      {mejor && <FinancingSimulator mejor={mejor} />}
 
       <div className="mt-8 flex flex-col items-center gap-3 rounded-2xl border border-black/5 bg-cream-100/70 p-6 text-center sm:flex-row sm:justify-between sm:text-left">
         <p className="text-sm text-ink-800/70">

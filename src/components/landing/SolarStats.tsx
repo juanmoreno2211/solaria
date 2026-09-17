@@ -1,7 +1,7 @@
 import { Leaf, Sun, TrendingUp, Wrench } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { HORAS_SOL_PICO, type Region } from "@/lib/config/pricing";
+import { ColombiaMap } from "@/components/landing/ColombiaMap";
 
 const DATOS = [
   {
@@ -25,20 +25,6 @@ const DATOS = [
     label: "que reduce tu dependencia de fuentes no renovables y tu huella de carbono",
   },
 ];
-
-const REGION_NOMBRE: Record<Region, string> = {
-  caribe: "Caribe",
-  insular: "Insular",
-  orinoquia: "Orinoquía",
-  amazonia: "Amazonía",
-  andina: "Andina",
-  pacifico: "Pacífico",
-};
-
-const HSP_MAXIMO = 6.5;
-const regionesOrdenadas = (Object.keys(HORAS_SOL_PICO) as Region[]).sort(
-  (a, b) => HORAS_SOL_PICO[b] - HORAS_SOL_PICO[a]
-);
 
 export function SolarStats() {
   return (
@@ -69,37 +55,7 @@ export function SolarStats() {
             ))}
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 sm:p-7">
-            <p className="text-sm font-semibold text-white">
-              Horas de sol pico promedio por región
-            </p>
-            <p className="mt-1 text-xs text-white/45">
-              A más horas de sol pico, menos paneles necesitas para el mismo consumo.
-            </p>
-
-            <div className="mt-6 space-y-4">
-              {regionesOrdenadas.map((region) => {
-                const hsp = HORAS_SOL_PICO[region];
-                const ancho = Math.round((hsp / HSP_MAXIMO) * 100);
-                return (
-                  <div key={region}>
-                    <div className="flex items-center justify-between text-xs text-white/60">
-                      <span>{REGION_NOMBRE[region]}</span>
-                      <span className="font-semibold text-sun-300">
-                        {hsp.toFixed(1)} HSP
-                      </span>
-                    </div>
-                    <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-white/10">
-                      <div
-                        className="h-full rounded-full bg-sun-gradient"
-                        style={{ width: `${ancho}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <ColombiaMap />
         </div>
       </Container>
     </section>
