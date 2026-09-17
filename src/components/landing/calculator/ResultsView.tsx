@@ -5,6 +5,7 @@ import type { AnalisisResultado } from "@/lib/savings/types";
 import { ResultCard } from "./ResultCard";
 import { SavingsCharts } from "./SavingsCharts";
 import { FinancingSimulator } from "./FinancingSimulator";
+import { buildWhatsAppLink } from "@/lib/whatsapp";
 
 export function ResultsView({
   resultado,
@@ -101,7 +102,15 @@ export function ResultsView({
         <p className="text-sm text-ink-800/70">
           ¿Quieres una cotización real con un asesor solar humano?
         </p>
-        <a href="#contacto">
+        <a
+          href={buildWhatsAppLink(
+            mejor
+              ? `¡Hola! Acabo de calcular mi ahorro solar en SolarIA (≈${mejor.ahorroPorcentual}% con ${mejor.nombre.toLowerCase()}) y quiero hablar con un asesor.`
+              : undefined
+          )}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           <Button size="md">Hablar con un asesor</Button>
         </a>
       </div>

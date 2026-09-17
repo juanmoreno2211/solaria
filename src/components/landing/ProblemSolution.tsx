@@ -1,6 +1,7 @@
 import { AlertTriangle, Compass, Lightbulb, Snowflake } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { FeatureCard } from "@/components/ui/FeatureCard";
 
 const PROBLEMAS = [
   {
@@ -8,18 +9,21 @@ const PROBLEMAS = [
     title: "El recibo de luz sube y no sabes por qué",
     description:
       "Sin visibilidad sobre tu consumo real es difícil saber qué tanto podrías ahorrar cambiando a energía solar.",
+    accent: "ember" as const,
   },
   {
     icon: Compass,
     title: "Demasiadas opciones, poca claridad",
     description:
       "¿Paneles, linternas solares, refrigeración solar? Cada negocio, casa o finca necesita una combinación distinta.",
+    accent: "sun" as const,
   },
   {
     icon: Snowflake,
     title: "Los cortes de energía afectan tu cadena de frío",
     description:
       "Negocios y fincas con neveras pierden inventario cuando se va la luz, sin un respaldo solar confiable.",
+    accent: "leaf" as const,
   },
 ];
 
@@ -34,21 +38,15 @@ export function ProblemSolution() {
         />
 
         <div className="mt-14 grid gap-6 sm:grid-cols-3">
-          {PROBLEMAS.map((p) => (
-            <div
+          {PROBLEMAS.map((p, i) => (
+            <FeatureCard
               key={p.title}
-              className="rounded-2xl border border-black/5 bg-white p-7 shadow-[0_1px_0_rgba(0,0,0,0.03)] transition-transform hover:-translate-y-1"
-            >
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-ember-500/10 text-ember-600">
-                <p.icon className="h-5 w-5" />
-              </span>
-              <h3 className="mt-5 text-lg font-semibold text-ink-950">
-                {p.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-ink-800/65">
-                {p.description}
-              </p>
-            </div>
+              index={i + 1}
+              icon={p.icon}
+              title={p.title}
+              description={p.description}
+              accent={p.accent}
+            />
           ))}
         </div>
 

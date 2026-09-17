@@ -1,5 +1,6 @@
 import { Sun } from "lucide-react";
 import { Container } from "@/components/ui/Container";
+import { buildWhatsAppLink } from "@/lib/whatsapp";
 
 export function Footer() {
   return (
@@ -35,7 +36,16 @@ export function Footer() {
               <h4 className="text-sm font-semibold text-white">Empresa</h4>
               <ul className="mt-4 space-y-2.5 text-sm">
                 <li><a href="#preguntas" className="hover:text-white">Preguntas frecuentes</a></li>
-                <li><a href="#contacto" className="hover:text-white">Habla con un asesor</a></li>
+                <li>
+                  <a
+                    href={buildWhatsAppLink()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-white"
+                  >
+                    Habla con un asesor
+                  </a>
+                </li>
               </ul>
             </div>
           </div>

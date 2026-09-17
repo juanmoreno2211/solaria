@@ -1,6 +1,7 @@
 import { ArrowRight, MessageCircle } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
+import { buildWhatsAppLink, WHATSAPP_NUMBER_DISPLAY } from "@/lib/whatsapp";
 
 export function CTA() {
   return (
@@ -25,7 +26,7 @@ export function CTA() {
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </a>
-            <a href="https://wa.me/573000000000" target="_blank" rel="noopener noreferrer">
+            <a href={buildWhatsAppLink()} target="_blank" rel="noopener noreferrer">
               <Button
                 size="lg"
                 variant="secondary"
@@ -36,6 +37,10 @@ export function CTA() {
               </Button>
             </a>
           </div>
+          <p className="relative mt-5 text-sm text-white/40">
+            O escríbenos directo al{" "}
+            <span className="font-medium text-white/70">{WHATSAPP_NUMBER_DISPLAY}</span>
+          </p>
         </div>
       </Container>
     </section>
