@@ -6,7 +6,9 @@ import { Mission } from "@/components/landing/Mission";
 import { ProblemSolution } from "@/components/landing/ProblemSolution";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { Alternatives } from "@/components/landing/Alternatives";
+import { SolarStats } from "@/components/landing/SolarStats";
 import { BusinessBenefits } from "@/components/landing/BusinessBenefits";
+import { TrustSection } from "@/components/landing/TrustSection";
 import { CalculatorSection } from "@/components/landing/calculator/CalculatorSection";
 import { FAQ } from "@/components/landing/FAQ";
 import { CTA } from "@/components/landing/CTA";
@@ -22,7 +24,9 @@ export default function Home() {
         <ProblemSolution />
         <HowItWorks />
         <Alternatives />
+        <SolarStats />
         <BusinessBenefits />
+        <TrustSection />
         <CalculatorSection />
         <FAQ />
         <CTA />
