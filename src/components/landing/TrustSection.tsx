@@ -2,6 +2,7 @@ import { MessageSquareQuote, Store } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Button } from "@/components/ui/Button";
+import { buildWhatsAppLink } from "@/lib/whatsapp";
 
 export function TrustSection() {
   return (
@@ -32,7 +33,13 @@ export function TrustSection() {
             ¿Ya usaste SolarIA? Cuéntanos tu experiencia y sé de los primeros
             testimonios en aparecer aquí.
           </p>
-          <a href="#contacto">
+          <a
+            href={buildWhatsAppLink(
+              "¡Hola! Ya probé SolarIA y quiero contarles mi experiencia 🙂"
+            )}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <Button size="md" variant="secondary">
               Compartir mi experiencia
             </Button>
@@ -51,7 +58,14 @@ export function TrustSection() {
         </div>
         <p className="mt-4 text-center text-xs text-ink-800/45">
           ¿Eres instalador o proveedor de energía solar en Colombia?{" "}
-          <a href="#contacto" className="font-medium text-ink-800/70 underline underline-offset-2">
+          <a
+            href={buildWhatsAppLink(
+              "¡Hola! Soy instalador/proveedor de energía solar y me interesa aparecer en SolarIA."
+            )}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-ink-800/70 underline underline-offset-2"
+          >
             Hablemos de aparecer aquí
           </a>
           .
