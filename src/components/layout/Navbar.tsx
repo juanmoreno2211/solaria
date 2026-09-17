@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import clsx from "clsx";
 
 const LINKS = [
+  { href: "#mision", label: "Nuestra misión" },
   { href: "#como-funciona", label: "Cómo funciona" },
   { href: "#alternativas", label: "Alternativas" },
   { href: "#calculadora", label: "Calculadora" },
