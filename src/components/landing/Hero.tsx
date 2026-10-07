@@ -29,15 +29,15 @@ export function Hero() {
           </span>
 
           <h1 className="mt-6 text-balance text-4xl font-bold leading-[1.08] tracking-tight text-white sm:text-5xl md:text-6xl">
-            Sube tu recibo de luz y descubre cuánto puedes{" "}
+            Descubre cuánto puedes{" "}
             <span className="bg-sun-gradient bg-clip-text text-transparent">
-              ahorrar con energía solar
+              ahorrar en dinero y energía
             </span>
           </h1>
 
           <p className="mt-6 max-w-xl text-balance text-lg text-white/65 sm:text-xl">
-            Sube tu recibo y descubre en minutos cuánto puedes ahorrar en
-            paneles, iluminación o refrigeración solar.
+            Sube tu recibo y deja que un agente con IA compare paneles,
+            iluminación y refrigeración solar por ti.
           </p>
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
