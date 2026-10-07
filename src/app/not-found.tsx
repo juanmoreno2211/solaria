@@ -11,8 +11,8 @@ export default function NotFound() {
       <Navbar />
       <main className="bg-ink-gradient py-28 sm:py-36">
         <Container className="flex flex-col items-center text-center">
-          <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-sun-gradient text-ink-950 shadow-[0_12px_30px_-10px_rgba(245,158,11,0.6)]">
-            <Sun className="h-8 w-8" strokeWidth={2.25} />
+          <span className="flex h-14 w-14 items-center justify-center rounded-xl bg-sun-500/10 text-sun-400">
+            <Sun className="h-7 w-7" strokeWidth={2} />
           </span>
           <p className="mt-8 text-sm font-semibold uppercase tracking-wide text-sun-300">
             Error 404

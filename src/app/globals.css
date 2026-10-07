@@ -1,41 +1,45 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fffdf9;
-  --foreground: #14110c;
+  --background: #fdfbf7;
+  --foreground: #19140f;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-display);
 
-  /* Marca: navy profundo para contraste + dorado solar + verde ahorro */
-  --color-ink-950: #070b14;
-  --color-ink-900: #0d1424;
-  --color-ink-800: #141d33;
-  --color-ink-700: #1d2942;
+  /* Marca: navy casi negro + naranja solar atenuado + verde ahorro */
+  --color-ink-950: #0a0e16;
+  --color-ink-900: #11161f;
+  --color-ink-800: #1c2330;
+  --color-ink-700: #2a3342;
 
-  --color-sun-200: #ffe6a8;
-  --color-sun-300: #ffd874;
-  --color-sun-400: #fdb833;
-  --color-sun-500: #f59e0b;
-  --color-sun-600: #db7b0a;
+  --color-sun-200: #f1d2a3;
+  --color-sun-300: #e7b876;
+  --color-sun-400: #e2a152;
+  --color-sun-500: #d9842b;
+  --color-sun-600: #b56a1d;
 
-  --color-ember-400: #ff9457;
-  --color-ember-500: #f2751a;
-  --color-ember-600: #d5590a;
+  --color-ember-400: #e2905a;
+  --color-ember-500: #cc6a2e;
+  --color-ember-600: #a9541f;
 
-  --color-leaf-300: #86efac;
-  --color-leaf-400: #4ade80;
-  --color-leaf-500: #22c55e;
-  --color-leaf-600: #16a34a;
-  --color-leaf-700: #15803d;
+  --color-leaf-300: #9bd9b1;
+  --color-leaf-400: #5fb983;
+  --color-leaf-500: #3f9c67;
+  --color-leaf-600: #2f7d50;
+  --color-leaf-700: #276844;
 
-  --color-cream-50: #fffdf9;
-  --color-cream-100: #fff6e8;
-  --color-cream-200: #ffecc9;
+  --color-cream-50: #fdfbf7;
+  --color-cream-100: #f7f1e6;
+  --color-cream-200: #efe4d0;
+
+  /* Grises cálidos para texto secundario (no azulados) */
+  --color-stone-400: #a99f8f;
+  --color-stone-500: #8a8071;
+  --color-stone-600: #6c6356;
 }
 
 body {
@@ -47,28 +51,25 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
   .bg-sun-gradient {
     background-image: linear-gradient(
-      135deg,
+      150deg,
       var(--color-sun-400) 0%,
-      var(--color-ember-500) 100%
+      var(--color-sun-500) 100%
     );
   }
   .bg-ink-gradient {
-    background-image: radial-gradient(
-        120% 120% at 15% 0%,
-        rgba(253, 184, 51, 0.18) 0%,
-        rgba(253, 184, 51, 0) 55%
-      ),
-      radial-gradient(
-        100% 100% at 85% 15%,
-        rgba(34, 197, 94, 0.14) 0%,
-        rgba(34, 197, 94, 0) 55%
-      ),
-      linear-gradient(180deg, var(--color-ink-950) 0%, var(--color-ink-900) 100%);
+    background-image: linear-gradient(
+      165deg,
+      var(--color-ink-950) 0%,
+      var(--color-ink-900) 100%
+    );
   }
   .card-glow {
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset,
-      0 20px 60px -20px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset,
+      0 16px 40px -24px rgba(0, 0, 0, 0.5);
   }
 }

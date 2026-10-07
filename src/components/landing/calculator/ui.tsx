@@ -18,7 +18,7 @@ export function TextInput(
     <input
       {...props}
       className={clsx(
-        "w-full rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm text-ink-950 outline-none transition-colors placeholder:text-ink-800/35 focus:border-sun-500 focus:ring-2 focus:ring-sun-500/20",
+        "w-full rounded-lg border border-ink-950/10 bg-white px-4 py-2.5 text-sm text-ink-950 outline-none transition-colors placeholder:text-ink-950/30 focus:border-sun-500 focus:ring-2 focus:ring-sun-500/15",
         props.className
       )}
     />
@@ -43,19 +43,19 @@ export function OptionCard({
       type="button"
       onClick={onClick}
       className={clsx(
-        "flex w-full items-start gap-3 rounded-xl border p-4 text-left transition-all duration-200",
+        "flex w-full items-start gap-3 rounded-lg border p-4 text-left transition-colors duration-150",
         selected
-          ? "border-sun-500 bg-sun-500/8 shadow-[0_10px_24px_-16px_rgba(245,158,11,0.7)] ring-1 ring-sun-500/30"
-          : "border-black/10 bg-white hover:-translate-y-0.5 hover:border-black/20 hover:shadow-[0_10px_20px_-16px_rgba(20,17,12,0.25)]"
+          ? "border-sun-500 bg-sun-500/6"
+          : "border-ink-950/10 bg-white hover:border-ink-950/20"
       )}
     >
       {icon && (
         <span
           className={clsx(
-            "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-transform duration-200",
+            "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors duration-150",
             selected
-              ? "bg-sun-gradient text-ink-950 scale-105"
-              : "bg-black/5 text-ink-800/60"
+              ? "bg-sun-500 text-white"
+              : "bg-ink-950/5 text-ink-950/55"
           )}
         >
           {icon}
@@ -91,10 +91,10 @@ export function ToggleCard({
       type="button"
       onClick={onClick}
       className={clsx(
-        "flex w-full items-center justify-between gap-4 rounded-xl border p-4 text-left transition-all duration-200",
+        "flex w-full items-center justify-between gap-4 rounded-lg border p-4 text-left transition-colors duration-150",
         active
-          ? "border-leaf-500 bg-leaf-500/8 shadow-[0_10px_24px_-16px_rgba(34,197,94,0.6)]"
-          : "border-black/10 bg-white hover:-translate-y-0.5 hover:border-black/20 hover:shadow-[0_10px_20px_-16px_rgba(20,17,12,0.25)]"
+          ? "border-leaf-500 bg-leaf-500/6"
+          : "border-ink-950/10 bg-white hover:border-ink-950/20"
       )}
     >
       <span>

@@ -46,12 +46,12 @@ export function SolarStats() {
               <Reveal
                 key={d.label}
                 delay={i * 0.08}
-                className="rounded-2xl border border-white/10 bg-white/[0.04] p-6"
+                className="rounded-xl border border-white/10 bg-white/[0.03] p-6"
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sun-gradient text-ink-950">
-                  <d.icon className="h-5 w-5" strokeWidth={2.25} />
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-sun-500/15 text-sun-300">
+                  <d.icon className="h-4 w-4" strokeWidth={2} />
                 </span>
-                <p className="mt-4 text-2xl font-bold text-white">{d.valor}</p>
+                <p className="tabular-nums mt-4 text-2xl font-bold text-white">{d.valor}</p>
                 <p className="mt-1.5 text-sm leading-relaxed text-white/55">
                   {d.label}
                 </p>

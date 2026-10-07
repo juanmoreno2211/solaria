@@ -59,10 +59,10 @@ const HSP_MAXIMO = 6.5;
 
 function colorPorHsp(hsp: number): string {
   const t = Math.min(1, hsp / HSP_MAXIMO);
-  if (t > 0.85) return "#fdb833";
-  if (t > 0.7) return "#f59e0b";
-  if (t > 0.55) return "#db7b0a";
-  return "#b8630a";
+  if (t > 0.85) return "#e2a152";
+  if (t > 0.7) return "#d9842b";
+  if (t > 0.55) return "#b56a1d";
+  return "#8a5016";
 }
 
 export function ColombiaMap() {
@@ -71,7 +71,7 @@ export function ColombiaMap() {
   const hsp = HORAS_SOL_PICO[activa];
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 sm:p-7">
+    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6 sm:p-7">
       <p className="text-sm font-semibold text-white">
         Mapa solar de Colombia por región
       </p>

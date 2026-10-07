@@ -121,13 +121,8 @@ export function CalculatorSection() {
         />
 
         <div className="relative mx-auto mt-12 max-w-3xl">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -inset-x-8 -inset-y-6 -z-10 animate-pulse rounded-[40px] bg-gradient-to-br from-sun-500/20 via-ember-500/10 to-leaf-500/20 blur-2xl [animation-duration:6s]"
-          />
-          <div className="rounded-[28px] bg-gradient-to-br from-sun-500/50 via-ember-500/30 to-leaf-500/40 p-[1.5px] shadow-[0_30px_60px_-30px_rgba(20,17,12,0.35)]">
-            <div className="rounded-[26.5px] bg-white/90 p-6 backdrop-blur-sm sm:p-9">
-              {step !== "resultado" && (
+          <div className="rounded-xl border border-ink-950/10 bg-white p-6 sm:p-9">
+            {step !== "resultado" && (
                 <div className="mb-9 flex items-center">
                   {PASOS.slice(0, 2).map((p, i) => {
                     const activo = step === p.key;
@@ -138,28 +133,28 @@ export function CalculatorSection() {
                         <div className="flex flex-col items-center gap-2">
                           <span
                             className={clsx(
-                              "flex h-9 w-9 items-center justify-center rounded-full transition-all duration-300",
+                              "flex h-9 w-9 items-center justify-center rounded-full transition-colors duration-200",
                               activo || completado
-                                ? "bg-sun-gradient text-ink-950 shadow-[0_6px_18px_-6px_rgba(245,158,11,0.7)]"
-                                : "bg-black/8 text-ink-800/40"
+                                ? "bg-sun-500 text-white"
+                                : "bg-ink-950/8 text-ink-950/35"
                             )}
                           >
-                            <p.icon className="h-4 w-4" strokeWidth={2.25} />
+                            <p.icon className="h-4 w-4" strokeWidth={2} />
                           </span>
                           <span
                             className={clsx(
                               "text-[11px] font-semibold uppercase tracking-wide",
-                              activo ? "text-ink-950" : "text-ink-800/40"
+                              activo ? "text-ink-950" : "text-ink-950/35"
                             )}
                           >
                             {p.label}
                           </span>
                         </div>
                         {i === 0 && (
-                          <span className="mx-3 mb-5 h-0.5 flex-1 overflow-hidden rounded-full bg-black/8">
+                          <span className="mx-3 mb-5 h-px flex-1 overflow-hidden bg-ink-950/8">
                             <span
                               className={clsx(
-                                "block h-full rounded-full bg-sun-gradient transition-all duration-500 ease-out",
+                                "block h-full bg-sun-500 transition-all duration-500 ease-out",
                                 step === "predio" ? "w-full" : "w-0"
                               )}
                             />
@@ -172,7 +167,7 @@ export function CalculatorSection() {
               )}
 
               {error && (
-                <p className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <p className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                   {error}
                 </p>
               )}
@@ -205,7 +200,6 @@ export function CalculatorSection() {
                   onReset={handleReset}
                 />
               )}
-            </div>
           </div>
         </div>
       </Container>

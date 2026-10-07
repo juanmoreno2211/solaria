@@ -12,7 +12,7 @@ const ICONS = {
 
 const ACCENTS = {
   paneles: {
-    icon: "bg-sun-gradient text-ink-950",
+    icon: "bg-sun-500/12 text-sun-600",
     ring: "border-sun-500/30",
     pct: "text-sun-600",
   },
@@ -41,25 +41,25 @@ export function ResultCard({
   return (
     <div
       className={clsx(
-        "relative flex flex-col rounded-2xl border bg-white p-6",
-        destacada ? clsx("border-2", accent.ring) : "border-black/8"
+        "relative flex flex-col rounded-xl border bg-white p-6",
+        destacada ? clsx("border-2", accent.ring) : "border-ink-950/8"
       )}
     >
       {destacada && (
-        <span className="absolute -top-3 left-6 rounded-full bg-ink-950 px-3 py-1 text-[11px] font-semibold text-white">
+        <span className="absolute -top-3 left-6 rounded-md bg-ink-950 px-2.5 py-1 text-[11px] font-semibold text-white">
           Recomendado para ti
         </span>
       )}
 
       <div className="flex items-center gap-3">
-        <span className={clsx("flex h-10 w-10 items-center justify-center rounded-xl", accent.icon)}>
-          <Icon className="h-5 w-5" />
+        <span className={clsx("flex h-10 w-10 items-center justify-center rounded-lg", accent.icon)}>
+          <Icon className="h-5 w-5" strokeWidth={2} />
         </span>
         <h4 className="text-base font-bold text-ink-950">{alternativa.nombre}</h4>
       </div>
 
       {alternativa.proveedorRecomendado ? (
-        <div className="mt-4 flex items-start gap-2 rounded-xl border border-leaf-500/25 bg-leaf-500/6 px-3.5 py-3">
+        <div className="mt-4 flex items-start gap-2 rounded-lg border border-leaf-500/25 bg-leaf-500/6 px-3.5 py-3">
           <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-leaf-600" />
           <div className="text-xs leading-relaxed text-ink-900/75">
             <p className="font-semibold text-ink-950">

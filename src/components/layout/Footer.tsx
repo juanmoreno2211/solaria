@@ -8,9 +8,9 @@ export function Footer() {
       <Container>
         <div className="flex flex-col gap-10 md:flex-row md:justify-between">
           <div className="max-w-sm">
-            <div className="flex items-center gap-2 font-bold text-white">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-sun-gradient">
-                <Sun className="h-4 w-4 text-ink-950" strokeWidth={2.5} />
+            <div className="flex items-center gap-2.5 font-semibold text-white">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-sun-500">
+                <Sun className="h-4 w-4 text-white" strokeWidth={2.25} />
               </span>
               <span className="text-lg tracking-tight">
                 Solar<span className="text-sun-400">IA</span>
