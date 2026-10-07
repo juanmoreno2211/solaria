@@ -31,7 +31,7 @@ export function Hero() {
           <h1 className="mt-6 text-balance text-4xl font-bold leading-[1.08] tracking-tight text-white sm:text-5xl md:text-6xl">
             Descubre cuánto puedes{" "}
             <span className="bg-sun-gradient bg-clip-text text-transparent">
-              ahorrar con energía solar
+              ahorrar en dinero y energía
             </span>
           </h1>
 
