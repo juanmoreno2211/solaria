@@ -45,8 +45,8 @@ export function FinancingSimulator({
   const flujoNeto = mejor.ahorroMensualEstimado - cuota;
 
   const dataBarras = [
-    { name: "Cuota estimada", value: cuota, color: "#f2751a" },
-    { name: "Tu ahorro mensual", value: mejor.ahorroMensualEstimado, color: "#22c55e" },
+    { name: "Cuota estimada", value: cuota, color: "#cc6a2e" },
+    { name: "Tu ahorro mensual", value: mejor.ahorroMensualEstimado, color: "#3f9c67" },
   ];
 
   return (

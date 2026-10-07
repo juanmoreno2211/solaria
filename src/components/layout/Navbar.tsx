@@ -29,26 +29,26 @@ export function Navbar() {
       className={clsx(
         "sticky top-0 z-50 transition-all duration-300",
         scrolled
-          ? "bg-cream-50/85 backdrop-blur-md border-b border-black/5"
-          : "bg-transparent"
+          ? "bg-cream-50/90 backdrop-blur-md border-b border-ink-950/8"
+          : "border-b border-transparent bg-transparent"
       )}
     >
-      <Container className="flex h-20 items-center justify-between sm:h-24">
-        <a href="#top" className="flex items-center gap-3 font-bold text-ink-950">
-          <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-sun-gradient text-white sm:h-14 sm:w-14">
-            <Sun className="h-7 w-7 sm:h-8 sm:w-8" strokeWidth={2.5} />
+      <Container className="flex h-16 items-center justify-between sm:h-[4.5rem]">
+        <a href="#top" className="flex items-center gap-2.5 text-ink-950">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-sun-500 text-white">
+            <Sun className="h-4 w-4" strokeWidth={2.25} />
           </span>
-          <span className="text-2xl tracking-tight sm:text-3xl">
+          <span className="text-lg font-semibold tracking-tight">
             Solar<span className="text-sun-600">IA</span>
           </span>
         </a>
 
-        <nav className="hidden items-center gap-8 text-base font-medium text-ink-800/80 md:flex">
+        <nav className="hidden items-center gap-7 text-[0.9rem] text-ink-950/70 md:flex">
           {LINKS.map((link) => (
             <a
               key={link.href}
               href={link.href}
-              className="transition-colors hover:text-ink-950"
+              className="relative py-1 transition-colors hover:text-ink-950 after:absolute after:bottom-0 after:left-0 after:h-px after:w-0 after:bg-sun-500 after:transition-all after:duration-200 hover:after:w-full"
             >
               {link.label}
             </a>

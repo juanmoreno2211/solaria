@@ -3,21 +3,21 @@ import clsx from "clsx";
 
 type Accent = "sun" | "ember" | "leaf";
 
-const ACCENTS: Record<Accent, { icon: string; glow: string; ring: string }> = {
+const ACCENTS: Record<Accent, { icon: string; border: string; underline: string }> = {
   sun: {
-    icon: "bg-sun-gradient text-ink-950",
-    glow: "bg-sun-500/25",
-    ring: "group-hover:border-sun-500/30",
+    icon: "bg-sun-500/10 text-sun-600",
+    border: "hover:border-sun-500/35",
+    underline: "group-hover:bg-sun-500",
   },
   ember: {
-    icon: "bg-ember-500/15 text-ember-600",
-    glow: "bg-ember-500/25",
-    ring: "group-hover:border-ember-500/30",
+    icon: "bg-ember-500/10 text-ember-600",
+    border: "hover:border-ember-500/35",
+    underline: "group-hover:bg-ember-500",
   },
   leaf: {
-    icon: "bg-leaf-500/15 text-leaf-600",
-    glow: "bg-leaf-500/25",
-    ring: "group-hover:border-leaf-500/30",
+    icon: "bg-leaf-500/10 text-leaf-600",
+    border: "hover:border-leaf-500/35",
+    underline: "group-hover:bg-leaf-500",
   },
 };
 
@@ -41,47 +41,38 @@ export function FeatureCard({
   return (
     <div
       className={clsx(
-        "group relative overflow-hidden rounded-2xl border border-black/5 bg-white p-7 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_20px_45px_-24px_rgba(20,17,12,0.35)]",
-        a.ring,
+        "group relative overflow-hidden rounded-xl border border-ink-950/8 bg-white p-7 transition-colors duration-200",
+        a.border,
         className
       )}
     >
       <span
         aria-hidden
-        className={clsx(
-          "pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-100",
-          a.glow
-        )}
-      />
-      <span
-        aria-hidden
-        className="pointer-events-none absolute -right-1 -top-2 select-none text-6xl font-black leading-none text-ink-950/[0.04]"
+        className="pointer-events-none absolute right-5 top-4 select-none text-5xl font-bold leading-none text-ink-950/[0.05]"
       >
         {String(index).padStart(2, "0")}
       </span>
 
       <span
         className={clsx(
-          "relative flex h-11 w-11 items-center justify-center rounded-xl transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110",
+          "relative flex h-10 w-10 items-center justify-center rounded-lg",
           a.icon
         )}
       >
-        <Icon className="h-5 w-5" strokeWidth={2.25} />
+        <Icon className="h-5 w-5" strokeWidth={2} />
       </span>
 
       <h3 className="relative mt-5 text-lg font-semibold text-ink-950">
         {title}
       </h3>
-      <p className="relative mt-2 text-sm leading-relaxed text-ink-800/65">
+      <p className="relative mt-2 text-sm leading-relaxed text-stone-600">
         {description}
       </p>
       <span
         aria-hidden
         className={clsx(
-          "relative mt-4 block h-0.5 w-8 rounded-full bg-ink-950/10 transition-all duration-300 group-hover:w-14",
-          accent === "sun" && "group-hover:bg-sun-500",
-          accent === "ember" && "group-hover:bg-ember-500",
-          accent === "leaf" && "group-hover:bg-leaf-500"
+          "relative mt-5 block h-px w-8 bg-ink-950/15 transition-all duration-200 group-hover:w-12",
+          a.underline
         )}
       />
     </div>

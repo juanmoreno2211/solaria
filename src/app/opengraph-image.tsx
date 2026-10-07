@@ -29,7 +29,7 @@ export default function OgImage() {
               borderRadius: 22,
               alignItems: "center",
               justifyContent: "center",
-              background: "linear-gradient(135deg, #fdb833 0%, #f2751a 100%)",
+              background: "linear-gradient(135deg, #e2a152 0%, #d9842b 100%)",
             }}
           >
             <svg
@@ -54,7 +54,7 @@ export default function OgImage() {
             </svg>
           </div>
           <div style={{ display: "flex", fontSize: 56, fontWeight: 800, color: "white" }}>
-            Solar<span style={{ color: "#fdb833" }}>IA</span>
+            Solar<span style={{ color: "#e2a152" }}>IA</span>
           </div>
         </div>
 

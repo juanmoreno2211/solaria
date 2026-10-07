@@ -50,17 +50,17 @@ export function HowItWorks() {
           {PASOS.map((paso, i) => (
             <Reveal key={paso.title} delay={i * 0.1} className="relative flex flex-col items-start">
               <div className="flex items-center gap-3">
-                <span className="relative z-10 flex h-12 w-12 items-center justify-center rounded-2xl bg-sun-gradient text-ink-950 shadow-[0_8px_24px_-8px_rgba(245,158,11,0.55)]">
-                  <paso.icon className="h-5 w-5" strokeWidth={2.25} />
+                <span className="relative z-10 flex h-11 w-11 items-center justify-center rounded-lg bg-sun-500/10 text-sun-600">
+                  <paso.icon className="h-5 w-5" strokeWidth={2} />
                 </span>
-                <span className="text-xs font-bold text-ink-950/30">
+                <span className="text-xs font-semibold text-ink-950/30">
                   0{i + 1}
                 </span>
               </div>
               <h3 className="mt-5 text-lg font-semibold text-ink-950">
                 {paso.title}
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-ink-800/65">
+              <p className="mt-2 text-sm leading-relaxed text-stone-600">
                 {paso.description}
               </p>
             </Reveal>

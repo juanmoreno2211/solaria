@@ -17,9 +17,9 @@ import { formatCOP } from "@/lib/format";
 import type { AlternativaResultado, AnalisisResultado } from "@/lib/savings/types";
 
 const COLOR_POR_ID: Record<AlternativaResultado["id"], string> = {
-  paneles: "#f59e0b",
-  iluminacion: "#f2751a",
-  refrigeracion: "#22c55e",
+  paneles: "#d9842b",
+  iluminacion: "#cc6a2e",
+  refrigeracion: "#3f9c67",
 };
 
 function TooltipDonut({ active, payload }: TooltipContentProps) {
@@ -133,8 +133,8 @@ export function SavingsCharts({ resultado }: { resultado: AnalisisResultado }) {
             <AreaChart data={dataProyeccion} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorNeto" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#22c55e" stopOpacity={0.35} />
-                  <stop offset="95%" stopColor="#22c55e" stopOpacity={0.02} />
+                  <stop offset="5%" stopColor="#3f9c67" stopOpacity={0.35} />
+                  <stop offset="95%" stopColor="#3f9c67" stopOpacity={0.02} />
                 </linearGradient>
               </defs>
               <XAxis
@@ -151,7 +151,7 @@ export function SavingsCharts({ resultado }: { resultado: AnalisisResultado }) {
               <Area
                 type="monotone"
                 dataKey="neto"
-                stroke="#16a34a"
+                stroke="#2f7d50"
                 strokeWidth={2}
                 fill="url(#colorNeto)"
                 isAnimationActive={false}

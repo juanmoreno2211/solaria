@@ -28,15 +28,9 @@ export function FloatingSun() {
     >
       <motion.div
         style={{ rotate }}
-        className="relative flex h-11 w-11 items-center justify-center rounded-full bg-sun-gradient shadow-[0_8px_22px_-6px_rgba(245,158,11,0.65)] sm:h-14 sm:w-14"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-sun-500/25 bg-cream-50 sm:h-12 sm:w-12"
       >
-        <motion.span
-          aria-hidden
-          className="absolute inset-0 rounded-full bg-sun-400/50 blur-md"
-          animate={{ opacity: [0.4, 0.85, 0.4] }}
-          transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <Sun className="relative h-5 w-5 text-ink-950 sm:h-7 sm:w-7" strokeWidth={2.25} />
+        <Sun className="h-4 w-4 text-sun-500 sm:h-5 sm:w-5" strokeWidth={2} />
       </motion.div>
     </motion.div>
   );
