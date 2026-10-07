@@ -2,6 +2,7 @@ import { Lightbulb, Sparkles, Target } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { FeatureCard } from "@/components/ui/FeatureCard";
+import { Reveal } from "@/components/ui/Reveal";
 
 const PILARES = [
   {
@@ -31,22 +32,25 @@ export function Mission() {
   return (
     <section id="mision" className="py-24 sm:py-28">
       <Container className="max-w-4xl">
-        <SectionHeading
-          eyebrow="De dónde nace SolarIA"
-          title="Ahorrar y consumir energía de forma más consciente no debería requerir ser experto en energía solar"
-          description="Cada año sube tu factura, pero la información sobre energía solar sigue siendo técnica y dispersa. SolarIA la convierte en un plan claro, tan simple como subir una foto."
-        />
+        <Reveal>
+          <SectionHeading
+            eyebrow="De dónde nace SolarIA"
+            title="Ahorrar y consumir energía de forma más consciente no debería requerir ser experto en energía solar"
+            description="Cada año sube tu factura, pero la información sobre energía solar sigue siendo técnica y dispersa. SolarIA la convierte en un plan claro, tan simple como subir una foto."
+          />
+        </Reveal>
 
         <div className="mt-14 grid gap-6 sm:grid-cols-3">
           {PILARES.map((p, i) => (
-            <FeatureCard
-              key={p.title}
-              index={i + 1}
-              icon={p.icon}
-              title={p.title}
-              description={p.description}
-              accent={p.accent}
-            />
+            <Reveal key={p.title} delay={i * 0.1}>
+              <FeatureCard
+                index={i + 1}
+                icon={p.icon}
+                title={p.title}
+                description={p.description}
+                accent={p.accent}
+              />
+            </Reveal>
           ))}
         </div>
       </Container>

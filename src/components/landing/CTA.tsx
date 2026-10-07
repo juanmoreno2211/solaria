@@ -1,13 +1,14 @@
 import { ArrowRight, MessageCircle } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
+import { Reveal } from "@/components/ui/Reveal";
 import { buildWhatsAppLink, WHATSAPP_NUMBER_DISPLAY } from "@/lib/whatsapp";
 
 export function CTA() {
   return (
     <section id="contacto" className="pb-24 sm:pb-28">
       <Container>
-        <div className="relative overflow-hidden rounded-3xl bg-ink-gradient px-6 py-14 text-center sm:px-16 sm:py-20">
+        <Reveal className="relative overflow-hidden rounded-3xl bg-ink-gradient px-6 py-14 text-center sm:px-16 sm:py-20">
           <div
             aria-hidden
             className="pointer-events-none absolute -top-10 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-sun-500/25 blur-[100px]"
@@ -41,7 +42,7 @@ export function CTA() {
             O escríbenos directo al{" "}
             <span className="font-medium text-white/70">{WHATSAPP_NUMBER_DISPLAY}</span>
           </p>
-        </div>
+        </Reveal>
       </Container>
     </section>
   );

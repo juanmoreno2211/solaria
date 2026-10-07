@@ -1,6 +1,7 @@
 import { CheckCircle2, Lightbulb, Snowflake, SunMedium } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { Reveal } from "@/components/ui/Reveal";
 import clsx from "clsx";
 
 const ALTERNATIVAS = [
@@ -76,18 +77,21 @@ export function Alternatives() {
   return (
     <section id="alternativas" className="py-24 sm:py-28">
       <Container>
-        <SectionHeading
-          eyebrow="Alternativas de energía solar"
-          title="Tres formas de aprovechar el sol, combinadas a tu medida"
-          description="El agente evalúa cuáles aplican a tu caso y cómo combinarlas para maximizar tu ahorro."
-        />
+        <Reveal>
+          <SectionHeading
+            eyebrow="Alternativas de energía solar"
+            title="Tres formas de aprovechar el sol, combinadas a tu medida"
+            description="El agente evalúa cuáles aplican a tu caso y cómo combinarlas para maximizar tu ahorro."
+          />
+        </Reveal>
 
         <div className="mt-14 grid gap-6 lg:grid-cols-3">
           {ALTERNATIVAS.map((alt, i) => {
             const accent = ACCENTS[alt.accent];
             return (
-              <div
+              <Reveal
                 key={alt.title}
+                delay={i * 0.1}
                 className={clsx(
                   "group relative flex flex-col overflow-hidden rounded-3xl border border-black/5 bg-white p-8 shadow-[0_1px_0_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_50px_-24px_rgba(20,17,12,0.35)]",
                   accent.ring
@@ -153,7 +157,7 @@ export function Alternatives() {
                     accent.underline
                   )}
                 />
-              </div>
+              </Reveal>
             );
           })}
         </div>
