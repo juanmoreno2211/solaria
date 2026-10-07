@@ -4,6 +4,7 @@ import { Hero } from "@/components/landing/Hero";
 import { StatsBar } from "@/components/landing/StatsBar";
 import { Mission } from "@/components/landing/Mission";
 import { ProblemSolution } from "@/components/landing/ProblemSolution";
+import { BillComparison } from "@/components/landing/BillComparison";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { Alternatives } from "@/components/landing/Alternatives";
 import { SolarStats } from "@/components/landing/SolarStats";
@@ -22,6 +23,7 @@ export default function Home() {
         <StatsBar />
         <Mission />
         <ProblemSolution />
+        <BillComparison />
         <HowItWorks />
         <Alternatives />
         <SolarStats />

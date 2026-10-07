@@ -2,6 +2,7 @@ import { Award, Receipt, ShieldCheck, TrendingDown } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { FeatureCard } from "@/components/ui/FeatureCard";
+import { Reveal } from "@/components/ui/Reveal";
 
 const BENEFICIOS = [
   {
@@ -38,22 +39,25 @@ export function BusinessBenefits() {
   return (
     <section className="bg-cream-100/50 py-24 sm:py-28">
       <Container>
-        <SectionHeading
-          eyebrow="Para empresas"
-          title="La energía solar también es una decisión de negocio"
-          description="Más allá del ahorro mensual, adoptar energía solar impacta la operación, las finanzas y la imagen de tu empresa."
-        />
+        <Reveal>
+          <SectionHeading
+            eyebrow="Para empresas"
+            title="La energía solar también es una decisión de negocio"
+            description="Más allá del ahorro mensual, adoptar energía solar impacta la operación, las finanzas y la imagen de tu empresa."
+          />
+        </Reveal>
 
         <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {BENEFICIOS.map((b, i) => (
-            <FeatureCard
-              key={b.title}
-              index={i + 1}
-              icon={b.icon}
-              title={b.title}
-              description={b.description}
-              accent={b.accent}
-            />
+            <Reveal key={b.title} delay={i * 0.08}>
+              <FeatureCard
+                index={i + 1}
+                icon={b.icon}
+                title={b.title}
+                description={b.description}
+                accent={b.accent}
+              />
+            </Reveal>
           ))}
         </div>
       </Container>

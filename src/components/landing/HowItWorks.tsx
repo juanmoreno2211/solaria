@@ -1,6 +1,7 @@
 import { ClipboardList, FileScan, Sparkles, TrendingUp } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { Reveal } from "@/components/ui/Reveal";
 
 const PASOS = [
   {
@@ -33,11 +34,13 @@ export function HowItWorks() {
   return (
     <section id="como-funciona" className="bg-cream-100/50 py-24 sm:py-28">
       <Container>
-        <SectionHeading
-          eyebrow="Cómo funciona"
-          title="De tu recibo a tu plan de ahorro solar, en 4 pasos"
-          description="Todo el proceso toma un par de minutos y no necesitas saber nada de energía solar para empezar."
-        />
+        <Reveal>
+          <SectionHeading
+            eyebrow="Cómo funciona"
+            title="De tu recibo a tu plan de ahorro solar, en 4 pasos"
+            description="Todo el proceso toma un par de minutos y no necesitas saber nada de energía solar para empezar."
+          />
+        </Reveal>
 
         <div className="relative mt-16 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div
@@ -45,7 +48,7 @@ export function HowItWorks() {
             className="absolute top-6 left-0 right-0 hidden h-px bg-gradient-to-r from-transparent via-black/10 to-transparent lg:block"
           />
           {PASOS.map((paso, i) => (
-            <div key={paso.title} className="relative flex flex-col items-start">
+            <Reveal key={paso.title} delay={i * 0.1} className="relative flex flex-col items-start">
               <div className="flex items-center gap-3">
                 <span className="relative z-10 flex h-12 w-12 items-center justify-center rounded-2xl bg-sun-gradient text-ink-950 shadow-[0_8px_24px_-8px_rgba(245,158,11,0.55)]">
                   <paso.icon className="h-5 w-5" strokeWidth={2.25} />
@@ -60,7 +63,7 @@ export function HowItWorks() {
               <p className="mt-2 text-sm leading-relaxed text-ink-800/65">
                 {paso.description}
               </p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </Container>

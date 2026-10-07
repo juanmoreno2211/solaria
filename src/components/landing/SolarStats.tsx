@@ -1,6 +1,7 @@
 import { Leaf, Sun, TrendingUp, Wrench } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { Reveal } from "@/components/ui/Reveal";
 import { ColombiaMap } from "@/components/landing/ColombiaMap";
 
 const DATOS = [
@@ -30,18 +31,21 @@ export function SolarStats() {
   return (
     <section className="bg-ink-gradient py-24 sm:py-28">
       <Container>
-        <SectionHeading
-          light
-          eyebrow="La energía solar en números"
-          title="Antes de decidir, el panorama general"
-          description="Datos generales sobre energía solar y el potencial de cada región de Colombia — independientes de tu caso puntual, que ya calculamos en la calculadora."
-        />
+        <Reveal>
+          <SectionHeading
+            light
+            eyebrow="La energía solar en números"
+            title="Antes de decidir, el panorama general"
+            description="Datos generales sobre energía solar y el potencial de cada región de Colombia — independientes de tu caso puntual, que ya calculamos en la calculadora."
+          />
+        </Reveal>
 
         <div className="mt-14 grid gap-10 lg:grid-cols-[1fr_1fr]">
           <div className="grid gap-5 sm:grid-cols-2">
-            {DATOS.map((d) => (
-              <div
+            {DATOS.map((d, i) => (
+              <Reveal
                 key={d.label}
+                delay={i * 0.08}
                 className="rounded-2xl border border-white/10 bg-white/[0.04] p-6"
               >
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sun-gradient text-ink-950">
@@ -51,11 +55,13 @@ export function SolarStats() {
                 <p className="mt-1.5 text-sm leading-relaxed text-white/55">
                   {d.label}
                 </p>
-              </div>
+              </Reveal>
             ))}
           </div>
 
-          <ColombiaMap />
+          <Reveal delay={0.15}>
+            <ColombiaMap />
+          </Reveal>
         </div>
       </Container>
     </section>
