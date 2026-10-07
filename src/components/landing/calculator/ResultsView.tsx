@@ -1,5 +1,7 @@
 import { RotateCcw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { Reveal } from "@/components/ui/Reveal";
+import { CountUp } from "@/components/ui/CountUp";
 import { formatCOP, formatNumber } from "@/lib/format";
 import type { AnalisisResultado } from "@/lib/savings/types";
 import { ResultCard } from "./ResultCard";
@@ -24,7 +26,7 @@ export function ResultsView({
   );
 
   return (
-    <div>
+    <Reveal y={16}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="text-lg font-bold text-ink-950">
@@ -63,13 +65,19 @@ export function ResultsView({
             <div>
               <p className="text-xs text-white/45">Ahorro combinado mensual</p>
               <p className="text-2xl font-bold">
-                {formatCOP(resultado.ahorroCombinadoMensual)}
+                <CountUp
+                  value={resultado.ahorroCombinadoMensual}
+                  format={(v) => formatCOP(Math.round(v))}
+                />
               </p>
             </div>
             <div>
               <p className="text-xs text-white/45">Ahorro combinado sobre tu factura</p>
               <p className="text-2xl font-bold text-sun-300">
-                {resultado.ahorroCombinadoPorcentual}%
+                <CountUp
+                  value={resultado.ahorroCombinadoPorcentual}
+                  format={(v) => `${Math.round(v)}%`}
+                />
               </p>
             </div>
           </div>
@@ -114,6 +122,6 @@ export function ResultsView({
           <Button size="md">Hablar con un asesor</Button>
         </a>
       </div>
-    </div>
+    </Reveal>
   );
 }

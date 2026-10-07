@@ -123,7 +123,7 @@ export function CalculatorSection() {
         <div className="relative mx-auto mt-12 max-w-3xl">
           <div
             aria-hidden
-            className="pointer-events-none absolute -inset-x-8 -inset-y-6 -z-10 rounded-[40px] bg-gradient-to-br from-sun-500/20 via-ember-500/10 to-leaf-500/20 blur-2xl"
+            className="pointer-events-none absolute -inset-x-8 -inset-y-6 -z-10 animate-pulse rounded-[40px] bg-gradient-to-br from-sun-500/20 via-ember-500/10 to-leaf-500/20 blur-2xl [animation-duration:6s]"
           />
           <div className="rounded-[28px] bg-gradient-to-br from-sun-500/50 via-ember-500/30 to-leaf-500/40 p-[1.5px] shadow-[0_30px_60px_-30px_rgba(20,17,12,0.35)]">
             <div className="rounded-[26.5px] bg-white/90 p-6 backdrop-blur-sm sm:p-9">

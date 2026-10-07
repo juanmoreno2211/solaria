@@ -8,13 +8,17 @@ import { Button } from "@/components/ui/Button";
 export function Hero() {
   return (
     <section id="top" className="relative overflow-hidden bg-ink-gradient pt-14 pb-24 sm:pt-20 sm:pb-32">
-      <div
+      <motion.div
         aria-hidden
         className="pointer-events-none absolute -top-24 right-[-10%] h-[420px] w-[420px] rounded-full bg-sun-500/20 blur-[120px]"
+        animate={{ scale: [1, 1.15, 1], opacity: [0.8, 1, 0.8] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
       />
-      <div
+      <motion.div
         aria-hidden
         className="pointer-events-none absolute bottom-[-10%] left-[-5%] h-[380px] w-[380px] rounded-full bg-leaf-500/15 blur-[120px]"
+        animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
+        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 1 }}
       />
 
       <Container className="relative grid gap-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
