@@ -36,10 +36,8 @@ export function Hero() {
           </h1>
 
           <p className="mt-6 max-w-xl text-balance text-lg text-white/65 sm:text-xl">
-            SolarIA lee tu recibo, entiende tu casa, negocio o finca, y te
-            muestra en minutos el % de ahorro, el dinero que dejarías de pagar
-            y el tiempo de retorno de paneles solares, iluminación solar o
-            refrigeración solar para tu cadena de frío.
+            Sube tu recibo y descubre en minutos cuánto puedes ahorrar en
+            paneles, iluminación o refrigeración solar.
           </p>
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
