@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@/components/Analytics";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { FloatingSun } from "@/components/FloatingSun";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -44,9 +45,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <LoadingScreen />
         {children}
+        <FloatingSun />
         <Analytics />
       </body>
     </html>

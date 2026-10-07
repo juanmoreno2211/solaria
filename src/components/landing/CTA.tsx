@@ -11,7 +11,7 @@ export function CTA() {
         <Reveal className="relative overflow-hidden rounded-3xl bg-ink-gradient px-6 py-14 text-center sm:px-16 sm:py-20">
           <div
             aria-hidden
-            className="pointer-events-none absolute -top-10 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-sun-500/25 blur-[100px]"
+            className="pointer-events-none absolute -top-10 left-1/2 h-72 w-72 -translate-x-1/2 animate-pulse rounded-full bg-sun-500/25 blur-[100px] [animation-duration:5s]"
           />
           <h2 className="relative text-balance text-3xl font-bold tracking-tight text-white sm:text-4xl">
             Descubre tu ahorro solar antes de invertir un peso

@@ -1,5 +1,6 @@
 import { BadgeCheck, ExternalLink, Lightbulb, Snowflake, SunMedium } from "lucide-react";
 import clsx from "clsx";
+import { CountUp } from "@/components/ui/CountUp";
 import { formatCOP } from "@/lib/format";
 import type { AlternativaResultado } from "@/lib/savings/types";
 
@@ -94,13 +95,19 @@ export function ResultCard({
         <div>
           <p className="text-xs text-ink-800/50">Ahorro mensual</p>
           <p className="text-lg font-bold text-ink-950">
-            {formatCOP(alternativa.ahorroMensualEstimado)}
+            <CountUp
+              value={alternativa.ahorroMensualEstimado}
+              format={(v) => formatCOP(Math.round(v))}
+            />
           </p>
         </div>
         <div>
           <p className="text-xs text-ink-800/50">Ahorro en %</p>
           <p className={clsx("text-lg font-bold", accent.pct)}>
-            {alternativa.ahorroPorcentual}%
+            <CountUp
+              value={alternativa.ahorroPorcentual}
+              format={(v) => `${Math.round(v)}%`}
+            />
           </p>
         </div>
         <div>
