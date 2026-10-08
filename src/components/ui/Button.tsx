@@ -5,7 +5,7 @@ type Variant = "primary" | "secondary" | "ghost";
 type Size = "md" | "lg";
 
 const base =
-  "group relative inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:transition-transform [&_svg]:duration-200 hover:[&_svg]:translate-x-0.5";
+  "group relative inline-flex items-center justify-center gap-2 rounded-md font-semibold transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:transition-transform [&_svg]:duration-200 hover:[&_svg]:translate-x-0.5";
 
 const variants: Record<Variant, string> = {
   primary: "bg-sun-500 text-white hover:bg-sun-600 active:bg-sun-600",

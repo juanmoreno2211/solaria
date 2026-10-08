@@ -37,32 +37,29 @@ export function HowItWorks() {
         <Reveal>
           <SectionHeading
             eyebrow="Cómo funciona"
-            title="De tu recibo a tu plan de ahorro solar, en 4 pasos"
+            title="De tu recibo a tu plan de ahorro solar"
             description="Todo el proceso toma un par de minutos y no necesitas saber nada de energía solar para empezar."
           />
         </Reveal>
 
-        <div className="relative mt-16 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="relative mt-16 grid gap-10 sm:grid-cols-4 sm:gap-6">
           <div
             aria-hidden
-            className="absolute top-6 left-0 right-0 hidden h-px bg-gradient-to-r from-transparent via-black/10 to-transparent lg:block"
+            className="absolute left-5 top-5 bottom-5 w-px bg-ink-950/10 sm:bottom-auto sm:left-0 sm:right-0 sm:h-px sm:w-auto"
           />
           {PASOS.map((paso, i) => (
-            <Reveal key={paso.title} delay={i * 0.1} className="relative flex flex-col items-start">
-              <div className="flex items-center gap-3">
-                <span className="relative z-10 flex h-11 w-11 items-center justify-center rounded-lg bg-sun-500/10 text-sun-600">
-                  <paso.icon className="h-5 w-5" strokeWidth={2} />
-                </span>
-                <span className="text-xs font-semibold text-ink-950/30">
-                  0{i + 1}
-                </span>
+            <Reveal key={paso.title} delay={i * 0.08} className="relative flex gap-5 sm:block">
+              <span className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-sun-500/30 bg-cream-50 text-sun-600">
+                <paso.icon className="h-[1.1rem] w-[1.1rem]" strokeWidth={1.75} />
+              </span>
+              <div className="sm:mt-5 sm:pr-4">
+                <h3 className="text-base font-semibold text-ink-950">
+                  {paso.title}
+                </h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-stone-600">
+                  {paso.description}
+                </p>
               </div>
-              <h3 className="mt-5 text-lg font-semibold text-ink-950">
-                {paso.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-stone-600">
-                {paso.description}
-              </p>
             </Reveal>
           ))}
         </div>

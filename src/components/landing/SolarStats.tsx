@@ -40,19 +40,15 @@ export function SolarStats() {
           />
         </Reveal>
 
-        <div className="mt-14 grid gap-10 lg:grid-cols-[1fr_1fr]">
-          <div className="grid gap-5 sm:grid-cols-2">
+        <div className="mt-16 grid gap-14 lg:grid-cols-[1fr_1fr] lg:gap-10">
+          <div className="grid grid-cols-2 gap-x-8 gap-y-12 border-t border-white/10 pt-10 sm:gap-x-10">
             {DATOS.map((d, i) => (
-              <Reveal
-                key={d.label}
-                delay={i * 0.08}
-                className="rounded-xl border border-white/10 bg-white/[0.03] p-6"
-              >
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-sun-500/15 text-sun-300">
-                  <d.icon className="h-4 w-4" strokeWidth={2} />
-                </span>
-                <p className="tabular-nums mt-4 text-2xl font-bold text-white">{d.valor}</p>
-                <p className="mt-1.5 text-sm leading-relaxed text-white/55">
+              <Reveal key={d.label} delay={i * 0.08}>
+                <d.icon className="h-4 w-4 text-sun-400" strokeWidth={1.75} />
+                <p className="tabular-nums mt-4 text-3xl font-bold text-white sm:text-4xl">
+                  {d.valor}
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-white/50">
                   {d.label}
                 </p>
               </Reveal>

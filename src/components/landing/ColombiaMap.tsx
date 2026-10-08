@@ -71,7 +71,7 @@ export function ColombiaMap() {
   const hsp = HORAS_SOL_PICO[activa];
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6 sm:p-7">
+    <div className="border-t border-white/10 pt-10">
       <p className="text-sm font-semibold text-white">
         Mapa solar de Colombia por región
       </p>
