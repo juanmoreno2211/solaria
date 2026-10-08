@@ -44,7 +44,7 @@ export function FAQ() {
         </Reveal>
 
         <Reveal delay={0.1}>
-          <div className="mt-12 divide-y divide-black/8 rounded-2xl border border-black/8 bg-white">
+          <div className="mt-14 divide-y divide-ink-950/8">
             {PREGUNTAS.map((item, i) => {
               const isOpen = open === i;
               return (
@@ -52,20 +52,20 @@ export function FAQ() {
                   <button
                     type="button"
                     onClick={() => setOpen(isOpen ? null : i)}
-                    className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
+                    className="flex w-full items-center justify-between gap-6 py-6 text-left"
                   >
-                    <span className="text-sm font-semibold text-ink-950 sm:text-base">
+                    <span className="text-base font-medium text-ink-950">
                       {item.q}
                     </span>
                     <ChevronDown
                       className={clsx(
-                        "h-4 w-4 shrink-0 text-ink-800/50 transition-transform",
+                        "h-4 w-4 shrink-0 text-stone-400 transition-transform duration-200",
                         isOpen && "rotate-180"
                       )}
                     />
                   </button>
                   {isOpen && (
-                    <p className="px-6 pb-5 text-sm leading-relaxed text-ink-800/65">
+                    <p className="max-w-xl pb-6 text-sm leading-relaxed text-stone-600">
                       {item.a}
                     </p>
                   )}

@@ -2,73 +2,29 @@ import { CheckCircle2, Lightbulb, Snowflake, SunMedium } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
-import clsx from "clsx";
 
-const ALTERNATIVAS = [
-  {
-    icon: SunMedium,
-    tag: "Mayor ahorro a largo plazo",
-    title: "Paneles solares",
-    description:
-      "La inversión más alta, pero la que más reduce tu factura. Dimensionamos el sistema según tu consumo real.",
-    puntos: [
-      "Ideal si tu consumo y tu factura son medios o altos",
-      "Cubre hasta la mayor parte de tu consumo mensual",
-      "Vida útil de más de 20 años",
-    ],
-    accent: "sun" as const,
-  },
+const SECUNDARIAS = [
   {
     icon: Lightbulb,
-    tag: "Inversión baja, resultado inmediato",
     title: "Iluminación solar",
+    tag: "Inversión baja, resultado inmediato",
     description:
-      "Linternas, reflectores y luces decorativas solares para exteriores, fachadas y zonas sin red eléctrica cercana.",
-    puntos: [
-      "Perfecta para exteriores, senderos y fachadas",
-      "Ideal en zonas rurales o con cortes frecuentes",
-      "Se instala sin obras ni conexión a la red",
-    ],
-    accent: "ember" as const,
+      "Linternas, reflectores y luces decorativas solares para exteriores, fachadas y zonas sin red eléctrica cercana. Se instala sin obras ni conexión a la red.",
   },
   {
     icon: Snowflake,
-    tag: "Protege tu inventario",
     title: "Refrigeración solar",
+    tag: "Protege tu inventario",
     description:
-      "Sistemas solares con respaldo para neveras y cuartos fríos, pensados para no perder la cadena de frío.",
-    puntos: [
-      "Clave para negocios y fincas con lácteos, alimentos o vacunas",
-      "Reduce el impacto de los cortes de energía",
-      "Se dimensiona según la capacidad de tu refrigeración",
-    ],
-    accent: "leaf" as const,
+      "Sistemas solares con respaldo para neveras y cuartos fríos de negocios y fincas con lácteos, alimentos o vacunas, para no perder la cadena de frío.",
   },
 ];
 
-const ACCENTS = {
-  sun: {
-    icon: "bg-sun-500/10 text-sun-600",
-    tag: "text-sun-600",
-    check: "text-sun-600",
-    border: "hover:border-sun-500/30",
-    underline: "group-hover:bg-sun-500",
-  },
-  ember: {
-    icon: "bg-ember-500/10 text-ember-600",
-    tag: "text-ember-600",
-    check: "text-ember-600",
-    border: "hover:border-ember-500/30",
-    underline: "group-hover:bg-ember-500",
-  },
-  leaf: {
-    icon: "bg-leaf-500/10 text-leaf-600",
-    tag: "text-leaf-600",
-    check: "text-leaf-600",
-    border: "hover:border-leaf-500/30",
-    underline: "group-hover:bg-leaf-500",
-  },
-};
+const PUNTOS_PANELES = [
+  "Ideal si tu consumo y tu factura son medios o altos",
+  "Cubre hasta la mayor parte de tu consumo mensual",
+  "Vida útil de más de 20 años",
+];
 
 export function Alternatives() {
   return (
@@ -76,80 +32,56 @@ export function Alternatives() {
       <Container>
         <Reveal>
           <SectionHeading
+            align="left"
             eyebrow="Alternativas de energía solar"
             title="Tres formas de aprovechar el sol, combinadas a tu medida"
             description="El agente evalúa cuáles aplican a tu caso y cómo combinarlas para maximizar tu ahorro."
           />
         </Reveal>
 
-        <div className="mt-14 grid gap-6 lg:grid-cols-3">
-          {ALTERNATIVAS.map((alt, i) => {
-            const accent = ACCENTS[alt.accent];
-            return (
-              <Reveal
-                key={alt.title}
-                delay={i * 0.1}
-                className={clsx(
-                  "group relative flex flex-col overflow-hidden rounded-xl border border-ink-950/8 bg-white p-8 transition-colors duration-200",
-                  accent.border
-                )}
-              >
-                <span
-                  aria-hidden
-                  className="pointer-events-none absolute -right-1 -top-3 select-none text-6xl font-bold leading-none text-ink-950/[0.045]"
-                >
-                  {String(i + 1).padStart(2, "0")}
+        <Reveal delay={0.1}>
+          <div className="mt-12 rounded-xl bg-ink-950 p-8 sm:p-10">
+            <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+              <div>
+                <span className="inline-flex items-center gap-2.5 text-xs font-semibold tracking-wide text-sun-300 uppercase">
+                  <SunMedium className="h-4 w-4" strokeWidth={1.75} />
+                  La opción principal
                 </span>
-
-                <span
-                  className={clsx(
-                    "relative flex h-11 w-11 items-center justify-center rounded-lg",
-                    accent.icon
-                  )}
-                >
-                  <alt.icon className="h-5 w-5" strokeWidth={2} />
-                </span>
-
-                <span
-                  className={clsx(
-                    "relative mt-5 inline-flex w-fit items-center text-xs font-semibold tracking-wide uppercase",
-                    accent.tag
-                  )}
-                >
-                  {alt.tag}
-                </span>
-
-                <h3 className="relative mt-3 text-xl font-bold text-ink-950">
-                  {alt.title}
+                <h3 className="mt-4 text-2xl font-bold text-white sm:text-3xl">
+                  Paneles solares
                 </h3>
-                <p className="relative mt-2 text-sm leading-relaxed text-stone-600">
-                  {alt.description}
+                <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/55 sm:text-base">
+                  La inversión más alta, pero la que más reduce tu factura.
+                  Dimensionamos el sistema según tu consumo real.
                 </p>
+              </div>
+              <ul className="space-y-4 border-t border-white/10 pt-6 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-10">
+                {PUNTOS_PANELES.map((punto) => (
+                  <li key={punto} className="flex items-start gap-3 text-sm text-white/70">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-sun-400" strokeWidth={1.75} />
+                    {punto}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </Reveal>
 
-                <ul className="relative mt-6 space-y-3 border-t border-ink-950/8 pt-6">
-                  {alt.puntos.map((punto) => (
-                    <li
-                      key={punto}
-                      className="flex items-start gap-2.5 text-sm text-stone-600"
-                    >
-                      <CheckCircle2
-                        className={clsx("mt-0.5 h-4 w-4 shrink-0", accent.check)}
-                      />
-                      {punto}
-                    </li>
-                  ))}
-                </ul>
-
-                <span
-                  aria-hidden
-                  className={clsx(
-                    "relative mt-6 block h-px w-8 bg-ink-950/15 transition-all duration-200 group-hover:w-12",
-                    accent.underline
-                  )}
-                />
-              </Reveal>
-            );
-          })}
+        <div className="mt-10 grid gap-10 border-t border-ink-950/8 pt-10 sm:grid-cols-2 sm:gap-12">
+          {SECUNDARIAS.map((alt, i) => (
+            <Reveal key={alt.title} delay={0.15 + i * 0.08}>
+              <div className="flex items-center gap-3">
+                <alt.icon className="h-5 w-5 text-stone-500" strokeWidth={1.75} />
+                <h3 className="text-lg font-semibold text-ink-950">{alt.title}</h3>
+              </div>
+              <p className="mt-1 text-xs font-medium tracking-wide text-stone-500 uppercase">
+                {alt.tag}
+              </p>
+              <p className="mt-3 text-sm leading-relaxed text-stone-600">
+                {alt.description}
+              </p>
+            </Reveal>
+          ))}
         </div>
       </Container>
     </section>

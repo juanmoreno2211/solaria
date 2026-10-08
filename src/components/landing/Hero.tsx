@@ -35,7 +35,7 @@ export function Hero() {
             </span>
           </h1>
 
-          <p className="mt-7 max-w-lg text-balance text-lg leading-relaxed text-white/60">
+          <p className="mt-7 max-w-md text-balance text-lg leading-relaxed text-white/60">
             Sube tu recibo y deja que un agente con IA compare paneles,
             iluminación y refrigeración solar por ti.
           </p>
@@ -71,10 +71,10 @@ export function Hero() {
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.12 }}
           className="relative"
         >
-          <div className="rounded-2xl border border-white/12 bg-white/[0.03] p-7 sm:p-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-white/70">
-                <FileScan className="h-4 w-4" />
+          <div className="overflow-hidden rounded-xl bg-white/[0.035] shadow-[0_24px_60px_-28px_rgba(0,0,0,0.65)]">
+            <div className="flex items-center justify-between border-b border-white/8 px-6 py-3.5 sm:px-7">
+              <div className="flex items-center gap-2 text-white/60">
+                <FileScan className="h-3.5 w-3.5" />
                 <span className="text-xs font-medium tracking-wide uppercase">
                   Tu recibo, analizado
                 </span>
@@ -85,7 +85,8 @@ export function Hero() {
               </span>
             </div>
 
-            <div className="mt-6 divide-y divide-white/10 border-y border-white/10">
+            <div className="p-6 sm:p-7">
+            <div className="divide-y divide-white/10 border-y border-white/10">
               <div className="flex items-center justify-between py-3 text-sm">
                 <span className="text-white/45">Consumo mensual</span>
                 <span className="tabular-nums font-medium text-white">312 kWh</span>
@@ -115,6 +116,7 @@ export function Hero() {
                   <p className="mt-1 text-[11px] text-white/40">{item.label}</p>
                 </div>
               ))}
+            </div>
             </div>
           </div>
 
