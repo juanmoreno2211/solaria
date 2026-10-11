@@ -5,7 +5,6 @@ import { Check } from "lucide-react";
 import clsx from "clsx";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { Button } from "@/components/ui/Button";
 import { StepReceipt, type ReciboFormState } from "./StepReceipt";
 import {
   StepProperty,
@@ -14,7 +13,14 @@ import {
 } from "./StepProperty";
 import { ResultsView } from "./ResultsView";
 import { LoadingState } from "./LoadingState";
-import type { AnalisisResultado } from "@/lib/savings/types";
+import { StepQuote } from "./StepQuote";
+import type { CotizacionFormState } from "./CotizacionForm";
+import {
+  validarSolicitante,
+  type ErroresSolicitante,
+  type SolicitudCotizacionInput,
+} from "@/lib/cotizacion";
+import type { AnalisisResultado, NegocioInput } from "@/lib/savings/types";
 
 type Step = "recibo" | "negocio" | "resultado" | "cotizacion";
 
@@ -39,6 +45,13 @@ const INITIAL_NEGOCIO: NegocioFormState = {
   horario: "",
   fallaLuz: "",
   legalmenteConstituido: "",
+};
+
+const INITIAL_COTIZACION: CotizacionFormState = {
+  nombre: "",
+  telefono: "",
+  municipio: "",
+  consentimiento: false,
 };
 
 interface ApiResponse {
@@ -105,6 +118,14 @@ export function CalculatorSection() {
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<ApiResponse | null>(null);
   const [proveedorElegido, setProveedorElegido] = useState<string | null>(null);
+  const [cotizacion, setCotizacion] = useState<CotizacionFormState>(INITIAL_COTIZACION);
+  const [erroresCotizacion, setErroresCotizacion] = useState<ErroresSolicitante>({});
+  const [errorEnvio, setErrorEnvio] = useState<string | null>(null);
+  const [enviando, setEnviando] = useState(false);
+  const [enviada, setEnviada] = useState(false);
+
+  const paneles = data?.resultado.alternativas[0];
+  const ofertaElegida = paneles?.ofertas.find((o) => o.proveedor === proveedorElegido);
 
   const cardRef = useRef<HTMLDivElement>(null);
   const primerRender = useRef(true);
@@ -119,7 +140,7 @@ export function CalculatorSection() {
     if (!card) return;
     card.scrollIntoView({ behavior: "smooth", block: "start" });
     card.querySelector<HTMLElement>("[data-step-title]")?.focus({ preventScroll: true });
-  }, [step, loading]);
+  }, [step, loading, enviada]);
 
   async function handleSubmit() {
     if (!negocioCompleto(negocio)) {
@@ -168,8 +189,67 @@ export function CalculatorSection() {
   }
 
   function handlePedirCotizacion(proveedor: string) {
+    if (proveedor !== proveedorElegido) setErroresCotizacion({});
     setProveedorElegido(proveedor);
+    setErrorEnvio(null);
+    setEnviada(false);
     setStep("cotizacion");
+  }
+
+  async function handleEnviarCotizacion() {
+    if (!data || !paneles || !ofertaElegida) return;
+
+    const errores = validarSolicitante(cotizacion, ofertaElegida.proveedor);
+    setErroresCotizacion(errores);
+    if (Object.keys(errores).length > 0) return;
+
+    const solicitud: SolicitudCotizacionInput = {
+      proveedor: ofertaElegida.proveedor,
+      solicitante: {
+        nombre: cotizacion.nombre.trim(),
+        telefono: cotizacion.telefono.trim(),
+        municipio: cotizacion.municipio.trim(),
+      },
+      consentimiento: cotizacion.consentimiento,
+      negocio: {
+        tipo: negocio.tipoNegocio as NegocioInput["tipoNegocio"],
+        region: negocio.region as NegocioInput["region"],
+        horario: negocio.horario as NegocioInput["horario"],
+        noPuedeFallar: negocio.cargasCriticas,
+        comoFalla: negocio.fallaLuz,
+        constituido: negocio.legalmenteConstituido,
+      },
+      estimado: {
+        consumoKwh: data.resultado.consumoMensualKwh,
+        valorFactura: data.resultado.valorPagadoMensual,
+        kwp: paneles.kwpRequeridos,
+        ahorroMensual: paneles.ahorroMensualEstimado,
+        inversion: Math.round(ofertaElegida.inversion),
+        retornoMeses:
+          ofertaElegida.retornoMeses === null ? null : Math.round(ofertaElegida.retornoMeses),
+      },
+    };
+
+    setEnviando(true);
+    setErrorEnvio(null);
+    try {
+      const res = await fetch("/api/cotizaciones", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(solicitud),
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        if (json.errores) setErroresCotizacion(json.errores);
+        setErrorEnvio(json.error ?? "No pudimos enviar tu solicitud. Intenta de nuevo.");
+        return;
+      }
+      setEnviada(true);
+    } catch {
+      setErrorEnvio("No pudimos enviar tu solicitud. Revisa tu conexión e intenta de nuevo.");
+    } finally {
+      setEnviando(false);
+    }
   }
 
   function handleReset() {
@@ -179,6 +259,10 @@ export function CalculatorSection() {
     setData(null);
     setError(null);
     setProveedorElegido(null);
+    setCotizacion(INITIAL_COTIZACION);
+    setErroresCotizacion({});
+    setErrorEnvio(null);
+    setEnviada(false);
   }
 
   return (
@@ -236,20 +320,19 @@ export function CalculatorSection() {
               />
             )}
 
-            {step === "cotizacion" && proveedorElegido && (
-              <div>
-                <h3 data-step-title tabIndex={-1} className="text-lg font-bold text-ink-950 outline-none">
-                  Pedir cotización con {proveedorElegido}
-                </h3>
-                <div className="mt-7 flex items-center justify-between">
-                  <Button variant="ghost" onClick={() => setStep("resultado")}>
-                    Atrás
-                  </Button>
-                  <Button variant="ghost" onClick={handleReset}>
-                    Empezar de nuevo
-                  </Button>
-                </div>
-              </div>
+            {step === "cotizacion" && ofertaElegida && (
+              <StepQuote
+                oferta={ofertaElegida}
+                value={cotizacion}
+                onChange={setCotizacion}
+                errores={erroresCotizacion}
+                errorEnvio={errorEnvio}
+                enviando={enviando}
+                enviada={enviada}
+                onBack={() => setStep("resultado")}
+                onSubmit={handleEnviarCotizacion}
+                onReset={handleReset}
+              />
             )}
           </div>
         </div>
