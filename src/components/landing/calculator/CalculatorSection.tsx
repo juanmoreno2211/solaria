@@ -21,6 +21,8 @@ import {
   type SolicitudCotizacionInput,
 } from "@/lib/cotizacion";
 import type { AnalisisResultado, NegocioInput } from "@/lib/savings/types";
+import { registrarEvento } from "@/lib/eventos";
+import { getSessionId } from "@/lib/session";
 
 type Step = "recibo" | "negocio" | "resultado" | "cotizacion";
 
@@ -181,6 +183,16 @@ export function CalculatorSection() {
 
       setData(json);
       setStep("resultado");
+      const p = json.resultado.alternativas[0];
+      registrarEvento("resultado_visto", {
+        region: negocio.region,
+        tipoNegocio: negocio.tipoNegocio,
+        veredicto: json.resultado.veredicto,
+        kwp: p?.kwpRequeridos,
+        ahorroMensual: p?.ahorroMensualEstimado,
+        proveedor: p?.mejorOferta?.proveedor ?? null,
+        retornoMeses: p?.retornoMeses ?? null,
+      });
     } catch {
       setError("No pudimos conectar con el servidor. Intenta de nuevo.");
     } finally {
@@ -194,6 +206,29 @@ export function CalculatorSection() {
     setErrorEnvio(null);
     setEnviada(false);
     setStep("cotizacion");
+    registrarEvento("clic_pedir_cotizacion", {
+      proveedor,
+      region: negocio.region,
+      veredicto: data?.resultado.veredicto,
+    });
+  }
+
+  function handleReciboListo() {
+    registrarEvento("recibo_ingresado", {
+      fuente: recibo.fuente,
+      consumoKwh: Number(recibo.consumoMensualKwh) || null,
+      valorFactura: Number(recibo.valorPagadoMensual) || null,
+      conFoto: Boolean(recibo.imageFile),
+    });
+    setStep("negocio");
+  }
+
+  function handleInteresSinProveedor() {
+    registrarEvento("interes_sin_proveedor", {
+      region: negocio.region,
+      tipoNegocio: negocio.tipoNegocio,
+      kwp: paneles?.kwpRequeridos,
+    });
   }
 
   async function handleEnviarCotizacion() {
@@ -204,6 +239,7 @@ export function CalculatorSection() {
     if (Object.keys(errores).length > 0) return;
 
     const solicitud: SolicitudCotizacionInput = {
+      sessionId: getSessionId(),
       proveedor: ofertaElegida.proveedor,
       solicitante: {
         nombre: cotizacion.nombre.trim(),
@@ -245,6 +281,13 @@ export function CalculatorSection() {
         return;
       }
       setEnviada(true);
+      registrarEvento("cotizacion_pedida", {
+        proveedor: ofertaElegida.proveedor,
+        region: negocio.region,
+        tipoNegocio: negocio.tipoNegocio,
+        ahorroMensual: paneles.ahorroMensualEstimado,
+        retornoMeses: solicitud.estimado.retornoMeses,
+      });
     } catch {
       setErrorEnvio("No pudimos enviar tu solicitud. Revisa tu conexión e intenta de nuevo.");
     } finally {
@@ -291,7 +334,7 @@ export function CalculatorSection() {
               <StepReceipt
                 value={recibo}
                 onChange={setRecibo}
-                onNext={() => setStep("negocio")}
+                onNext={handleReciboListo}
               />
             )}
 
@@ -316,7 +359,7 @@ export function CalculatorSection() {
                 avisoExtraccion={data.avisoExtraccion}
                 onCambiarDatos={() => setStep("negocio")}
                 onPedirCotizacion={handlePedirCotizacion}
-                onInteresSinProveedor={() => {}}
+                onInteresSinProveedor={handleInteresSinProveedor}
               />
             )}
 

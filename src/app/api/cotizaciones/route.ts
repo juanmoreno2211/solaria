@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import catalogoJson from "@/lib/catalog/data/catalogo.json";
 import type { CatalogoData } from "@/lib/catalog/types";
 import { validarSolicitante, type SolicitudCotizacionInput } from "@/lib/cotizacion";
+import { enviarAHoja } from "@/lib/sheets";
 
 export const runtime = "nodejs";
 
@@ -9,6 +10,10 @@ const catalogo = catalogoJson as CatalogoData;
 
 function texto(valor: unknown, max = 120): string {
   return typeof valor === "string" ? valor.trim().slice(0, max) : "";
+}
+
+function numero(valor: unknown): number | null {
+  return typeof valor === "number" && Number.isFinite(valor) ? valor : null;
 }
 
 export async function POST(req: NextRequest) {
@@ -48,12 +53,46 @@ export async function POST(req: NextRequest) {
     esSimulado: sistema.esSimulado ?? false,
     solicitante,
     consentimiento: true,
-    negocio: body.negocio,
-    estimado: body.estimado,
     estado: "nueva",
   };
+  const negocio = body.negocio ?? {};
+  const estimado = body.estimado ?? {};
 
-  console.info("[cotizaciones] solicitud recibida", registro.id, registro.proveedor);
+  // Orden de columnas de la hoja "solicitudes" (ver docs/hoja-google.md).
+  const ok = await enviarAHoja("solicitudes", [
+    registro.id,
+    registro.fecha,
+    registro.sessionId,
+    registro.proveedor,
+    registro.esSimulado,
+    solicitante.nombre,
+    solicitante.telefono,
+    solicitante.municipio,
+    registro.consentimiento,
+    texto(negocio.tipo, 30),
+    texto(negocio.region, 30),
+    texto(negocio.horario, 30),
+    Array.isArray(negocio.noPuedeFallar)
+      ? negocio.noPuedeFallar.map((v) => texto(v, 30)).join(", ")
+      : "",
+    texto(negocio.comoFalla, 30),
+    texto(negocio.constituido, 30),
+    numero(estimado.consumoKwh),
+    numero(estimado.valorFactura),
+    numero(estimado.kwp),
+    numero(estimado.ahorroMensual),
+    numero(estimado.inversion),
+    numero(estimado.retornoMeses),
+    registro.estado,
+  ]);
+
+  if (!ok) {
+    console.error("[cotizaciones] no se pudo guardar la solicitud", registro.id);
+    return NextResponse.json(
+      { error: "No pudimos enviar tu solicitud. Intenta de nuevo en unos minutos." },
+      { status: 502 }
+    );
+  }
 
   return NextResponse.json({ id: registro.id }, { status: 201 });
 }
