@@ -26,11 +26,11 @@ const PREGUNTAS = [
   },
   {
     q: "¿Qué pasa cuando pido una cotización?",
-    a: "Te pedimos tus datos de contacto y tu autorización. Solo con esa autorización los compartimos con el proveedor que elegiste, para que te contacte con una cotización real. Pedirla no te obliga a comprar.",
+    a: "Eliges un proveedor, dejas tu nombre, celular y municipio, y marcas la autorización para compartir tus datos y tu estimado con él. Usamos esos datos solo para gestionar tu cotización. Por ahora estamos en una versión de prueba: los proveedores que ves son de ejemplo y tu solicitud la recibe el equipo de SolarIA, que la pasará a un instalador. Pedirla no te obliga a comprar.",
   },
   {
     q: "¿Y si no me conviene?",
-    a: "Te lo decimos. Si tu consumo es bajo o la inversión tarda mucho en pagarse, el resultado dirá \"por ahora no\".",
+    a: "Te lo decimos. Si tu consumo es bajo o la inversión tarda mucho en pagarse, el resultado dirá \"por ahora no\". Si todavía no hay proveedores en tu región, también te lo diremos.",
   },
 ];
 

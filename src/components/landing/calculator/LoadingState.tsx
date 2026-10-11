@@ -7,6 +7,7 @@ const MENSAJES = [
   "Leyendo tu consumo eléctrico...",
   "Revisando las horas de sol de tu región...",
   "Calculando el sistema de paneles para tu horario...",
+  "Buscando proveedores en tu región...",
   "Viendo si la inversión te conviene...",
 ];
 

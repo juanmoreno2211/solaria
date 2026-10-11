@@ -20,13 +20,13 @@ const PASOS = [
     icon: Calculator,
     title: "Mira si te conviene",
     description:
-      "Calculamos cuánto ahorrarías con paneles solares, cuánto costaría y en cuánto tiempo recuperas la inversión. Si no te conviene, te lo decimos.",
+      "Calculamos cuánto ahorrarías con paneles solares y, con cada proveedor, cuánto costaría y en cuánto tiempo recuperas la inversión. Si no te conviene, te lo decimos.",
   },
   {
     icon: Handshake,
     title: "Pide tu cotización",
     description:
-      "Si te interesa, elige un proveedor que cubra tu región y deja tus datos. Con tu autorización, el proveedor te contacta con una cotización real.",
+      "Si te interesa, elige un proveedor de tu región y deja tus datos. Con tu autorización, le pasamos tu solicitud con tu estimado para que te cotice.",
   },
 ];
 
