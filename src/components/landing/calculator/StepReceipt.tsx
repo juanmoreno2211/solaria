@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Camera, FileText, ImageUp, X } from "lucide-react";
 import { FieldLabel, OptionCard, TextInput } from "./ui";
 import { Button } from "@/components/ui/Button";
@@ -22,31 +22,44 @@ export function StepReceipt({
   onNext: () => void;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  // Se deriva del archivo guardado para que la vista previa siga al volver con "Atrás".
+  const preview = useMemo(
+    () => (value.imageFile ? URL.createObjectURL(value.imageFile) : null),
+    [value.imageFile]
+  );
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
+  const [error, setError] = useState<string | null>(null);
 
-  const canContinue =
-    value.fuente === "foto"
-      ? Boolean(value.imageFile)
-      : Boolean(value.consumoMensualKwh || value.valorPagadoMensual);
+  function handleContinue() {
+    const tieneNumeros = Boolean(value.consumoMensualKwh || value.valorPagadoMensual);
+    if (value.fuente === "foto" && !value.imageFile && !tieneNumeros) {
+      setError("Sube una foto de tu recibo o escribe el consumo o el valor para continuar.");
+      return;
+    }
+    if (value.fuente === "manual" && !tieneNumeros) {
+      setError("Escribe el consumo o el valor de tu recibo para continuar.");
+      return;
+    }
+    setError(null);
+    onNext();
+  }
 
   function handleFile(file: File | null) {
     onChange({ ...value, imageFile: file });
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => setPreview(reader.result as string);
-      reader.readAsDataURL(file);
-    } else {
-      setPreview(null);
-    }
   }
 
   return (
     <div>
-      <h3 className="text-lg font-bold text-ink-950">
-        1. El recibo de luz de tu negocio
+      <h3 data-step-title tabIndex={-1} className="text-lg font-bold text-ink-950 outline-none">
+        Tu recibo de luz
       </h3>
       <p className="mt-1 text-sm text-ink-800/60">
-        Sube una foto o ingresa los datos manualmente.
+        Sube una foto o escribe el consumo y el valor pagado. Si solo tienes
+        uno de los dos, también sirve.
       </p>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
@@ -163,10 +176,14 @@ export function StepReceipt({
         </div>
       )}
 
+      {error && (
+        <p role="alert" className="mt-5 text-sm font-medium text-red-700">
+          {error}
+        </p>
+      )}
+
       <div className="mt-7 flex justify-end">
-        <Button onClick={onNext} disabled={!canContinue}>
-          Continuar
-        </Button>
+        <Button onClick={handleContinue}>Continuar</Button>
       </div>
     </div>
   );

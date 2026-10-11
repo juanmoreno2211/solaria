@@ -1,22 +1,28 @@
 "use client";
 
-import { useState } from "react";
-import { FileScan, Store, Calculator } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Check } from "lucide-react";
 import clsx from "clsx";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { Button } from "@/components/ui/Button";
 import { StepReceipt, type ReciboFormState } from "./StepReceipt";
-import { StepProperty, type NegocioFormState } from "./StepProperty";
+import {
+  StepProperty,
+  negocioCompleto,
+  type NegocioFormState,
+} from "./StepProperty";
 import { ResultsView } from "./ResultsView";
 import { LoadingState } from "./LoadingState";
 import type { AnalisisResultado } from "@/lib/savings/types";
 
-type Step = "recibo" | "negocio" | "resultado";
+type Step = "recibo" | "negocio" | "resultado" | "cotizacion";
 
-const PASOS = [
-  { key: "recibo" as const, label: "Tu recibo", icon: FileScan },
-  { key: "negocio" as const, label: "Tu negocio", icon: Store },
-  { key: "resultado" as const, label: "Resultado", icon: Calculator },
+const PASOS: { key: Step; label: string }[] = [
+  { key: "recibo", label: "Tu recibo" },
+  { key: "negocio", label: "Tu negocio" },
+  { key: "resultado", label: "Tu resultado" },
+  { key: "cotizacion", label: "Tu cotización" },
 ];
 
 const INITIAL_RECIBO: ReciboFormState = {
@@ -27,11 +33,11 @@ const INITIAL_RECIBO: ReciboFormState = {
 };
 
 const INITIAL_NEGOCIO: NegocioFormState = {
-  tipoNegocio: "tienda",
-  region: "andina",
+  tipoNegocio: "",
+  region: "",
   cargasCriticas: [],
-  horario: "dia",
-  fallaLuz: "cortes",
+  horario: "",
+  fallaLuz: "",
   legalmenteConstituido: "",
 };
 
@@ -43,15 +49,84 @@ interface ApiResponse {
   error?: string;
 }
 
+function BarraProgreso({ step }: { step: Step }) {
+  const actual = PASOS.findIndex((p) => p.key === step);
+  return (
+    <ol aria-label="Progreso" className="mb-9 flex items-start">
+      {PASOS.map((p, i) => {
+        const hecho = i < actual;
+        const activo = i === actual;
+        return (
+          <li
+            key={p.key}
+            aria-current={activo ? "step" : undefined}
+            className="relative flex flex-1 flex-col items-center gap-2 text-center"
+          >
+            {i > 0 && (
+              <span
+                aria-hidden
+                className={clsx(
+                  "absolute top-4 right-1/2 h-px w-full -translate-y-1/2",
+                  i <= actual ? "bg-sun-500" : "bg-ink-950/10"
+                )}
+              />
+            )}
+            <span
+              className={clsx(
+                "relative z-10 flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold transition-colors duration-200",
+                hecho && "bg-sun-500 text-white",
+                activo && "bg-sun-500 text-white ring-4 ring-sun-500/20",
+                !hecho && !activo && "bg-cream-100 text-ink-950/40 ring-1 ring-ink-950/10"
+              )}
+            >
+              {hecho ? <Check className="h-4 w-4" strokeWidth={2.5} /> : i + 1}
+            </span>
+            <span
+              className={clsx(
+                "text-[11px] font-semibold leading-tight sm:text-xs",
+                activo ? "text-ink-950" : "text-ink-950/40"
+              )}
+            >
+              {p.label}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 export function CalculatorSection() {
   const [step, setStep] = useState<Step>("recibo");
   const [recibo, setRecibo] = useState<ReciboFormState>(INITIAL_RECIBO);
   const [negocio, setNegocio] = useState<NegocioFormState>(INITIAL_NEGOCIO);
+  const [errorNegocio, setErrorNegocio] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<ApiResponse | null>(null);
+  const [proveedorElegido, setProveedorElegido] = useState<string | null>(null);
+
+  const cardRef = useRef<HTMLDivElement>(null);
+  const primerRender = useRef(true);
+
+  // Al cambiar de paso: llevar la vista al inicio de la calculadora y el foco al título.
+  useEffect(() => {
+    if (primerRender.current) {
+      primerRender.current = false;
+      return;
+    }
+    const card = cardRef.current;
+    if (!card) return;
+    card.scrollIntoView({ behavior: "smooth", block: "start" });
+    card.querySelector<HTMLElement>("[data-step-title]")?.focus({ preventScroll: true });
+  }, [step, loading]);
 
   async function handleSubmit() {
+    if (!negocioCompleto(negocio)) {
+      setErrorNegocio("Elige el tipo de negocio, tu región y cuándo trabajas.");
+      return;
+    }
+    setErrorNegocio(null);
     setLoading(true);
     setError(null);
 
@@ -67,7 +142,7 @@ export function CalculatorSection() {
     formData.set("region", negocio.region);
     for (const c of negocio.cargasCriticas) formData.append("cargasCriticas", c);
     formData.set("horario", negocio.horario);
-    formData.set("fallaLuz", negocio.fallaLuz);
+    if (negocio.fallaLuz) formData.set("fallaLuz", negocio.fallaLuz);
     if (negocio.legalmenteConstituido)
       formData.set("legalmenteConstituido", negocio.legalmenteConstituido);
 
@@ -92,12 +167,18 @@ export function CalculatorSection() {
     }
   }
 
+  function handlePedirCotizacion(proveedor: string) {
+    setProveedorElegido(proveedor);
+    setStep("cotizacion");
+  }
+
   function handleReset() {
     setStep("recibo");
     setRecibo(INITIAL_RECIBO);
     setNegocio(INITIAL_NEGOCIO);
     setData(null);
     setError(null);
+    setProveedorElegido(null);
   }
 
   return (
@@ -106,90 +187,70 @@ export function CalculatorSection() {
         <SectionHeading
           eyebrow="Calculadora para negocios"
           title="¿Le conviene la energía solar a tu negocio?"
-          description="Con tu recibo y unos datos de tu negocio te mostramos cuánto ahorrarías con paneles, cuánto costarían y en cuánto tiempo recuperas la inversión."
+          description="Con tu recibo y unos datos de tu negocio te mostramos cuánto ahorrarías con paneles, cuánto costarían y quién te puede cotizar."
         />
 
         <div className="relative mx-auto mt-12 max-w-3xl">
-          <div className="rounded-xl border border-ink-950/10 bg-white p-6 sm:p-9">
-            {step !== "resultado" && (
-                <div className="mb-9 flex items-center">
-                  {PASOS.slice(0, 2).map((p, i) => {
-                    const activo = step === p.key;
-                    const completado =
-                      PASOS.findIndex((x) => x.key === step) > i;
-                    return (
-                      <div key={p.key} className="flex flex-1 items-center last:flex-none">
-                        <div className="flex flex-col items-center gap-2">
-                          <span
-                            className={clsx(
-                              "flex h-9 w-9 items-center justify-center rounded-full transition-colors duration-200",
-                              activo || completado
-                                ? "bg-sun-500 text-white"
-                                : "bg-ink-950/8 text-ink-950/35"
-                            )}
-                          >
-                            <p.icon className="h-4 w-4" strokeWidth={2} />
-                          </span>
-                          <span
-                            className={clsx(
-                              "text-[11px] font-semibold uppercase tracking-wide",
-                              activo ? "text-ink-950" : "text-ink-950/35"
-                            )}
-                          >
-                            {p.label}
-                          </span>
-                        </div>
-                        {i === 0 && (
-                          <span className="mx-3 mb-5 h-px flex-1 overflow-hidden bg-ink-950/8">
-                            <span
-                              className={clsx(
-                                "block h-full bg-sun-500 transition-all duration-500 ease-out",
-                                step === "negocio" ? "w-full" : "w-0"
-                              )}
-                            />
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })}
+          <div
+            ref={cardRef}
+            className="scroll-mt-24 rounded-xl border border-ink-950/10 bg-white p-6 sm:p-9"
+          >
+            <BarraProgreso step={step} />
+
+            {error && (
+              <p role="alert" className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </p>
+            )}
+
+            {step === "recibo" && (
+              <StepReceipt
+                value={recibo}
+                onChange={setRecibo}
+                onNext={() => setStep("negocio")}
+              />
+            )}
+
+            {step === "negocio" && loading && <LoadingState />}
+
+            {step === "negocio" && !loading && (
+              <StepProperty
+                value={negocio}
+                onChange={setNegocio}
+                onBack={() => setStep("recibo")}
+                onSubmit={handleSubmit}
+                loading={loading}
+                error={errorNegocio}
+              />
+            )}
+
+            {step === "resultado" && data && (
+              <ResultsView
+                resultado={data.resultado}
+                recomendacion={data.recomendacion}
+                recomendacionFuente={data.recomendacionFuente}
+                avisoExtraccion={data.avisoExtraccion}
+                onCambiarDatos={() => setStep("negocio")}
+                onPedirCotizacion={handlePedirCotizacion}
+                onInteresSinProveedor={() => {}}
+              />
+            )}
+
+            {step === "cotizacion" && proveedorElegido && (
+              <div>
+                <h3 data-step-title tabIndex={-1} className="text-lg font-bold text-ink-950 outline-none">
+                  Pedir cotización con {proveedorElegido}
+                </h3>
+                <div className="mt-7 flex items-center justify-between">
+                  <Button variant="ghost" onClick={() => setStep("resultado")}>
+                    Atrás
+                  </Button>
+                  <Button variant="ghost" onClick={handleReset}>
+                    Empezar de nuevo
+                  </Button>
                 </div>
-              )}
-
-              {error && (
-                <p className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {error}
-                </p>
-              )}
-
-              {step === "recibo" && (
-                <StepReceipt
-                  value={recibo}
-                  onChange={setRecibo}
-                  onNext={() => setStep("negocio")}
-                />
-              )}
-
-              {step === "negocio" && loading && <LoadingState />}
-
-              {step === "negocio" && !loading && (
-                <StepProperty
-                  value={negocio}
-                  onChange={setNegocio}
-                  onBack={() => setStep("recibo")}
-                  onSubmit={handleSubmit}
-                  loading={loading}
-                />
-              )}
-
-              {step === "resultado" && data && (
-                <ResultsView
-                  resultado={data.resultado}
-                  recomendacion={data.recomendacion}
-                  recomendacionFuente={data.recomendacionFuente}
-                  avisoExtraccion={data.avisoExtraccion}
-                  onReset={handleReset}
-                />
-              )}
+              </div>
+            )}
           </div>
         </div>
       </Container>

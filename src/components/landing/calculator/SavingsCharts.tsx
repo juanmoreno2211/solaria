@@ -45,7 +45,7 @@ const anioEquilibrio = mejor.retornoMeses ? mejor.retornoMeses / 12 : null;
 return (
     <div className="rounded-2xl border border-black/8 bg-white p-6">
       <p className="text-sm font-semibold text-ink-950">
-        Proyección de {mejor.nombre.toLowerCase()} a 25 años
+        Proyección a 25 años{mejor.mejorOferta ? ` con ${mejor.mejorOferta.proveedor}` : ""}
       </p>
       <p className="mt-1 text-xs text-ink-800/50">
         Ahorro acumulado neto (descontando inversión y mantenimiento)
@@ -54,7 +54,7 @@ return (
       </p>
       <div className="mt-2 h-52">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={dataProyeccion} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+          <AreaChart data={dataProyeccion} margin={{ top: 10, right: 16, left: 16, bottom: 0 }}>
             <defs>
               <linearGradient id="colorNeto" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#3f9c67" stopOpacity={0.35} />

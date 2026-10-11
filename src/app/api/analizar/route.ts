@@ -62,16 +62,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const constituido = formData.get("legalmenteConstituido");
     const negocio: NegocioInput = {
       tipoNegocio:
         (formData.get("tipoNegocio") as NegocioInput["tipoNegocio"]) || "otro",
       region: (formData.get("region") as NegocioInput["region"]) || "andina",
       cargasCriticas: formData.getAll("cargasCriticas") as CargaCritica[],
       horario: (formData.get("horario") as NegocioInput["horario"]) || "dia",
-      fallaLuz: (formData.get("fallaLuz") as NegocioInput["fallaLuz"]) || "cortes",
+      fallaLuz: (formData.get("fallaLuz") as NegocioInput["fallaLuz"]) || undefined,
       legalmenteConstituido:
-        constituido === "si" ? true : constituido === "no" ? false : undefined,
+        (formData.get("legalmenteConstituido") as NegocioInput["legalmenteConstituido"]) ||
+        undefined,
     };
 
     const analisisInput: AnalisisInput = { recibo, negocio };

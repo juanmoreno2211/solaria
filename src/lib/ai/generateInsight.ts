@@ -42,7 +42,7 @@ function construirResumenParaIA(
 
   return `Tipo de negocio: ${input.negocio.tipoNegocio}. Región: ${input.negocio.region}. Trabaja ${
     HORARIO_TEXTO[input.negocio.horario]
-  }. La luz falla por: ${input.negocio.fallaLuz}.
+  }. La luz falla por: ${input.negocio.fallaLuz ?? "no lo indicó"}.
 Consumo mensual: ${resultado.consumoMensualKwh} kWh. Valor pagado: ${formatCOP(resultado.valorPagadoMensual)}.
 Sistema de paneles: ${formatDecimal(p.kwpRequeridos)} kWp, ahorro mensual ${formatCOPMiles(
     p.ahorroMensualEstimado

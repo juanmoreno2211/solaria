@@ -61,7 +61,7 @@ export function FinancingSimulator({
         </span>
         <div>
           <p className="text-sm font-semibold text-ink-950">
-            ¿Y si financias {mejor.nombre.toLowerCase()}?
+            ¿Y si lo financias con un banco?
           </p>
           <p className="text-xs text-ink-800/50">
             Compara la cuota estimada del crédito con tu ahorro mensual

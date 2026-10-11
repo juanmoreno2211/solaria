@@ -8,12 +8,12 @@ export type TipoNegocio =
   | "finca"
   | "otro";
 export type CargaCritica =
-  | "refrigeracion"
-  | "equipos"
-  | "iluminacion"
-  | "caja_datafono"
+  | "neveras"
+  | "aire"
+  | "medicos"
   | "maquinaria"
-  | "bombeo";
+  | "computo"
+  | "luces";
 export type Horario = "dia" | "dia_noche" | "24h";
 export type FallaLuz = "cortes" | "bajones" | "ambos";
 
@@ -31,8 +31,8 @@ export interface NegocioInput {
   region: Region;
   cargasCriticas: CargaCritica[];
   horario: Horario;
-  fallaLuz: FallaLuz;
-  legalmenteConstituido?: boolean;
+  fallaLuz?: FallaLuz;
+  legalmenteConstituido?: "si" | "no" | "nose";
 }
 
 export interface AnalisisInput {

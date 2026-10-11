@@ -16,21 +16,22 @@ import type {
   CargaCritica,
   FallaLuz,
   Horario,
+  NegocioInput,
   TipoNegocio,
 } from "@/lib/savings/types";
 
 export interface NegocioFormState {
-  tipoNegocio: TipoNegocio;
+  tipoNegocio: TipoNegocio | "";
   region: string;
   cargasCriticas: CargaCritica[];
-  horario: Horario;
-  fallaLuz: FallaLuz;
-  legalmenteConstituido: "si" | "no" | "";
+  horario: Horario | "";
+  fallaLuz: FallaLuz | "";
+  legalmenteConstituido: NonNullable<NegocioInput["legalmenteConstituido"]> | "";
 }
 
 const TIPOS: { v: TipoNegocio; label: string; icon: React.ReactNode }[] = [
   { v: "tienda", label: "Tienda o supermercado", icon: <Store className="h-4 w-4" /> },
-  { v: "restaurante", label: "Restaurante", icon: <UtensilsCrossed className="h-4 w-4" /> },
+  { v: "restaurante", label: "Restaurante o cafetería", icon: <UtensilsCrossed className="h-4 w-4" /> },
   { v: "consultorio", label: "Consultorio o clínica", icon: <Stethoscope className="h-4 w-4" /> },
   { v: "taller", label: "Taller o ferretería", icon: <Wrench className="h-4 w-4" /> },
   { v: "finca", label: "Finca o agro", icon: <Tractor className="h-4 w-4" /> },
@@ -38,25 +39,35 @@ const TIPOS: { v: TipoNegocio; label: string; icon: React.ReactNode }[] = [
 ];
 
 const CARGAS: { v: CargaCritica; label: string }[] = [
-  { v: "refrigeracion", label: "Refrigeración" },
-  { v: "equipos", label: "Equipos o computadores" },
-  { v: "iluminacion", label: "Iluminación" },
-  { v: "caja_datafono", label: "Caja o datáfono" },
-  { v: "maquinaria", label: "Maquinaria" },
-  { v: "bombeo", label: "Bombeo de agua" },
+  { v: "neveras", label: "Neveras o congeladores" },
+  { v: "aire", label: "Aire acondicionado" },
+  { v: "medicos", label: "Equipos médicos u odontológicos" },
+  { v: "maquinaria", label: "Maquinaria o motores" },
+  { v: "computo", label: "Computador y datáfono" },
+  { v: "luces", label: "Iluminación" },
 ];
 
 const HORARIOS: { v: Horario; label: string }[] = [
   { v: "dia", label: "De día" },
   { v: "dia_noche", label: "De día y de noche" },
-  { v: "24h", label: "24 horas" },
+  { v: "24h", label: "Las 24 horas" },
 ];
 
 const FALLAS: { v: FallaLuz; label: string }[] = [
-  { v: "cortes", label: "Se va (cortes)" },
-  { v: "bajones", label: "Baja (bajones)" },
-  { v: "ambos", label: "Las dos" },
+  { v: "cortes", label: "Cortes largos" },
+  { v: "bajones", label: "Bajones y fluctuaciones" },
+  { v: "ambos", label: "Las dos cosas" },
 ];
+
+const CONSTITUIDO = [
+  { v: "si", label: "Sí" },
+  { v: "no", label: "No" },
+  { v: "nose", label: "No sé" },
+] as const;
+
+export function negocioCompleto(v: NegocioFormState): boolean {
+  return Boolean(v.tipoNegocio && v.region && v.horario);
+}
 
 function Chip({
   selected,
@@ -90,12 +101,14 @@ export function StepProperty({
   onBack,
   onSubmit,
   loading,
+  error,
 }: {
   value: NegocioFormState;
   onChange: (v: NegocioFormState) => void;
   onBack: () => void;
   onSubmit: () => void;
   loading: boolean;
+  error: string | null;
 }) {
   function toggleCarga(c: CargaCritica) {
     const cargasCriticas = value.cargasCriticas.includes(c)
@@ -106,11 +119,12 @@ export function StepProperty({
 
   return (
     <div>
-      <h3 className="text-lg font-bold text-ink-950">
-        2. Cuéntanos de tu negocio
+      <h3 data-step-title tabIndex={-1} className="text-lg font-bold text-ink-950 outline-none">
+        Cuéntanos de tu negocio
       </h3>
       <p className="mt-1 text-sm text-ink-800/60">
-        Con esto ajustamos el cálculo a cómo y cuándo usas la luz.
+        Estas respuestas cambian el cálculo: cuánto de tu consumo pueden cubrir
+        los paneles y qué tan bien se ajusta a tu forma de trabajar.
       </p>
 
       <div className="mt-5">
@@ -135,6 +149,7 @@ export function StepProperty({
           onChange={(e) => onChange({ ...value, region: e.target.value })}
           className="w-full rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm text-ink-950 outline-none focus:border-sun-500 focus:ring-2 focus:ring-sun-500/20"
         >
+          <option value="">Elige tu región</option>
           {REGIONES.map((r) => (
             <option key={r.value} value={r.value}>
               {r.label}
@@ -144,8 +159,7 @@ export function StepProperty({
       </div>
 
       <div className="mt-5">
-        <FieldLabel>¿Qué no puede fallar en tu negocio?</FieldLabel>
-        <p className="-mt-1 mb-2 text-xs text-ink-800/50">Puedes marcar varias.</p>
+        <FieldLabel>¿Qué no puede fallar?</FieldLabel>
         <div className="flex flex-wrap gap-2">
           {CARGAS.map((c) => (
             <Chip
@@ -157,48 +171,43 @@ export function StepProperty({
             </Chip>
           ))}
         </div>
+        <p className="mt-2 text-xs text-ink-800/50">Marca todo lo que aplique.</p>
       </div>
 
-      <div className="mt-5 grid gap-5 sm:grid-cols-2">
-        <div>
-          <FieldLabel>¿Cuándo trabajas?</FieldLabel>
-          <div className="flex flex-wrap gap-2">
-            {HORARIOS.map((h) => (
-              <Chip
-                key={h.v}
-                selected={value.horario === h.v}
-                onClick={() => onChange({ ...value, horario: h.v })}
-              >
-                {h.label}
-              </Chip>
-            ))}
-          </div>
+      <div className="mt-5">
+        <FieldLabel>¿Cuándo trabajas?</FieldLabel>
+        <div className="flex flex-wrap gap-2">
+          {HORARIOS.map((h) => (
+            <Chip
+              key={h.v}
+              selected={value.horario === h.v}
+              onClick={() => onChange({ ...value, horario: h.v })}
+            >
+              {h.label}
+            </Chip>
+          ))}
         </div>
-        <div>
-          <FieldLabel>¿Cómo te falla la luz?</FieldLabel>
-          <div className="flex flex-wrap gap-2">
-            {FALLAS.map((f) => (
-              <Chip
-                key={f.v}
-                selected={value.fallaLuz === f.v}
-                onClick={() => onChange({ ...value, fallaLuz: f.v })}
-              >
-                {f.label}
-              </Chip>
-            ))}
-          </div>
+      </div>
+
+      <div className="mt-5">
+        <FieldLabel>¿Cómo falla la luz?</FieldLabel>
+        <div className="flex flex-wrap gap-2">
+          {FALLAS.map((f) => (
+            <Chip
+              key={f.v}
+              selected={value.fallaLuz === f.v}
+              onClick={() => onChange({ ...value, fallaLuz: f.v })}
+            >
+              {f.label}
+            </Chip>
+          ))}
         </div>
       </div>
 
       <div className="mt-5">
         <FieldLabel>¿Tu negocio está legalmente constituido? (opcional)</FieldLabel>
         <div className="flex flex-wrap gap-2">
-          {(
-            [
-              { v: "si", label: "Sí" },
-              { v: "no", label: "No" },
-            ] as const
-          ).map((o) => (
+          {CONSTITUIDO.map((o) => (
             <Chip
               key={o.v}
               selected={value.legalmenteConstituido === o.v}
@@ -214,14 +223,21 @@ export function StepProperty({
             </Chip>
           ))}
         </div>
+        <p className="mt-2 text-xs text-ink-800/50">Algunos apoyos del Gobierno lo piden.</p>
       </div>
+
+      {error && (
+        <p role="alert" className="mt-5 text-sm font-medium text-red-700">
+          {error}
+        </p>
+      )}
 
       <div className="mt-7 flex items-center justify-between">
         <Button variant="ghost" onClick={onBack} disabled={loading}>
           Atrás
         </Button>
         <Button onClick={onSubmit} disabled={loading}>
-          {loading ? "Calculando..." : "Ver si me conviene"}
+          {loading ? "Calculando..." : "Ver mi ahorro"}
         </Button>
       </div>
     </div>
