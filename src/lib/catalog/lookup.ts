@@ -20,19 +20,6 @@ function cubreRegion(regiones: RegionesCobertura, region: Region): boolean {
   return regiones.includes(region);
 }
 
-export function buscarMejorPanelSistema(
-  kwpRequeridos: number,
-  region: Region
-): CatalogoPanelSistema | null {
-  const candidatos = buscarPanelesSistemas(kwpRequeridos, region)
-    .filter((e) => e.aplica)
-    .map((e) => e.sistema);
-  if (candidatos.length === 0) return null;
-  return candidatos.reduce((mejor, actual) =>
-    actual.precioPorKwpCOP < mejor.precioPorKwpCOP ? actual : mejor
-  );
-}
-
 /**
  * Devuelve todos los proveedores de paneles del catálogo, cada uno con si
  * aplica para este negocio y, si no, el motivo para mostrárselo al usuario.

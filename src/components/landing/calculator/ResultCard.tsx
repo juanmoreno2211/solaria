@@ -1,4 +1,4 @@
-import { ExternalLink, SunMedium } from "lucide-react";
+import { SunMedium } from "lucide-react";
 import { CountUp } from "@/components/ui/CountUp";
 import { formatCOP } from "@/lib/format";
 import type { AlternativaResultado } from "@/lib/savings/types";
@@ -22,37 +22,9 @@ export function ResultCard({
         </div>
       </div>
 
-      {alternativa.proveedorRecomendado ? (
-        <div className="mt-4 rounded-lg border border-ink-950/10 bg-cream-100/60 px-3.5 py-3">
-          <div className="text-xs leading-relaxed text-ink-900/75">
-            <p className="font-semibold text-ink-950">
-              {alternativa.proveedorRecomendado.producto}
-              {alternativa.proveedorRecomendado.marca &&
-                ` · ${alternativa.proveedorRecomendado.marca}`}
-            </p>
-            <p>
-              Precio de{" "}
-              <span className="font-medium">
-                {alternativa.proveedorRecomendado.proveedor}
-              </span>
-              {alternativa.proveedorRecomendado.url && (
-                <a
-                  href={alternativa.proveedorRecomendado.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ml-1 inline-flex items-center gap-0.5 font-medium text-leaf-700 hover:underline"
-                >
-                  ver ficha <ExternalLink className="h-3 w-3" />
-                </a>
-              )}
-            </p>
-          </div>
-        </div>
-      ) : (
-        <p className="mt-4 text-xs text-ink-800/40">
-          Precio de referencia estimado, no es una cotización de un proveedor.
-        </p>
-      )}
+      <p className="mt-4 text-xs text-ink-800/40">
+        Precio de referencia estimado, no es una cotización de un proveedor.
+      </p>
 
       <div className="mt-5 grid grid-cols-2 gap-4">
         <div>

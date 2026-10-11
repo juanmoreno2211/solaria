@@ -12,8 +12,9 @@ import { buildWhatsAppLink } from "@/lib/whatsapp";
 
 const VEREDICTO: Record<Veredicto, { titulo: string; color: string }> = {
   conviene: { titulo: "Te conviene pedir cotización", color: "text-leaf-400" },
-  comparar: { titulo: "Puede convenirte, compara", color: "text-sun-300" },
-  por_ahora_no: { titulo: "Por ahora no", color: "text-ember-400" },
+  comparar: { titulo: "Puede convenirte: compara con calma", color: "text-sun-300" },
+  por_ahora_no: { titulo: "Por ahora no te lo recomendamos", color: "text-ember-400" },
+  sin_proveedores: { titulo: "Aún no tenemos proveedores en tu zona", color: "text-sun-300" },
 };
 
 export function ResultsView({

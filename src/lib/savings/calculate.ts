@@ -7,7 +7,8 @@ import {
   TARIFA_COMERCIAL_COP_KWH,
   UMBRALES_RECOMENDACION,
 } from "@/lib/config/pricing";
-import { buscarMejorPanelSistema } from "@/lib/catalog/lookup";
+import { formatCOPMiles, formatDecimal, formatNumber } from "@/lib/format";
+import { calcularOfertas, elegirMejorOferta } from "./ofertas";
 import type {
   AlternativaResultado,
   AnalisisInput,
@@ -46,16 +47,20 @@ function calcularPaneles(
   const produccionDiariaObjetivoKwh = (consumoMensualKwh * cobertura) / DIAS_MES;
   const kwpRequeridos = produccionDiariaObjetivoKwh / (hsp * PERFORMANCE_RATIO);
 
-  const matchCatalogo = buscarMejorPanelSistema(kwpRequeridos, input.negocio.region);
-  const costoPorKwp = matchCatalogo?.precioPorKwpCOP ?? COSTO_PANELES_POR_KWP;
-
-  const inversion = Math.round(kwpRequeridos * costoPorKwp);
   const ahorroMensual = Math.round(valorPagadoMensual * cobertura);
 
-  // Retorno = inversión ÷ (ahorro anual − mantenimiento anual).
+  const ofertas = calcularOfertas(kwpRequeridos, ahorroMensual, input.negocio.region);
+  const mejorOferta = elegirMejorOferta(ofertas);
+
+  // Los números principales salen del mejor proveedor; el costo genérico por
+  // kWp solo se usa como respaldo cuando ningún proveedor aplica.
+  const inversion = mejorOferta?.inversion ?? kwpRequeridos * COSTO_PANELES_POR_KWP;
   const ahorroAnualNeto = ahorroMensual * 12 - inversion * MANTENIMIENTO_ANUAL;
-  const retornoMeses =
-    ahorroAnualNeto > 0 ? Math.round((inversion / ahorroAnualNeto) * 12) : null;
+  const retornoMeses = mejorOferta
+    ? mejorOferta.retornoMeses
+    : ahorroAnualNeto > 0
+      ? (inversion / ahorroAnualNeto) * 12
+      : null;
 
   return {
     id: "paneles",
@@ -63,10 +68,10 @@ function calcularPaneles(
     aplica: kwpRequeridos > 0,
     kwpRequeridos: Math.round(kwpRequeridos * 10) / 10,
     inversionEstimadaMin: Math.round(inversion * 0.9),
-    inversionEstimadaMax: Math.round(inversion * 1.15),
+    inversionEstimadaMax: Math.round(inversion * (mejorOferta ? 1.1 : 1.15)),
     ahorroMensualEstimado: ahorroMensual,
     ahorroPorcentual: Math.round(cobertura * 100),
-    retornoMeses,
+    retornoMeses: retornoMeses === null ? null : Math.round(retornoMeses),
     ahorro5Anios: Math.round(ahorroAnualNeto * 5 - inversion),
     ahorro10Anios: Math.round(ahorroAnualNeto * 10 - inversion),
     idealPara: [
@@ -74,16 +79,9 @@ function calcularPaneles(
       "Facturas medias o altas",
       "Quienes buscan bajar el costo fijo de energía a largo plazo",
     ],
-    fuentePrecio: matchCatalogo ? "catalogo" : "estimado",
-    proveedorRecomendado: matchCatalogo
-      ? {
-          proveedor: matchCatalogo.proveedor,
-          producto: matchCatalogo.nombreSistema,
-          marca: matchCatalogo.marca,
-          url: matchCatalogo.url,
-          telefono: matchCatalogo.telefono,
-        }
-      : undefined,
+    fuentePrecio: mejorOferta ? "catalogo" : "estimado",
+    ofertas,
+    mejorOferta,
   };
 }
 
@@ -92,38 +90,54 @@ function decidirVeredicto(
   consumoMensualKwh: number
 ): { veredicto: Veredicto; motivo: string } {
   const u = UMBRALES_RECOMENDACION;
+  const kwp = formatDecimal(paneles.kwpRequeridos);
+  const ahorro = formatCOPMiles(paneles.ahorroMensualEstimado);
 
   if (consumoMensualKwh < u.consumoMinimoKwh) {
     return {
       veredicto: "por_ahora_no",
-      motivo: `Tu consumo (${Math.round(consumoMensualKwh)} kWh al mes) es bajo; con menos de ${u.consumoMinimoKwh} kWh la inversión tarda mucho en pagarse.`,
+      motivo: `Tu consumo (${formatNumber(Math.round(consumoMensualKwh))} kWh al mes) es bajo, y un sistema solar tardaría demasiado en pagarse. Si tu consumo sube o cambia tu negocio, vuelve a calcular.`,
     };
   }
   if (paneles.ahorroPorcentual < u.ahorroMinimoFraccion * 100) {
     return {
       veredicto: "por_ahora_no",
-      motivo: "El ahorro sobre tu factura sería pequeño para lo que cuesta instalar.",
+      motivo: `El ahorro estimado sería de solo ${paneles.ahorroPorcentual} % de tu factura.`,
     };
   }
 
-  const retornoAnios =
-    paneles.retornoMeses !== null ? paneles.retornoMeses / 12 : Infinity;
+  const mejor = paneles.mejorOferta;
+  if (!mejor && paneles.ofertas.some((o) => o.aplica)) {
+    return {
+      veredicto: "por_ahora_no",
+      motivo: "Con los precios actuales, el ahorro no alcanzaría a pagar la inversión.",
+    };
+  }
+  if (!mejor) {
+    return {
+      veredicto: "sin_proveedores",
+      motivo: `Con tus datos, un sistema de unos ${kwp} kWp ahorraría cerca de ${ahorro} al mes, pero todavía no hay un proveedor que atienda tu región o el tamaño de tu sistema.`,
+    };
+  }
+
+  const retornoAnios = mejor.retornoMeses! / 12;
+  const anios = `${formatDecimal(retornoAnios)} años`;
 
   if (retornoAnios <= u.retornoConvieneAnios) {
     return {
       veredicto: "conviene",
-      motivo: `Recuperarías la inversión en menos de ${u.retornoConvieneAnios} años.`,
+      motivo: `Con tu consumo, un sistema de unos ${kwp} kWp ahorraría cerca de ${ahorro} al mes y se pagaría en unos ${anios} con ${mejor.proveedor}.`,
     };
   }
   if (retornoAnios <= u.retornoCompararAnios) {
     return {
       veredicto: "comparar",
-      motivo: `Recuperarías la inversión en ${u.retornoConvieneAnios} a ${u.retornoCompararAnios} años; vale la pena comparar cotizaciones.`,
+      motivo: `Se pagaría en unos ${anios}. Pide cotizaciones y compara antes de decidir.`,
     };
   }
   return {
     veredicto: "por_ahora_no",
-    motivo: `Recuperar la inversión tomaría más de ${u.retornoCompararAnios} años.`,
+    motivo: `Con los precios actuales, la inversión tardaría unos ${anios} en pagarse.`,
   };
 }
 
