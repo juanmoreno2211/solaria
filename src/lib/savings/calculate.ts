@@ -1,41 +1,21 @@
 import {
-  COBERTURA_MAXIMA,
+  COBERTURA_POR_HORARIO,
   COSTO_PANELES_POR_KWP,
   HORAS_SOL_PICO,
-  ILUMINACION_SOLAR,
+  MANTENIMIENTO_ANUAL,
   PERFORMANCE_RATIO,
-  REFRIGERACION_SOLAR,
-  TARIFA_ESTIMADA_COP_KWH,
+  TARIFA_COMERCIAL_COP_KWH,
+  UMBRALES_RECOMENDACION,
 } from "@/lib/config/pricing";
-import {
-  buscarMejorIluminacion,
-  buscarMejorPanelSistema,
-  buscarMejorRefrigeracion,
-} from "@/lib/catalog/lookup";
+import { buscarMejorPanelSistema } from "@/lib/catalog/lookup";
 import type {
   AlternativaResultado,
   AnalisisInput,
   AnalisisResultado,
+  Veredicto,
 } from "./types";
 
 const DIAS_MES = 30;
-
-function estimarTarifaKwh(predio: AnalisisInput["predio"]): number {
-  if (predio.conexionRed === "zona_no_interconectada") {
-    return TARIFA_ESTIMADA_COP_KWH.rural_zni;
-  }
-  if (predio.tipoPredio === "negocio") {
-    return predio.esComercialOIndustrial === "industrial"
-      ? TARIFA_ESTIMADA_COP_KWH.industrial
-      : TARIFA_ESTIMADA_COP_KWH.comercial;
-  }
-  if (predio.tipoPredio === "finca") {
-    return TARIFA_ESTIMADA_COP_KWH.estrato3;
-  }
-  const estrato = predio.estrato ?? 3;
-  const key = `estrato${estrato}` as keyof typeof TARIFA_ESTIMADA_COP_KWH;
-  return TARIFA_ESTIMADA_COP_KWH[key] ?? TARIFA_ESTIMADA_COP_KWH.estrato3;
-}
 
 function resolverConsumoYValor(input: AnalisisInput, tarifaEstimada: number) {
   let consumo = input.recibo.consumoMensualKwh;
@@ -59,49 +39,40 @@ function calcularPaneles(
   consumoMensualKwh: number,
   valorPagadoMensual: number
 ): AlternativaResultado {
-  const hsp = HORAS_SOL_PICO[input.predio.region];
+  const hsp = HORAS_SOL_PICO[input.negocio.region];
 
-  // kWp necesarios para cubrir el consumo mensual, limitado a una cobertura máxima realista.
-  const produccionDiariaObjetivoKwh =
-    (consumoMensualKwh * COBERTURA_MAXIMA) / DIAS_MES;
+  // Sin baterías, los paneles solo cubren lo que el negocio consume de día.
+  const cobertura = COBERTURA_POR_HORARIO[input.negocio.horario];
+  const produccionDiariaObjetivoKwh = (consumoMensualKwh * cobertura) / DIAS_MES;
   const kwpRequeridos = produccionDiariaObjetivoKwh / (hsp * PERFORMANCE_RATIO);
 
-  const matchCatalogo = buscarMejorPanelSistema(kwpRequeridos, input.predio.region);
-  const costoPorKwp =
-    matchCatalogo?.precioPorKwpCOP ??
-    (input.predio.conexionRed === "zona_no_interconectada"
-      ? COSTO_PANELES_POR_KWP.zona_no_interconectada
-      : COSTO_PANELES_POR_KWP.interconectado);
+  const matchCatalogo = buscarMejorPanelSistema(kwpRequeridos, input.negocio.region);
+  const costoPorKwp = matchCatalogo?.precioPorKwpCOP ?? COSTO_PANELES_POR_KWP;
 
   const inversion = Math.round(kwpRequeridos * costoPorKwp);
-  const produccionMensualKwh =
-    kwpRequeridos * hsp * PERFORMANCE_RATIO * DIAS_MES;
-  const cobertura = Math.min(
-    COBERTURA_MAXIMA,
-    consumoMensualKwh > 0 ? produccionMensualKwh / consumoMensualKwh : 0
-  );
-
   const ahorroMensual = Math.round(valorPagadoMensual * cobertura);
+
+  // Retorno = inversión ÷ (ahorro anual − mantenimiento anual).
+  const ahorroAnualNeto = ahorroMensual * 12 - inversion * MANTENIMIENTO_ANUAL;
   const retornoMeses =
-    ahorroMensual > 0 ? Math.round(inversion / ahorroMensual) : null;
+    ahorroAnualNeto > 0 ? Math.round((inversion / ahorroAnualNeto) * 12) : null;
 
   return {
     id: "paneles",
     nombre: "Paneles solares",
     aplica: kwpRequeridos > 0,
+    kwpRequeridos: Math.round(kwpRequeridos * 10) / 10,
     inversionEstimadaMin: Math.round(inversion * 0.9),
     inversionEstimadaMax: Math.round(inversion * 1.15),
     ahorroMensualEstimado: ahorroMensual,
     ahorroPorcentual: Math.round(cobertura * 100),
     retornoMeses,
-    ahorro5Anios: ahorroMensual * 60 - inversion,
-    ahorro10Anios: ahorroMensual * 120 - inversion,
+    ahorro5Anios: Math.round(ahorroAnualNeto * 5 - inversion),
+    ahorro10Anios: Math.round(ahorroAnualNeto * 10 - inversion),
     idealPara: [
-      "Consumos medios o altos y factura elevada",
-      "Quienes buscan el mayor ahorro a largo plazo",
-      input.predio.conexionRed === "zona_no_interconectada"
-        ? "Predios sin conexión a la red interconectada"
-        : "Casas y negocios conectados a la red",
+      "Negocios que gastan buena parte de su luz de día",
+      "Facturas medias o altas",
+      "Quienes buscan bajar el costo fijo de energía a largo plazo",
     ],
     fuentePrecio: matchCatalogo ? "catalogo" : "estimado",
     proveedorRecomendado: matchCatalogo
@@ -116,150 +87,60 @@ function calcularPaneles(
   };
 }
 
-function calcularIluminacion(
-  input: AnalisisInput,
-  valorPagadoMensual: number
-): AlternativaResultado {
-  const { tipoPredio, interesIluminacionExterior, puntosIluminacionAprox } =
-    input.predio;
-  const puntos =
-    puntosIluminacionAprox ??
-    ILUMINACION_SOLAR.puntosSugeridos[tipoPredio];
-  const matchCatalogo = buscarMejorIluminacion(input.predio.region);
-  const costoPorPunto =
-    matchCatalogo?.precioPorUnidadCOP ??
-    ILUMINACION_SOLAR.costoPromedioPorPunto;
-  const inversion = Math.round(puntos * costoPorPunto);
-  const fraccion =
-    ILUMINACION_SOLAR.fraccionConsumoIluminacionExterior[tipoPredio];
-  const ahorroMensual = Math.round(valorPagadoMensual * fraccion);
-  const retornoMeses =
-    ahorroMensual > 0 ? Math.round(inversion / ahorroMensual) : null;
+function decidirVeredicto(
+  paneles: AlternativaResultado,
+  consumoMensualKwh: number
+): { veredicto: Veredicto; motivo: string } {
+  const u = UMBRALES_RECOMENDACION;
 
+  if (consumoMensualKwh < u.consumoMinimoKwh) {
+    return {
+      veredicto: "por_ahora_no",
+      motivo: `Tu consumo (${Math.round(consumoMensualKwh)} kWh al mes) es bajo; con menos de ${u.consumoMinimoKwh} kWh la inversión tarda mucho en pagarse.`,
+    };
+  }
+  if (paneles.ahorroPorcentual < u.ahorroMinimoFraccion * 100) {
+    return {
+      veredicto: "por_ahora_no",
+      motivo: "El ahorro sobre tu factura sería pequeño para lo que cuesta instalar.",
+    };
+  }
+
+  const retornoAnios =
+    paneles.retornoMeses !== null ? paneles.retornoMeses / 12 : Infinity;
+
+  if (retornoAnios <= u.retornoConvieneAnios) {
+    return {
+      veredicto: "conviene",
+      motivo: `Recuperarías la inversión en menos de ${u.retornoConvieneAnios} años.`,
+    };
+  }
+  if (retornoAnios <= u.retornoCompararAnios) {
+    return {
+      veredicto: "comparar",
+      motivo: `Recuperarías la inversión en ${u.retornoConvieneAnios} a ${u.retornoCompararAnios} años; vale la pena comparar cotizaciones.`,
+    };
+  }
   return {
-    id: "iluminacion",
-    nombre: "Iluminación solar (linternas y decorativos)",
-    aplica: interesIluminacionExterior,
-    motivoNoAplica: interesIluminacionExterior
-      ? undefined
-      : "No marcaste interés en iluminación exterior o decorativa.",
-    inversionEstimadaMin: Math.round(inversion * 0.85),
-    inversionEstimadaMax: Math.round(inversion * 1.2),
-    ahorroMensualEstimado: ahorroMensual,
-    ahorroPorcentual: Math.round(fraccion * 100),
-    retornoMeses,
-    ahorro5Anios: ahorroMensual * 60 - inversion,
-    ahorro10Anios: ahorroMensual * 120 - inversion,
-    idealPara: [
-      "Iluminación exterior, fachadas y zonas comunes",
-      "Zonas rurales o con cortes frecuentes de energía",
-      "Inversión inicial baja y resultados inmediatos",
-    ],
-    fuentePrecio: matchCatalogo ? "catalogo" : "estimado",
-    proveedorRecomendado: matchCatalogo
-      ? {
-          proveedor: matchCatalogo.proveedor,
-          producto: matchCatalogo.nombre,
-          marca: matchCatalogo.marca,
-          url: matchCatalogo.url,
-          telefono: matchCatalogo.telefono,
-        }
-      : undefined,
-  };
-}
-
-function calcularRefrigeracion(
-  input: AnalisisInput,
-  valorPagadoMensual: number
-): AlternativaResultado {
-  const { tieneRefrigeracionCritica, tamanoRefrigeracion } = input.predio;
-  const tamano = tamanoRefrigeracion ?? "media";
-  const fraccion = REFRIGERACION_SOLAR.fraccionConsumoPorTamano[tamano];
-  const litrosEstimados =
-    tamano === "pequena" ? 150 : tamano === "grande" ? 800 : 400;
-  const matchCatalogo = buscarMejorRefrigeracion(
-    litrosEstimados,
-    input.predio.region
-  );
-  const inversion =
-    matchCatalogo?.precioCOP ??
-    Math.round(
-      REFRIGERACION_SOLAR.costoBase +
-        litrosEstimados * REFRIGERACION_SOLAR.costoPorLitroCapacidad
-    );
-  const ahorroMensual = Math.round(valorPagadoMensual * fraccion);
-  const retornoMeses =
-    ahorroMensual > 0 ? Math.round(inversion / ahorroMensual) : null;
-
-  return {
-    id: "refrigeracion",
-    nombre: "Refrigeración solar (cadena de frío)",
-    aplica: tieneRefrigeracionCritica,
-    motivoNoAplica: tieneRefrigeracionCritica
-      ? undefined
-      : "No indicaste que tengas neveras o refrigeración crítica que proteger.",
-    inversionEstimadaMin: Math.round(inversion * 0.9),
-    inversionEstimadaMax: Math.round(inversion * 1.25),
-    ahorroMensualEstimado: ahorroMensual,
-    ahorroPorcentual: Math.round(fraccion * 100),
-    retornoMeses,
-    ahorro5Anios: ahorroMensual * 60 - inversion,
-    ahorro10Anios: ahorroMensual * 120 - inversion,
-    idealPara: [
-      "Negocios y fincas con neveras, lácteos, vacunas o alimentos",
-      "Zonas con cortes de luz frecuentes",
-      "Evitar pérdidas de inventario por daño de la cadena de frío",
-    ],
-    fuentePrecio: matchCatalogo ? "catalogo" : "estimado",
-    proveedorRecomendado: matchCatalogo
-      ? {
-          proveedor: matchCatalogo.proveedor,
-          producto: matchCatalogo.nombre,
-          marca: matchCatalogo.marca,
-          url: matchCatalogo.url,
-          telefono: matchCatalogo.telefono,
-        }
-      : undefined,
+    veredicto: "por_ahora_no",
+    motivo: `Recuperar la inversión tomaría más de ${u.retornoCompararAnios} años.`,
   };
 }
 
 export function calcularAhorro(input: AnalisisInput): AnalisisResultado {
-  const tarifaEstimada = estimarTarifaKwh(input.predio);
+  const tarifaEstimada = TARIFA_COMERCIAL_COP_KWH;
   const { consumo, valor } = resolverConsumoYValor(input, tarifaEstimada);
 
   const paneles = calcularPaneles(input, consumo, valor);
-  const iluminacion = calcularIluminacion(input, valor);
-  const refrigeracion = calcularRefrigeracion(input, valor);
-
-  const alternativas = [paneles, iluminacion, refrigeracion];
-  const aplicables = alternativas.filter((a) => a.aplica);
-
-  const mejorAlternativa = aplicables.reduce<AlternativaResultado | null>(
-    (mejor, actual) =>
-      !mejor || actual.ahorroMensualEstimado > mejor.ahorroMensualEstimado
-        ? actual
-        : mejor,
-    null
-  );
-
-  // Las alternativas pueden compartir la misma carga (p. ej. los paneles ya
-  // cubren la iluminación y la refrigeración), así que no se pueden sumar los
-  // pesos ahorrados directamente: se combina por fracción de la factura y se
-  // limita a la cobertura máxima realista para no "ahorrar" más de lo que se paga.
-  const fraccionCombinada = Math.min(
-    COBERTURA_MAXIMA,
-    aplicables.reduce((sum, a) => sum + a.ahorroPorcentual / 100, 0)
-  );
-  const ahorroCombinadoPorcentual = Math.round(fraccionCombinada * 100);
-  const ahorroCombinadoMensual = Math.round(valor * fraccionCombinada);
+  const { veredicto, motivo } = decidirVeredicto(paneles, consumo);
 
   return {
     consumoMensualKwh: Math.round(consumo),
     valorPagadoMensual: Math.round(valor),
     tarifaEstimadaKwh: tarifaEstimada,
-    alternativas,
-    mejorAlternativaId: mejorAlternativa?.id ?? null,
-    ahorroCombinadoMensual,
-    ahorroCombinadoPorcentual,
+    alternativas: [paneles],
+    mejorAlternativaId: paneles.aplica ? paneles.id : null,
+    veredicto,
+    motivoVeredicto: motivo,
   };
 }

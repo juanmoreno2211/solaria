@@ -43,7 +43,7 @@ export function StepReceipt({
   return (
     <div>
       <h3 className="text-lg font-bold text-ink-950">
-        1. Cuéntanos sobre tu recibo de luz
+        1. El recibo de luz de tu negocio
       </h3>
       <p className="mt-1 text-sm text-ink-800/60">
         Sube una foto o ingresa los datos manualmente.
@@ -54,7 +54,7 @@ export function StepReceipt({
           selected={value.fuente === "foto"}
           onClick={() => onChange({ ...value, fuente: "foto" })}
           title="Subir foto"
-          description="El agente lee tu recibo"
+          description="La IA lee los números; no guardamos la foto"
           icon={<Camera className="h-4 w-4" />}
         />
         <OptionCard

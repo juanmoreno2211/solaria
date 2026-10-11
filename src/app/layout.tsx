@@ -11,9 +11,9 @@ const display = Plus_Jakarta_Sans({
 });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-const TITLE = "SolarIA — Descubre cuánto puedes ahorrar con energía solar";
+const TITLE = "SolarIA — ¿Le conviene la energía solar a tu negocio?";
 const DESCRIPTION =
-  "Sube tu recibo de luz y deja que nuestro agente con IA calcule cuánto puedes ahorrar en % y dinero con paneles solares, iluminación solar y refrigeración solar para tu casa, negocio o finca en Colombia.";
+  "Calculadora para micronegocios en Colombia: sube el recibo de luz de tu negocio, mira cuánto ahorrarías con paneles solares y en cuánto tiempo recuperas la inversión, y pide una cotización a un proveedor de tu región.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

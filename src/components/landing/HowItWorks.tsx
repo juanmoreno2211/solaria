@@ -1,4 +1,4 @@
-import { ClipboardList, FileScan, Sparkles, TrendingUp } from "lucide-react";
+import { Calculator, FileScan, Handshake, Store } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
@@ -8,25 +8,25 @@ const PASOS = [
     icon: FileScan,
     title: "Sube tu recibo",
     description:
-      "Toma una foto de tu recibo de luz o ingresa el consumo y valor manualmente.",
+      "Toma una foto del recibo de luz de tu negocio o escribe el consumo y el valor a mano. No guardamos la foto, solo los números.",
   },
   {
-    icon: ClipboardList,
-    title: "Cuéntanos tu predio",
+    icon: Store,
+    title: "Cuéntanos de tu negocio",
     description:
-      "Casa, negocio o finca; si tienes neveras que proteger o iluminación exterior que mejorar.",
+      "Qué tipo de negocio tienes, en qué región está, en qué horario trabajas y cómo te falla la luz.",
   },
   {
-    icon: Sparkles,
-    title: "El agente analiza con IA",
+    icon: Calculator,
+    title: "Mira si te conviene",
     description:
-      "Cruza tu consumo, tu tarifa y tu contexto para dimensionar cada alternativa solar.",
+      "Calculamos cuánto ahorrarías con paneles solares, cuánto costaría y en cuánto tiempo recuperas la inversión. Si no te conviene, te lo decimos.",
   },
   {
-    icon: TrendingUp,
-    title: "Recibe tu plan de ahorro",
+    icon: Handshake,
+    title: "Pide tu cotización",
     description:
-      "Ahorro en %, en dinero al mes y tiempo de retorno de cada solución, explicado en lenguaje simple.",
+      "Si te interesa, elige un proveedor que cubra tu región y deja tus datos. Con tu autorización, el proveedor te contacta con una cotización real.",
   },
 ];
 
@@ -37,8 +37,8 @@ export function HowItWorks() {
         <Reveal>
           <SectionHeading
             eyebrow="Cómo funciona"
-            title="De tu recibo a tu plan de ahorro solar"
-            description="Todo el proceso toma un par de minutos y no necesitas saber nada de energía solar para empezar."
+            title="De tu recibo a una cotización para tu negocio"
+            description="En un par de minutos sabes si la energía solar le conviene a tu negocio y, si es así, quién te puede cotizar. No necesitas saber nada de paneles para empezar."
           />
         </Reveal>
 

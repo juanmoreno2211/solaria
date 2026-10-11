@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { extraerDatosRecibo } from "@/lib/ai/extractReceipt";
 import { generarRecomendacion } from "@/lib/ai/generateInsight";
 import { calcularAhorro } from "@/lib/savings/calculate";
-import type { AnalisisInput, PredioInput, ReciboInput } from "@/lib/savings/types";
+import type {
+  AnalisisInput,
+  CargaCritica,
+  NegocioInput,
+  ReciboInput,
+} from "@/lib/savings/types";
 
 export const runtime = "nodejs";
 
@@ -57,33 +62,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const predio: PredioInput = {
-      tipoPredio: (formData.get("tipoPredio") as PredioInput["tipoPredio"]) || "casa",
-      estrato: toNumberOrNull(formData.get("estrato")) as PredioInput["estrato"] | undefined,
-      esComercialOIndustrial:
-        (formData.get("esComercialOIndustrial") as PredioInput["esComercialOIndustrial"]) ||
-        undefined,
-      region: (formData.get("region") as PredioInput["region"]) || "andina",
-      conexionRed:
-        (formData.get("conexionRed") as PredioInput["conexionRed"]) ||
-        "interconectado",
-      tieneRefrigeracionCritica: formData.get("tieneRefrigeracionCritica") === "true",
-      tamanoRefrigeracion:
-        (formData.get("tamanoRefrigeracion") as PredioInput["tamanoRefrigeracion"]) ||
-        undefined,
-      interesIluminacionExterior:
-        formData.get("interesIluminacionExterior") === "true",
-      puntosIluminacionAprox:
-        toNumberOrNull(formData.get("puntosIluminacionAprox")) ?? undefined,
+    const constituido = formData.get("legalmenteConstituido");
+    const negocio: NegocioInput = {
+      tipoNegocio:
+        (formData.get("tipoNegocio") as NegocioInput["tipoNegocio"]) || "otro",
+      region: (formData.get("region") as NegocioInput["region"]) || "andina",
+      cargasCriticas: formData.getAll("cargasCriticas") as CargaCritica[],
+      horario: (formData.get("horario") as NegocioInput["horario"]) || "dia",
+      fallaLuz: (formData.get("fallaLuz") as NegocioInput["fallaLuz"]) || "cortes",
+      legalmenteConstituido:
+        constituido === "si" ? true : constituido === "no" ? false : undefined,
     };
 
-    const analisisInput: AnalisisInput = { recibo, predio };
+    const analisisInput: AnalisisInput = { recibo, negocio };
     const resultado = calcularAhorro(analisisInput);
     const recomendacion = await generarRecomendacion(analisisInput, resultado);
 
     return NextResponse.json({
       resultado,
-      recomendacion,
+      recomendacion: recomendacion.texto,
+      recomendacionFuente: recomendacion.fuente,
       recibo,
       avisoExtraccion: extraccionMensaje,
     });

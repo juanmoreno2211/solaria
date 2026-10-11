@@ -9,24 +9,28 @@ import clsx from "clsx";
 
 const PREGUNTAS = [
   {
-    q: "¿Qué tan precisos son los cálculos de ahorro?",
-    a: "Son estimaciones de referencia basadas en tu consumo, tu tarifa y precios promedio del mercado solar colombiano. Son un excelente punto de partida, pero la cifra final depende de una cotización con un instalador certificado.",
+    q: "¿Para qué tipo de negocios sirve?",
+    a: "Para micronegocios que dependen de la luz: tiendas, supermercados, restaurantes, consultorios, talleres, ferreterías y fincas, entre otros. No está pensado para viviendas.",
   },
   {
-    q: "¿Qué pasa con la foto de mi recibo? ¿Es segura?",
-    a: "La foto se usa únicamente para extraer el consumo y el valor pagado, y no se comparte con terceros. Si prefieres no subir una imagen, puedes ingresar los datos manualmente.",
+    q: "¿Qué tan precisos son los cálculos?",
+    a: "Son estimaciones de referencia hechas con tu consumo, tu región, tu horario y supuestos de precio que todavía estamos validando. Sirven para decidir si vale la pena pedir una cotización; la cifra final la da el proveedor.",
   },
   {
-    q: "¿Sirve si vivo en una zona sin red eléctrica (ZNI)?",
-    a: "Sí. Indícalo en el paso 2 y el agente ajusta los cálculos considerando que hoy dependes de plantas eléctricas o combustible, donde el ahorro con energía solar suele ser aún mayor.",
+    q: "¿Voy a tener luz cuando haya cortes?",
+    a: "No con este cálculo. Estimamos el ahorro en tu factura con paneles sin baterías. Para tener luz durante un corte se necesitan baterías, que suben la inversión. Puedes pedírselas al proveedor en la cotización.",
   },
   {
-    q: "¿Puedo combinar varias alternativas solares?",
-    a: "Sí, de hecho es lo más común: paneles para tu consumo general, iluminación solar para exteriores y refrigeración solar para proteger tu cadena de frío si tienes neveras.",
+    q: "¿Qué pasa con la foto de mi recibo?",
+    a: "La usamos solo para leer el consumo y el valor pagado, y no la guardamos. Si prefieres no subirla, puedes escribir los datos a mano.",
   },
   {
-    q: "¿Necesito saber de energía solar para usar esto?",
-    a: "No. Solo necesitas tu recibo de luz y algunos datos de tu casa, negocio o finca. El agente traduce todo a cifras simples de entender.",
+    q: "¿Qué pasa cuando pido una cotización?",
+    a: "Te pedimos tus datos de contacto y tu autorización. Solo con esa autorización los compartimos con el proveedor que elegiste, para que te contacte con una cotización real. Pedirla no te obliga a comprar.",
+  },
+  {
+    q: "¿Y si no me conviene?",
+    a: "Te lo decimos. Si tu consumo es bajo o la inversión tarda mucho en pagarse, el resultado dirá \"por ahora no\".",
   },
 ];
 

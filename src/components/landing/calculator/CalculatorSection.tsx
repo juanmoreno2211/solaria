@@ -1,22 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { FileScan, ClipboardList, Sparkles } from "lucide-react";
+import { FileScan, Store, Calculator } from "lucide-react";
 import clsx from "clsx";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { StepReceipt, type ReciboFormState } from "./StepReceipt";
-import { StepProperty, type PredioFormState } from "./StepProperty";
+import { StepProperty, type NegocioFormState } from "./StepProperty";
 import { ResultsView } from "./ResultsView";
 import { LoadingState } from "./LoadingState";
 import type { AnalisisResultado } from "@/lib/savings/types";
 
-type Step = "recibo" | "predio" | "resultado";
+type Step = "recibo" | "negocio" | "resultado";
 
 const PASOS = [
   { key: "recibo" as const, label: "Tu recibo", icon: FileScan },
-  { key: "predio" as const, label: "Tu predio", icon: ClipboardList },
-  { key: "resultado" as const, label: "Resultado", icon: Sparkles },
+  { key: "negocio" as const, label: "Tu negocio", icon: Store },
+  { key: "resultado" as const, label: "Resultado", icon: Calculator },
 ];
 
 const INITIAL_RECIBO: ReciboFormState = {
@@ -26,21 +26,19 @@ const INITIAL_RECIBO: ReciboFormState = {
   valorPagadoMensual: "",
 };
 
-const INITIAL_PREDIO: PredioFormState = {
-  tipoPredio: "casa",
-  estrato: 3,
-  esComercialOIndustrial: "comercial",
+const INITIAL_NEGOCIO: NegocioFormState = {
+  tipoNegocio: "tienda",
   region: "andina",
-  conexionRed: "interconectado",
-  tieneRefrigeracionCritica: false,
-  tamanoRefrigeracion: "media",
-  interesIluminacionExterior: false,
-  puntosIluminacionAprox: "",
+  cargasCriticas: [],
+  horario: "dia",
+  fallaLuz: "cortes",
+  legalmenteConstituido: "",
 };
 
 interface ApiResponse {
   resultado: AnalisisResultado;
   recomendacion: string;
+  recomendacionFuente: "ia" | "plantilla";
   avisoExtraccion?: string;
   error?: string;
 }
@@ -48,7 +46,7 @@ interface ApiResponse {
 export function CalculatorSection() {
   const [step, setStep] = useState<Step>("recibo");
   const [recibo, setRecibo] = useState<ReciboFormState>(INITIAL_RECIBO);
-  const [predio, setPredio] = useState<PredioFormState>(INITIAL_PREDIO);
+  const [negocio, setNegocio] = useState<NegocioFormState>(INITIAL_NEGOCIO);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<ApiResponse | null>(null);
@@ -65,22 +63,13 @@ export function CalculatorSection() {
     if (recibo.valorPagadoMensual)
       formData.set("valorPagadoMensual", recibo.valorPagadoMensual);
 
-    formData.set("tipoPredio", predio.tipoPredio);
-    formData.set("estrato", String(predio.estrato));
-    formData.set("esComercialOIndustrial", predio.esComercialOIndustrial);
-    formData.set("region", predio.region);
-    formData.set("conexionRed", predio.conexionRed);
-    formData.set(
-      "tieneRefrigeracionCritica",
-      String(predio.tieneRefrigeracionCritica)
-    );
-    formData.set("tamanoRefrigeracion", predio.tamanoRefrigeracion);
-    formData.set(
-      "interesIluminacionExterior",
-      String(predio.interesIluminacionExterior)
-    );
-    if (predio.puntosIluminacionAprox)
-      formData.set("puntosIluminacionAprox", predio.puntosIluminacionAprox);
+    formData.set("tipoNegocio", negocio.tipoNegocio);
+    formData.set("region", negocio.region);
+    for (const c of negocio.cargasCriticas) formData.append("cargasCriticas", c);
+    formData.set("horario", negocio.horario);
+    formData.set("fallaLuz", negocio.fallaLuz);
+    if (negocio.legalmenteConstituido)
+      formData.set("legalmenteConstituido", negocio.legalmenteConstituido);
 
     try {
       const res = await fetch("/api/analizar", {
@@ -97,7 +86,7 @@ export function CalculatorSection() {
       setData(json);
       setStep("resultado");
     } catch {
-      setError("No pudimos conectar con el agente. Intenta de nuevo.");
+      setError("No pudimos conectar con el servidor. Intenta de nuevo.");
     } finally {
       setLoading(false);
     }
@@ -106,7 +95,7 @@ export function CalculatorSection() {
   function handleReset() {
     setStep("recibo");
     setRecibo(INITIAL_RECIBO);
-    setPredio(INITIAL_PREDIO);
+    setNegocio(INITIAL_NEGOCIO);
     setData(null);
     setError(null);
   }
@@ -115,9 +104,9 @@ export function CalculatorSection() {
     <section id="calculadora" className="bg-cream-100/50 py-24 sm:py-28">
       <Container>
         <SectionHeading
-          eyebrow="Calculadora con IA"
-          title="Calcula tu ahorro solar en minutos"
-          description="Completa estos pasos y el agente te mostrará el ahorro estimado en porcentaje, dinero y tiempo de retorno."
+          eyebrow="Calculadora para negocios"
+          title="¿Le conviene la energía solar a tu negocio?"
+          description="Con tu recibo y unos datos de tu negocio te mostramos cuánto ahorrarías con paneles, cuánto costarían y en cuánto tiempo recuperas la inversión."
         />
 
         <div className="relative mx-auto mt-12 max-w-3xl">
@@ -155,7 +144,7 @@ export function CalculatorSection() {
                             <span
                               className={clsx(
                                 "block h-full bg-sun-500 transition-all duration-500 ease-out",
-                                step === "predio" ? "w-full" : "w-0"
+                                step === "negocio" ? "w-full" : "w-0"
                               )}
                             />
                           </span>
@@ -176,16 +165,16 @@ export function CalculatorSection() {
                 <StepReceipt
                   value={recibo}
                   onChange={setRecibo}
-                  onNext={() => setStep("predio")}
+                  onNext={() => setStep("negocio")}
                 />
               )}
 
-              {step === "predio" && loading && <LoadingState />}
+              {step === "negocio" && loading && <LoadingState />}
 
-              {step === "predio" && !loading && (
+              {step === "negocio" && !loading && (
                 <StepProperty
-                  value={predio}
-                  onChange={setPredio}
+                  value={negocio}
+                  onChange={setNegocio}
                   onBack={() => setStep("recibo")}
                   onSubmit={handleSubmit}
                   loading={loading}
@@ -196,6 +185,7 @@ export function CalculatorSection() {
                 <ResultsView
                   resultado={data.resultado}
                   recomendacion={data.recomendacion}
+                  recomendacionFuente={data.recomendacionFuente}
                   avisoExtraccion={data.avisoExtraccion}
                   onReset={handleReset}
                 />

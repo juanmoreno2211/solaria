@@ -1,25 +1,25 @@
-import { AlertTriangle, Compass, Snowflake } from "lucide-react";
+import { Compass, ReceiptText, Zap } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Reveal } from "@/components/ui/Reveal";
 
 const PROBLEMAS = [
   {
-    icon: AlertTriangle,
-    title: "El recibo de luz sube y no sabes por qué",
+    icon: Zap,
+    title: "La luz se va o se baja, y tu negocio se frena",
     description:
-      "Sin visibilidad sobre tu consumo real es difícil saber qué tanto podrías ahorrar cambiando a energía solar.",
+      "Cada corte o bajón puede parar la caja, dañar equipos o echar a perder mercancía, y aun así la factura llega igual.",
+  },
+  {
+    icon: ReceiptText,
+    title: "La factura de luz pesa cada mes",
+    description:
+      "Para un negocio pequeño, la energía es un costo fijo alto que se paga con tarifa comercial, venda mucho o poco.",
   },
   {
     icon: Compass,
-    title: "Demasiadas opciones, poca claridad",
+    title: "No sabes si la energía solar te conviene",
     description:
-      "¿Paneles, linternas solares, refrigeración solar? Cada negocio, casa o finca necesita una combinación distinta.",
-  },
-  {
-    icon: Snowflake,
-    title: "Los cortes de energía afectan tu cadena de frío",
-    description:
-      "Negocios y fincas con neveras pierden inventario cuando se va la luz, sin un respaldo solar confiable.",
+      "La información es técnica y dispersa, y pedir cotizaciones sin saber si vale la pena es perder tiempo.",
   },
 ];
 
@@ -34,8 +34,8 @@ export function ProblemSolution() {
               El problema
             </span>
             <h2 className="mt-5 text-balance text-2xl font-bold leading-[1.25] tracking-tight text-ink-950 sm:text-3xl lg:sticky lg:top-28">
-              Decidir qué solución solar te conviene hoy toma tiempo y
-              estudio. <span className="text-stone-500">SolarIA hace ese trabajo por ti.</span>
+              Saber si la energía solar le conviene a tu negocio toma tiempo y
+              estudio. <span className="text-stone-500">SolarIA te da una primera respuesta en minutos.</span>
             </h2>
           </Reveal>
 

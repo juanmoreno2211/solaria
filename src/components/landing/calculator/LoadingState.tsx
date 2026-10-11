@@ -5,9 +5,9 @@ import { Sparkles } from "lucide-react";
 
 const MENSAJES = [
   "Leyendo tu consumo eléctrico...",
-  "Cruzando tarifas y horas de sol de tu región...",
-  "Comparando paneles, iluminación y refrigeración solar...",
-  "Redactando tu recomendación personalizada...",
+  "Revisando las horas de sol de tu región...",
+  "Calculando el sistema de paneles para tu horario...",
+  "Viendo si la inversión te conviene...",
 ];
 
 export function LoadingState() {
@@ -28,7 +28,7 @@ export function LoadingState() {
 
       <div>
         <p className="text-sm font-semibold text-ink-950">
-          El agente está analizando tu información
+          Estamos calculando tu ahorro
         </p>
         <p className="mt-1.5 text-sm text-stone-500">{MENSAJES[indice]}</p>
       </div>

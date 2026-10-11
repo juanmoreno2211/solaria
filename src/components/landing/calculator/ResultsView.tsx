@@ -1,36 +1,45 @@
-import { RotateCcw, Sparkles } from "lucide-react";
+import { BatteryWarning, RotateCcw } from "lucide-react";
+import clsx from "clsx";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 import { CountUp } from "@/components/ui/CountUp";
 import { formatCOP, formatNumber } from "@/lib/format";
-import type { AnalisisResultado } from "@/lib/savings/types";
+import type { AnalisisResultado, Veredicto } from "@/lib/savings/types";
 import { ResultCard } from "./ResultCard";
 import { SavingsCharts } from "./SavingsCharts";
 import { FinancingSimulator } from "./FinancingSimulator";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 
+const VEREDICTO: Record<Veredicto, { titulo: string; color: string }> = {
+  conviene: { titulo: "Te conviene pedir cotización", color: "text-leaf-400" },
+  comparar: { titulo: "Puede convenirte, compara", color: "text-sun-300" },
+  por_ahora_no: { titulo: "Por ahora no", color: "text-ember-400" },
+};
+
 export function ResultsView({
   resultado,
   recomendacion,
+  recomendacionFuente,
   avisoExtraccion,
   onReset,
 }: {
   resultado: AnalisisResultado;
   recomendacion: string;
+  recomendacionFuente: "ia" | "plantilla";
   avisoExtraccion?: string;
   onReset: () => void;
 }) {
-  const aplicables = resultado.alternativas.filter((a) => a.aplica);
-  const mejor = resultado.alternativas.find(
+  const paneles = resultado.alternativas.find(
     (a) => a.id === resultado.mejorAlternativaId
   );
+  const veredicto = VEREDICTO[resultado.veredicto];
 
   return (
     <Reveal y={16}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="text-lg font-bold text-ink-950">
-            Tu plan de ahorro solar
+            ¿Le conviene la energía solar a tu negocio?
           </h3>
           <p className="mt-1 text-sm text-ink-800/60">
             Basado en {formatNumber(resultado.consumoMensualKwh)} kWh/mes y{" "}
@@ -50,32 +59,34 @@ export function ResultsView({
       )}
 
       <div className="mt-5 rounded-2xl bg-ink-950 p-6 text-white sm:p-7">
-        <div className="flex items-center gap-2 text-sun-300">
-          <Sparkles className="h-4 w-4" />
-          <span className="text-xs font-semibold uppercase tracking-wide">
-            Recomendación del agente
-          </span>
-        </div>
+        <span className="text-xs font-semibold uppercase tracking-wide text-white/45">
+          {recomendacionFuente === "ia"
+            ? "Nuestra recomendación (redactada con IA)"
+            : "Nuestra recomendación"}
+        </span>
+        <p className={clsx("mt-2 text-2xl font-bold", veredicto.color)}>
+          {veredicto.titulo}
+        </p>
         <p className="mt-3 text-sm leading-relaxed text-white/80 sm:text-base">
           {recomendacion}
         </p>
 
-        {aplicables.length > 0 && (
-          <div className="mt-6 grid grid-cols-2 gap-4 border-t border-white/10 pt-5 sm:grid-cols-2">
+        {paneles && (
+          <div className="mt-6 grid grid-cols-2 gap-4 border-t border-white/10 pt-5">
             <div>
-              <p className="text-xs text-white/45">Ahorro combinado mensual</p>
+              <p className="text-xs text-white/45">Ahorro mensual estimado</p>
               <p className="text-2xl font-bold">
                 <CountUp
-                  value={resultado.ahorroCombinadoMensual}
+                  value={paneles.ahorroMensualEstimado}
                   format={(v) => formatCOP(Math.round(v))}
                 />
               </p>
             </div>
             <div>
-              <p className="text-xs text-white/45">Ahorro combinado sobre tu factura</p>
+              <p className="text-xs text-white/45">Ahorro sobre tu factura</p>
               <p className="text-2xl font-bold text-sun-300">
                 <CountUp
-                  value={resultado.ahorroCombinadoPorcentual}
+                  value={paneles.ahorroPorcentual}
                   format={(v) => `${Math.round(v)}%`}
                 />
               </p>
@@ -84,44 +95,46 @@ export function ResultsView({
         )}
       </div>
 
-      {aplicables.length > 0 && <SavingsCharts resultado={resultado} />}
+      <p className="mt-4 flex items-start gap-2.5 rounded-xl border border-black/8 bg-white px-4 py-3 text-sm text-ink-800/75">
+        <BatteryWarning className="mt-0.5 h-4 w-4 shrink-0 text-ember-600" />
+        Este cálculo estima tu ahorro en la factura. Para tener luz durante un
+        corte se necesitan baterías, que suben la inversión.
+      </p>
 
-      {aplicables.length > 0 ? (
-        <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {aplicables.map((a) => (
-            <ResultCard
-              key={a.id}
-              alternativa={a}
-              destacada={a.id === resultado.mejorAlternativaId}
-            />
-          ))}
-        </div>
-      ) : (
-        <p className="mt-6 rounded-xl border border-black/10 bg-white p-5 text-sm text-ink-800/60">
-          Marca si te interesa iluminación exterior o si tienes refrigeración
-          que proteger para ver esas alternativas también. Mientras tanto, te
-          mostramos el potencial de paneles solares para tu consumo.
-        </p>
+      {paneles && (
+        <>
+          <div className="mt-6 grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
+            <ResultCard alternativa={paneles} />
+            <SavingsCharts mejor={paneles} />
+          </div>
+          <FinancingSimulator mejor={paneles} />
+        </>
       )}
 
-      {mejor && <FinancingSimulator mejor={mejor} />}
+      <p className="mt-4 text-xs leading-relaxed text-ink-800/45">
+        Las cifras son estimaciones con supuestos por validar (precio por kWp,
+        tarifa comercial y qué parte de tu consumo es de día). La cifra final
+        depende de la cotización de un proveedor.
+      </p>
 
-      <div className="mt-8 flex flex-col items-center gap-3 rounded-2xl border border-black/5 bg-cream-100/70 p-6 text-center sm:flex-row sm:justify-between sm:text-left">
-        <p className="text-sm text-ink-800/70">
-          ¿Quieres una cotización real con un asesor solar humano?
-        </p>
-        <a
-          href={buildWhatsAppLink(
-            mejor
-              ? `¡Hola! Acabo de calcular mi ahorro solar en SolarIA (≈${mejor.ahorroPorcentual}% con ${mejor.nombre.toLowerCase()}) y quiero hablar con un asesor.`
-              : undefined
-          )}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Button size="md">Hablar con un asesor</Button>
-        </a>
-      </div>
+      {resultado.veredicto !== "por_ahora_no" && (
+        <div className="mt-8 flex flex-col items-center gap-3 rounded-2xl border border-black/5 bg-cream-100/70 p-6 text-center sm:flex-row sm:justify-between sm:text-left">
+          <p className="text-sm text-ink-800/70">
+            ¿Quieres una cotización real para tu negocio?
+          </p>
+          <a
+            href={buildWhatsAppLink(
+              paneles
+                ? `¡Hola! Calculé en SolarIA que mi negocio ahorraría ≈${paneles.ahorroPorcentual}% con paneles solares y quiero pedir una cotización.`
+                : undefined
+            )}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Button size="md">Pedir cotización</Button>
+          </a>
+        </div>
+      )}
     </Reveal>
   );
 }

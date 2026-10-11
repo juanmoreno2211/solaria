@@ -12,7 +12,7 @@ const PILARES = [
     n: "02",
     title: "Incentivar",
     description:
-      "Mostramos el ahorro real desde el primer minuto, para que dar el paso hacia la energía solar sea una decisión fácil, no un salto de fe.",
+      "Mostramos el ahorro estimado desde el primer minuto, para que dar el paso hacia la energía solar sea una decisión fácil, no un salto de fe.",
   },
   {
     n: "03",
@@ -39,9 +39,10 @@ export function Mission() {
               </h2>
             </div>
             <p className="max-w-xl text-balance text-base leading-relaxed text-stone-600 lg:pt-1 lg:text-lg">
-              Cada año sube tu factura, pero la información sobre energía
-              solar sigue siendo técnica y dispersa. SolarIA la convierte en
-              un plan claro, tan simple como subir una foto.
+              Muchos negocios pagan una factura alta y aun así viven con cortes
+              y bajones de luz. La información sobre energía solar sigue siendo
+              técnica y dispersa; SolarIA la convierte en una respuesta clara
+              para tu negocio, tan simple como subir una foto del recibo.
             </p>
           </div>
         </Reveal>

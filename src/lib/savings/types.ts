@@ -1,10 +1,22 @@
 import type { Region } from "@/lib/config/pricing";
 import type { ProveedorRecomendado } from "@/lib/catalog/types";
 
-export type TipoPredio = "casa" | "negocio" | "finca";
-export type ConexionRed = "interconectado" | "zona_no_interconectada";
-export type Estrato = 1 | 2 | 3 | 4 | 5 | 6;
-export type TamanoRefrigeracion = "pequena" | "media" | "grande";
+export type TipoNegocio =
+  | "tienda"
+  | "restaurante"
+  | "consultorio"
+  | "taller"
+  | "finca"
+  | "otro";
+export type CargaCritica =
+  | "refrigeracion"
+  | "equipos"
+  | "iluminacion"
+  | "caja_datafono"
+  | "maquinaria"
+  | "bombeo";
+export type Horario = "dia" | "dia_noche" | "24h";
+export type FallaLuz = "cortes" | "bajones" | "ambos";
 
 export interface ReciboInput {
   fuente: "foto" | "manual";
@@ -15,28 +27,28 @@ export interface ReciboInput {
   confianzaExtraccion?: "alta" | "media" | "baja" | null;
 }
 
-export interface PredioInput {
-  tipoPredio: TipoPredio;
-  estrato?: Estrato;
-  esComercialOIndustrial?: "comercial" | "industrial";
+export interface NegocioInput {
+  tipoNegocio: TipoNegocio;
   region: Region;
-  conexionRed: ConexionRed;
-  tieneRefrigeracionCritica: boolean;
-  tamanoRefrigeracion?: TamanoRefrigeracion;
-  interesIluminacionExterior: boolean;
-  puntosIluminacionAprox?: number;
+  cargasCriticas: CargaCritica[];
+  horario: Horario;
+  fallaLuz: FallaLuz;
+  legalmenteConstituido?: boolean;
 }
 
 export interface AnalisisInput {
   recibo: ReciboInput;
-  predio: PredioInput;
+  negocio: NegocioInput;
 }
 
+export type Veredicto = "conviene" | "comparar" | "por_ahora_no";
+
 export interface AlternativaResultado {
-  id: "paneles" | "iluminacion" | "refrigeracion";
+  id: "paneles";
   nombre: string;
   aplica: boolean;
   motivoNoAplica?: string;
+  kwpRequeridos: number;
   inversionEstimadaMin: number;
   inversionEstimadaMax: number;
   ahorroMensualEstimado: number;
@@ -55,6 +67,6 @@ export interface AnalisisResultado {
   tarifaEstimadaKwh: number;
   alternativas: AlternativaResultado[];
   mejorAlternativaId: AlternativaResultado["id"] | null;
-  ahorroCombinadoMensual: number;
-  ahorroCombinadoPorcentual: number;
+  veredicto: Veredicto;
+  motivoVeredicto: string;
 }

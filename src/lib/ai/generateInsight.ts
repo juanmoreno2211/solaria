@@ -2,92 +2,68 @@ import { AI_MODEL, getAnthropicClient, isAiConfigured } from "./client";
 import type { AnalisisInput, AnalisisResultado } from "@/lib/savings/types";
 import { formatCOP } from "@/lib/format";
 
-const PROMPT_SISTEMA = `Eres un asesor experto en energía solar en Colombia, cercano y claro.
-Recibes datos de consumo eléctrico de un cliente y los resultados de un cálculo de ahorro con distintas
-alternativas de energía solar (paneles, iluminación solar, refrigeración solar). Escribe una recomendación
-personalizada en español, en un tono cercano y profesional, de máximo 4 frases, en texto plano (sin markdown,
-sin listas). Explica cuál alternativa conviene más según su caso y por qué, y menciona brevemente si combinar
-alternativas tiene sentido, teniendo en cuenta que si la alternativa principal ya cubre casi toda la
-factura, combinarla con otras no suma mucho ahorro adicional (aunque sí puede dar respaldo ante cortes de
-energía). No inventes cifras que no te dieron.`;
+export interface Recomendacion {
+  texto: string;
+  fuente: "ia" | "plantilla";
+}
+
+const PROMPT_SISTEMA = `Eres parte de SolarIA, una calculadora de ahorro solar para micronegocios en Colombia.
+Recibes los datos de un negocio y el resultado de un cálculo de ahorro con paneles solares, hecho con
+código. Redacta en español, en tono cercano y claro, máximo 4 frases, en texto plano (sin markdown ni
+listas), una explicación del resultado para el dueño del negocio. Respeta el veredicto que te dan; no lo
+cambies. Usa solo las cifras que te dan: no inventes, redondees de otra forma ni calcules cifras nuevas.
+No prometas que tendrá luz durante los cortes: sin baterías, los paneles solo bajan la factura.`;
+
+const HORARIO_TEXTO = {
+  dia: "de día",
+  dia_noche: "de día y de noche",
+  "24h": "24 horas",
+} as const;
 
 function construirResumenParaIA(
   input: AnalisisInput,
   resultado: AnalisisResultado
 ): string {
-  const aplicables = resultado.alternativas.filter((a) => a.aplica);
-  const lineas = aplicables.map((a) => {
-    const proveedor = a.proveedorRecomendado
-      ? ` Proveedor real disponible: ${a.proveedorRecomendado.producto}${
-          a.proveedorRecomendado.marca ? ` (${a.proveedorRecomendado.marca})` : ""
-        } de ${a.proveedorRecomendado.proveedor}.`
-      : "";
-    return `- ${a.nombre}: inversión ${formatCOP(a.inversionEstimadaMin)}-${formatCOP(
-      a.inversionEstimadaMax
-    )}, ahorro mensual ${formatCOP(a.ahorroMensualEstimado)} (${a.ahorroPorcentual}%), retorno ${a.retornoMeses ?? "N/D"} meses.${proveedor}`;
-  });
-
-  return `Tipo de predio: ${input.predio.tipoPredio}. Región: ${input.predio.region}. Conexión: ${input.predio.conexionRed}.
+  const p = resultado.alternativas[0];
+  return `Tipo de negocio: ${input.negocio.tipoNegocio}. Región: ${input.negocio.region}. Trabaja ${
+    HORARIO_TEXTO[input.negocio.horario]
+  }. La luz falla por: ${input.negocio.fallaLuz}.
 Consumo mensual: ${resultado.consumoMensualKwh} kWh. Valor pagado: ${formatCOP(resultado.valorPagadoMensual)}.
-Alternativas aplicables:
-${lineas.join("\n")}`;
+Paneles solares: inversión ${formatCOP(p.inversionEstimadaMin)}-${formatCOP(
+    p.inversionEstimadaMax
+  )}, ahorro mensual ${formatCOP(p.ahorroMensualEstimado)} (${p.ahorroPorcentual}% de la factura), retorno ${
+    p.retornoMeses ?? "N/D"
+  } meses.
+Veredicto: ${resultado.veredicto}. Motivo: ${resultado.motivoVeredicto}`;
 }
 
-function generarInsightPlantilla(
-  input: AnalisisInput,
-  resultado: AnalisisResultado
-): string {
-  const mejor = resultado.alternativas.find(
-    (a) => a.id === resultado.mejorAlternativaId
-  );
+function generarInsightPlantilla(resultado: AnalisisResultado): string {
+  const p = resultado.alternativas[0];
+  const inicio = {
+    conviene: "Te conviene pedir una cotización.",
+    comparar: "Puede convenirte; compara antes de decidir.",
+    por_ahora_no: "Por ahora no te recomendamos invertir en paneles.",
+  }[resultado.veredicto];
 
-  if (!mejor) {
-    return "Cuéntanos un poco más sobre tu casa, negocio o finca (iluminación exterior o refrigeración) para poder recomendarte la mejor combinación de energía solar.";
+  let texto = `${inicio} ${resultado.motivoVeredicto}`;
+  if (p.aplica && resultado.veredicto !== "por_ahora_no") {
+    texto += ` Con ${resultado.consumoMensualKwh} kWh al mes, ahorrarías cerca de ${formatCOP(
+      p.ahorroMensualEstimado
+    )} al mes (${p.ahorroPorcentual}% de tu factura).`;
   }
-
-  const otras = resultado.alternativas.filter(
-    (a) => a.aplica && a.id !== mejor.id
-  );
-
-  let texto = `Con un consumo de ${resultado.consumoMensualKwh} kWh al mes, la alternativa con mayor impacto para ti es ${mejor.nombre.toLowerCase()}, con un ahorro estimado de ${formatCOP(
-    mejor.ahorroMensualEstimado
-  )} al mes (${mejor.ahorroPorcentual}%) y un retorno de inversión cercano a ${mejor.retornoMeses ?? "varios"} meses.`;
-
-  if (mejor.proveedorRecomendado) {
-    texto += ` Para tu caso, ${mejor.proveedorRecomendado.proveedor} tiene disponible ${mejor.proveedorRecomendado.producto}${
-      mejor.proveedorRecomendado.marca ? ` (${mejor.proveedorRecomendado.marca})` : ""
-    } a ese precio.`;
-  }
-
-  const margenCombinado =
-    resultado.ahorroCombinadoPorcentual - mejor.ahorroPorcentual;
-
-  if (otras.length > 0 && margenCombinado >= 3) {
-    texto += ` Además, podrías combinarla con ${otras
-      .map((a) => a.nombre.toLowerCase())
-      .join(" y ")} para llevar tu ahorro total a cerca del ${
-      resultado.ahorroCombinadoPorcentual
-    }% de tu factura.`;
-  } else if (otras.length > 0) {
-    texto += ` Como ${mejor.nombre.toLowerCase()} ya cubre la mayor parte de tu consumo, ${otras
-      .map((a) => a.nombre.toLowerCase())
-      .join(" y ")} suman poco ahorro adicional, pero te dan respaldo si hay cortes de energía.`;
-  }
-
-  if (input.predio.conexionRed === "zona_no_interconectada") {
-    texto += " Como tu predio no está conectado a la red interconectada, el beneficio también incluye independencia energética y menos dependencia de plantas o combustible.";
-  }
-
   return texto;
 }
 
 export async function generarRecomendacion(
   input: AnalisisInput,
   resultado: AnalisisResultado
-): Promise<string> {
-  if (!isAiConfigured()) {
-    return generarInsightPlantilla(input, resultado);
-  }
+): Promise<Recomendacion> {
+  const plantilla: Recomendacion = {
+    texto: generarInsightPlantilla(resultado),
+    fuente: "plantilla",
+  };
+
+  if (!isAiConfigured()) return plantilla;
 
   try {
     const client = getAnthropicClient();
@@ -105,10 +81,10 @@ export async function generarRecomendacion(
 
     const textBlock = response.content.find((block) => block.type === "text");
     if (textBlock && textBlock.type === "text" && textBlock.text.trim()) {
-      return textBlock.text.trim();
+      return { texto: textBlock.text.trim(), fuente: "ia" };
     }
-    return generarInsightPlantilla(input, resultado);
+    return plantilla;
   } catch {
-    return generarInsightPlantilla(input, resultado);
+    return plantilla;
   }
 }
