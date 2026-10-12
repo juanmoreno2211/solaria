@@ -15,7 +15,8 @@ export function CTA() {
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-balance text-white/60">
             Con tu recibo de luz y unos datos de tu negocio, en un par de minutos
-            sabrás cuánto ahorrarías y si vale la pena pedir una cotización.
+            sabrás cuánto ahorrarías y qué proveedor de tu región te conviene
+            más para pedirle una cotización.
           </p>
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link href="/#calculadora">

@@ -9,7 +9,7 @@ const RESPUESTAS = [
   "Cuánto ahorrarías al mes en la factura",
   "Cuánto cuesta instalar los paneles",
   "En cuánto tiempo recuperas la inversión",
-  "Qué proveedor de tu región te puede cotizar",
+  "Qué proveedor de tu región te conviene más",
 ];
 
 export function Hero() {
@@ -36,8 +36,9 @@ export function Hero() {
           </h1>
 
           <p className="mt-7 max-w-md text-balance text-lg leading-relaxed text-white/60">
-            Si la luz te falla y la factura pesa, con los datos de tu recibo
-            sabrás en un par de minutos si te conviene instalar paneles solares.
+            Con los datos de tu recibo calculamos cuánto ahorrarías con paneles
+            solares y comparamos los proveedores de tu región para acercarte al
+            que más te beneficia.
           </p>
 
           <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
