@@ -36,8 +36,8 @@ export function Hero() {
           </h1>
 
           <p className="mt-7 max-w-md text-balance text-lg leading-relaxed text-white/60">
-            Si la luz te falla y la factura pesa, sube tu recibo y en un par
-            de minutos sabrás si te conviene instalar paneles solares.
+            Si la luz te falla y la factura pesa, con los datos de tu recibo
+            sabrás en un par de minutos si te conviene instalar paneles solares.
           </p>
 
           <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">

@@ -81,7 +81,7 @@ export default function OgImage() {
             maxWidth: 860,
           }}
         >
-          Sube el recibo de luz de tu negocio, mira cuánto ahorrarías con
+          Con el recibo de luz de tu negocio, mira cuánto ahorrarías con
           paneles solares y pide una cotización.
         </div>
       </div>

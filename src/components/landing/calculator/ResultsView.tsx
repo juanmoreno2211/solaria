@@ -48,16 +48,12 @@ function ProveedoresGrid({
 export function ResultsView({
   resultado,
   recomendacion,
-  recomendacionFuente,
-  avisoExtraccion,
   onCambiarDatos,
   onPedirCotizacion,
   onInteresSinProveedor,
 }: {
   resultado: AnalisisResultado;
   recomendacion: string;
-  recomendacionFuente: "ia" | "plantilla";
-  avisoExtraccion?: string;
   onCambiarDatos: () => void;
   onPedirCotizacion: (proveedor: string) => void;
   onInteresSinProveedor: () => void;
@@ -80,17 +76,9 @@ export function ResultsView({
         {formatCOP(resultado.valorPagadoMensual)} de factura mensual.
       </p>
 
-      {avisoExtraccion && (
-        <p className="mt-4 rounded-xl border border-sun-500/25 bg-sun-500/8 px-4 py-3 text-xs text-ink-900/70">
-          {avisoExtraccion}
-        </p>
-      )}
-
       <div className="mt-5 rounded-2xl bg-ink-950 p-6 text-white sm:p-7">
         <span className="text-xs font-semibold uppercase tracking-wide text-white/45">
-          {recomendacionFuente === "ia"
-            ? "Nuestra recomendación (redactada con IA)"
-            : "Nuestra recomendación"}
+          Nuestra recomendación
         </span>
         <p className={clsx("mt-2 text-2xl font-bold", veredicto.color)}>
           {veredicto.titulo}

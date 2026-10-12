@@ -5,7 +5,13 @@ import { Check } from "lucide-react";
 import clsx from "clsx";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { StepReceipt, type ReciboFormState } from "./StepReceipt";
+import {
+  StepReceipt,
+  corrigioLectura,
+  fuenteNumeros,
+  reciboInicial,
+  type ReciboFormState,
+} from "./StepReceipt";
 import {
   StepProperty,
   negocioCompleto,
@@ -33,13 +39,6 @@ const PASOS: { key: Step; label: string }[] = [
   { key: "cotizacion", label: "Tu cotización" },
 ];
 
-const INITIAL_RECIBO: ReciboFormState = {
-  fuente: "foto",
-  imageFile: null,
-  consumoMensualKwh: "",
-  valorPagadoMensual: "",
-};
-
 const INITIAL_NEGOCIO: NegocioFormState = {
   tipoNegocio: "",
   region: "",
@@ -59,8 +58,6 @@ const INITIAL_COTIZACION: CotizacionFormState = {
 interface ApiResponse {
   resultado: AnalisisResultado;
   recomendacion: string;
-  recomendacionFuente: "ia" | "plantilla";
-  avisoExtraccion?: string;
   error?: string;
 }
 
@@ -111,9 +108,10 @@ function BarraProgreso({ step }: { step: Step }) {
   );
 }
 
-export function CalculatorSection() {
+export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean }) {
   const [step, setStep] = useState<Step>("recibo");
-  const [recibo, setRecibo] = useState<ReciboFormState>(INITIAL_RECIBO);
+  const [recibo, setRecibo] = useState<ReciboFormState>(() => reciboInicial(fotoDisponible));
+  const [errorRecibo, setErrorRecibo] = useState<string | null>(null);
   const [negocio, setNegocio] = useState<NegocioFormState>(INITIAL_NEGOCIO);
   const [errorNegocio, setErrorNegocio] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -154,8 +152,8 @@ export function CalculatorSection() {
     setError(null);
 
     const formData = new FormData();
-    formData.set("fuente", recibo.fuente);
-    if (recibo.imageFile) formData.set("recibo", recibo.imageFile);
+    // Solo números confirmados; la foto ya se leyó en el paso 1 y no se reenvía.
+    formData.set("fuente", fuenteNumeros(recibo));
     if (recibo.consumoMensualKwh)
       formData.set("consumoMensualKwh", recibo.consumoMensualKwh);
     if (recibo.valorPagadoMensual)
@@ -215,10 +213,13 @@ export function CalculatorSection() {
 
   function handleReciboListo() {
     registrarEvento("recibo_ingresado", {
-      fuente: recibo.fuente,
+      fuente: fuenteNumeros(recibo),
       consumoKwh: Number(recibo.consumoMensualKwh) || null,
       valorFactura: Number(recibo.valorPagadoMensual) || null,
-      conFoto: Boolean(recibo.imageFile),
+    });
+    registrarEvento("recibo_leido", {
+      fuente: fuenteNumeros(recibo),
+      corrigio: corrigioLectura(recibo),
     });
     setStep("negocio");
   }
@@ -297,7 +298,8 @@ export function CalculatorSection() {
 
   function handleReset() {
     setStep("recibo");
-    setRecibo(INITIAL_RECIBO);
+    setRecibo(reciboInicial(fotoDisponible));
+    setErrorRecibo(null);
     setNegocio(INITIAL_NEGOCIO);
     setData(null);
     setError(null);
@@ -335,6 +337,9 @@ export function CalculatorSection() {
                 value={recibo}
                 onChange={setRecibo}
                 onNext={handleReciboListo}
+                fotoDisponible={fotoDisponible}
+                error={errorRecibo}
+                onError={setErrorRecibo}
               />
             )}
 
@@ -355,8 +360,6 @@ export function CalculatorSection() {
               <ResultsView
                 resultado={data.resultado}
                 recomendacion={data.recomendacion}
-                recomendacionFuente={data.recomendacionFuente}
-                avisoExtraccion={data.avisoExtraccion}
                 onCambiarDatos={() => setStep("negocio")}
                 onPedirCotizacion={handlePedirCotizacion}
                 onInteresSinProveedor={handleInteresSinProveedor}

@@ -13,7 +13,7 @@ const display = Plus_Jakarta_Sans({
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 const TITLE = "SolarIA — ¿Le conviene la energía solar a tu negocio?";
 const DESCRIPTION =
-  "Calculadora para micronegocios en Colombia: sube el recibo de luz de tu negocio, mira cuánto ahorrarías con paneles solares y en cuánto tiempo recuperas la inversión, y pide una cotización a un proveedor de tu región.";
+  "Calculadora para micronegocios en Colombia: con el recibo de luz de tu negocio, mira cuánto ahorrarías con paneles solares y en cuánto tiempo recuperas la inversión, y pide una cotización a un proveedor de tu región.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

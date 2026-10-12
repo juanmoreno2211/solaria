@@ -3,13 +3,21 @@ import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
 
+const PASO_RECIBO_FOTO = {
+  icon: FileScan,
+  title: "Sube tu recibo",
+  description:
+    "Toma una foto del recibo de luz de tu negocio o escribe el consumo y el valor a mano. Si usas la foto, la leemos y tú confirmas los números.",
+};
+
+const PASO_RECIBO_MANUAL = {
+  icon: FileScan,
+  title: "Escribe tu recibo",
+  description:
+    "Escribe el consumo y el valor del recibo de luz de tu negocio. Con uno de los dos basta.",
+};
+
 const PASOS = [
-  {
-    icon: FileScan,
-    title: "Sube tu recibo",
-    description:
-      "Toma una foto del recibo de luz de tu negocio o escribe el consumo y el valor a mano. No guardamos la foto, solo los números.",
-  },
   {
     icon: Store,
     title: "Cuéntanos de tu negocio",
@@ -30,7 +38,9 @@ const PASOS = [
   },
 ];
 
-export function HowItWorks() {
+export function HowItWorks({ fotoDisponible }: { fotoDisponible: boolean }) {
+  const pasos = [fotoDisponible ? PASO_RECIBO_FOTO : PASO_RECIBO_MANUAL, ...PASOS];
+
   return (
     <section id="como-funciona" className="bg-cream-100/50 py-24 sm:py-28">
       <Container>
@@ -47,7 +57,7 @@ export function HowItWorks() {
             aria-hidden
             className="absolute left-5 top-5 bottom-5 w-px bg-ink-950/10 sm:bottom-auto sm:left-0 sm:right-0 sm:h-px sm:w-auto"
           />
-          {PASOS.map((paso, i) => (
+          {pasos.map((paso, i) => (
             <Reveal key={paso.title} delay={i * 0.08} className="relative flex gap-5 sm:block">
               <span className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-sun-500/30 bg-cream-50 text-sun-600">
                 <paso.icon className="h-[1.1rem] w-[1.1rem]" strokeWidth={1.75} />

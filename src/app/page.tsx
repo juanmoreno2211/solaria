@@ -7,13 +7,16 @@ import { FAQ } from "@/components/landing/FAQ";
 import { CTA } from "@/components/landing/CTA";
 
 export default function Home() {
+  // Sin llave de Gemini se oculta la opción de foto (se evalúa al compilar la página).
+  const fotoDisponible = Boolean(process.env.GEMINI_API_KEY);
+
   return (
     <>
       <Navbar />
       <main>
         <Hero />
-        <CalculatorSection />
-        <HowItWorks />
+        <CalculatorSection fotoDisponible={fotoDisponible} />
+        <HowItWorks fotoDisponible={fotoDisponible} />
         <FAQ />
         <CTA />
       </main>

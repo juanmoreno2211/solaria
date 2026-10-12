@@ -42,7 +42,7 @@ export function Mission() {
               Muchos negocios pagan una factura alta y aun así viven con cortes
               y bajones de luz. La información sobre energía solar sigue siendo
               técnica y dispersa; SolarIA la convierte en una respuesta clara
-              para tu negocio, tan simple como subir una foto del recibo.
+              para tu negocio, tan simple como tener a mano tu recibo de luz.
             </p>
           </div>
         </Reveal>

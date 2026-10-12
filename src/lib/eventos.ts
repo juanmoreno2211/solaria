@@ -2,6 +2,7 @@ import { getSessionId } from "./session";
 
 export const EVENTOS = [
   "recibo_ingresado",
+  "recibo_leido",
   "resultado_visto",
   "clic_pedir_cotizacion",
   "cotizacion_pedida",

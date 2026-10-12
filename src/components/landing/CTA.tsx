@@ -14,7 +14,7 @@ export function CTA() {
             Sabe si los paneles le convienen a tu negocio antes de invertir
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-balance text-white/60">
-            Sube tu recibo, cuéntanos de tu negocio y en un par de minutos
+            Con tu recibo de luz y unos datos de tu negocio, en un par de minutos
             sabrás cuánto ahorrarías y si vale la pena pedir una cotización.
           </p>
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">

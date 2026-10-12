@@ -21,9 +21,6 @@ export interface ReciboInput {
   fuente: "foto" | "manual";
   consumoMensualKwh: number | null;
   valorPagadoMensual: number | null;
-  periodoFacturado?: string | null;
-  ciudad?: string | null;
-  confianzaExtraccion?: "alta" | "media" | "baja" | null;
 }
 
 export interface NegocioInput {

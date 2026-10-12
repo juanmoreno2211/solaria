@@ -22,7 +22,7 @@ const PREGUNTAS = [
   },
   {
     q: "¿Qué pasa con la foto de mi recibo?",
-    a: "La usamos solo para leer el consumo y el valor pagado, y no la guardamos. Si prefieres no subirla, puedes escribir los datos a mano.",
+    a: "Si subes una foto, la enviamos a Google (Gemini) solo para leer el consumo y el valor, y tú confirmas los números antes de seguir. Nosotros no la guardamos, pero en esta versión de prueba Google puede usarla para mejorar sus productos: tapa tu nombre, tu dirección y tu número de cuenta antes de subirla. Si prefieres, escribe los datos a mano.",
   },
   {
     q: "¿Qué pasa cuando pido una cotización?",
