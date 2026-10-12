@@ -6,10 +6,18 @@
       "kwpMin": 1,
       "kwpMax": 50,
       "precioPorKwpCOP": 4200000,
-      "regiones": ["caribe", "andina", "pacifico"],
+      "regiones": [
+        "caribe",
+        "andina",
+        "pacifico"
+      ],
       "instalacion": "3 a 4 semanas",
       "pagoDescripcion": "Cuota inicial del 30 % y el resto en 36 cuotas",
-      "financiacion": { "cuotaInicialPct": 0.3, "tasaMensual": 0.017, "plazoMeses": 36 },
+      "financiacion": {
+        "cuotaInicialPct": 0.3,
+        "tasaMensual": 0.017,
+        "plazoMeses": 36
+      },
       "esSimulado": true
     },
     {
@@ -18,10 +26,34 @@
       "kwpMin": 3,
       "kwpMax": 50,
       "precioPorKwpCOP": 3600000,
-      "regiones": ["caribe", "andina", "orinoquia"],
+      "regiones": [
+        "caribe",
+        "andina",
+        "orinoquia"
+      ],
       "instalacion": "2 a 3 semanas",
       "pagoDescripcion": "50 % de anticipo y 50 % al terminar la instalación",
       "financiacion": null,
+      "esSimulado": true
+    },
+    {
+      "proveedor": "Proveedor 3",
+      "nombreSistema": "Sistema fotovoltaico conectado a la red",
+      "kwpMin": 1.5,
+      "kwpMax": 30,
+      "precioPorKwpCOP": 3900000,
+      "regiones": [
+        "caribe",
+        "pacifico",
+        "orinoquia"
+      ],
+      "instalacion": "4 a 6 semanas",
+      "pagoDescripcion": "Cuota inicial del 20 % y el resto en 48 cuotas",
+      "financiacion": {
+        "cuotaInicialPct": 0.2,
+        "tasaMensual": 0.021,
+        "plazoMeses": 48
+      },
       "esSimulado": true
     }
   ],
