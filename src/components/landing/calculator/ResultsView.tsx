@@ -17,7 +17,7 @@ const VEREDICTO: Record<Veredicto, { titulo: string; color: string }> = {
   conviene: { titulo: "Te conviene pedir cotización", color: "text-leaf-400" },
   comparar: { titulo: "Puede convenirte: compara con calma", color: "text-sun-300" },
   por_ahora_no: { titulo: "Por ahora no te lo recomendamos", color: "text-ember-400" },
-  sin_proveedores: { titulo: "Aún no tenemos proveedores en tu zona", color: "text-sun-300" },
+  sin_proveedores: { titulo: "Aún no hay un proveedor para tu caso", color: "text-sun-300" },
 };
 
 function ProveedoresGrid({
@@ -25,7 +25,7 @@ function ProveedoresGrid({
   onPedir,
 }: {
   ofertas: OfertaProveedor[];
-  onPedir: (proveedor: string) => void;
+  onPedir: (proveedor: string, plan?: string) => void;
 }) {
   const aplican = ofertas.filter((o) => o.aplica);
   const menorInversion =
@@ -38,7 +38,7 @@ function ProveedoresGrid({
           key={o.proveedor}
           oferta={o}
           menorInversion={o.aplica && o.inversion === menorInversion}
-          onPedir={() => onPedir(o.proveedor)}
+          onPedir={(plan) => onPedir(o.proveedor, plan)}
         />
       ))}
     </div>
@@ -55,7 +55,7 @@ export function ResultsView({
   resultado: AnalisisResultado;
   recomendacion: string;
   onCambiarDatos: () => void;
-  onPedirCotizacion: (proveedor: string) => void;
+  onPedirCotizacion: (proveedor: string, plan?: string) => void;
   onInteresSinProveedor: () => void;
 }) {
   const [verProveedores, setVerProveedores] = useState(false);
@@ -65,6 +65,8 @@ export function ResultsView({
     (a) => a.id === resultado.mejorAlternativaId
   );
   const veredicto = VEREDICTO[resultado.veredicto];
+  const ofertas = paneles?.ofertas ?? [];
+  const enZona = ofertas.filter((o) => o.cubreZona);
 
   return (
     <Reveal y={16}>
@@ -117,9 +119,7 @@ export function ResultsView({
         corte se necesitan baterías, que suben la inversión.
       </p>
       <p className="mt-3 text-xs leading-relaxed text-ink-800/45">
-        Las cifras son estimaciones con supuestos por validar (tarifa, horas de
-        sol y qué parte de tu consumo es de día). Los proveedores y sus precios
-        son de ejemplo. La cifra final depende de la cotización de un instalador.
+        La cifra final depende de la cotización de un instalador.
       </p>
 
       {paneles && (resultado.veredicto === "conviene" || resultado.veredicto === "comparar") && (
@@ -145,6 +145,13 @@ export function ResultsView({
               Ver cotizaciones de todas formas
             </button>
           )}
+        </section>
+      )}
+
+      {resultado.veredicto === "sin_proveedores" && enZona.length > 0 && (
+        <section className="mt-8">
+          <h4 className="text-base font-bold text-ink-950">Proveedores en tu zona</h4>
+          <ProveedoresGrid ofertas={enZona} onPedir={onPedirCotizacion} />
         </section>
       )}
 

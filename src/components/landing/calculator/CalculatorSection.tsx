@@ -14,6 +14,7 @@ import {
 } from "./StepReceipt";
 import {
   StepProperty,
+  departamentosDe,
   negocioCompleto,
   type NegocioFormState,
 } from "./StepProperty";
@@ -42,6 +43,7 @@ const PASOS: { key: Step; label: string }[] = [
 const INITIAL_NEGOCIO: NegocioFormState = {
   tipoNegocio: "",
   region: "",
+  departamento: "",
   cargasCriticas: [],
   horario: "",
   fallaLuz: "",
@@ -118,6 +120,8 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<ApiResponse | null>(null);
   const [proveedorElegido, setProveedorElegido] = useState<string | null>(null);
+  // Plan pedido cuando no es el recomendado ("Cubre más de tu consumo").
+  const [planElegido, setPlanElegido] = useState<string | undefined>(undefined);
   const [cotizacion, setCotizacion] = useState<CotizacionFormState>(INITIAL_COTIZACION);
   const [erroresCotizacion, setErroresCotizacion] = useState<ErroresSolicitante>({});
   const [errorEnvio, setErrorEnvio] = useState<string | null>(null);
@@ -125,7 +129,11 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
   const [enviada, setEnviada] = useState(false);
 
   const paneles = data?.resultado.alternativas[0];
-  const ofertaElegida = paneles?.ofertas.find((o) => o.proveedor === proveedorElegido);
+  const ofertaProveedor = paneles?.ofertas.find((o) => o.proveedor === proveedorElegido);
+  const ofertaElegida =
+    planElegido && ofertaProveedor?.cubreMas?.plan?.nombre === planElegido
+      ? ofertaProveedor.cubreMas
+      : ofertaProveedor;
 
   const cardRef = useRef<HTMLDivElement>(null);
   const primerRender = useRef(true);
@@ -147,6 +155,10 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
       setErrorNegocio("Elige el tipo de negocio, tu región y cuándo trabajas.");
       return;
     }
+    if (departamentosDe(negocio.region).length > 0 && !negocio.departamento) {
+      setErrorNegocio("Elige el departamento donde está tu negocio.");
+      return;
+    }
     setErrorNegocio(null);
     setLoading(true);
     setError(null);
@@ -161,6 +173,7 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
 
     formData.set("tipoNegocio", negocio.tipoNegocio);
     formData.set("region", negocio.region);
+    if (negocio.departamento) formData.set("departamento", negocio.departamento);
     for (const c of negocio.cargasCriticas) formData.append("cargasCriticas", c);
     formData.set("horario", negocio.horario);
     if (negocio.fallaLuz) formData.set("fallaLuz", negocio.fallaLuz);
@@ -184,6 +197,7 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
       const p = json.resultado.alternativas[0];
       registrarEvento("resultado_visto", {
         region: negocio.region,
+        departamento: negocio.departamento || null,
         tipoNegocio: negocio.tipoNegocio,
         veredicto: json.resultado.veredicto,
         kwp: p?.kwpRequeridos,
@@ -198,14 +212,16 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
     }
   }
 
-  function handlePedirCotizacion(proveedor: string) {
+  function handlePedirCotizacion(proveedor: string, plan?: string) {
     if (proveedor !== proveedorElegido) setErroresCotizacion({});
     setProveedorElegido(proveedor);
+    setPlanElegido(plan);
     setErrorEnvio(null);
     setEnviada(false);
     setStep("cotizacion");
     registrarEvento("clic_pedir_cotizacion", {
       proveedor,
+      plan: plan ?? null,
       region: negocio.region,
       veredicto: data?.resultado.veredicto,
     });
@@ -227,6 +243,7 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
   function handleInteresSinProveedor() {
     registrarEvento("interes_sin_proveedor", {
       region: negocio.region,
+      departamento: negocio.departamento || null,
       tipoNegocio: negocio.tipoNegocio,
       kwp: paneles?.kwpRequeridos,
     });
@@ -242,6 +259,7 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
     const solicitud: SolicitudCotizacionInput = {
       sessionId: getSessionId(),
       proveedor: ofertaElegida.proveedor,
+      plan: ofertaElegida.plan?.nombre,
       solicitante: {
         nombre: cotizacion.nombre.trim(),
         telefono: cotizacion.telefono.trim(),
@@ -251,6 +269,7 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
       negocio: {
         tipo: negocio.tipoNegocio as NegocioInput["tipoNegocio"],
         region: negocio.region as NegocioInput["region"],
+        departamento: negocio.departamento,
         horario: negocio.horario as NegocioInput["horario"],
         noPuedeFallar: negocio.cargasCriticas,
         comoFalla: negocio.fallaLuz,
@@ -260,7 +279,7 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
         consumoKwh: data.resultado.consumoMensualKwh,
         valorFactura: data.resultado.valorPagadoMensual,
         kwp: paneles.kwpRequeridos,
-        ahorroMensual: paneles.ahorroMensualEstimado,
+        ahorroMensual: Math.round(ofertaElegida.ahorroMensual),
         inversion: Math.round(ofertaElegida.inversion),
         retornoMeses:
           ofertaElegida.retornoMeses === null ? null : Math.round(ofertaElegida.retornoMeses),
@@ -284,9 +303,10 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
       setEnviada(true);
       registrarEvento("cotizacion_pedida", {
         proveedor: ofertaElegida.proveedor,
+        plan: ofertaElegida.plan?.nombre ?? null,
         region: negocio.region,
         tipoNegocio: negocio.tipoNegocio,
-        ahorroMensual: paneles.ahorroMensualEstimado,
+        ahorroMensual: solicitud.estimado.ahorroMensual,
         retornoMeses: solicitud.estimado.retornoMeses,
       });
     } catch {
@@ -304,6 +324,7 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
     setData(null);
     setError(null);
     setProveedorElegido(null);
+    setPlanElegido(undefined);
     setCotizacion(INITIAL_COTIZACION);
     setErroresCotizacion({});
     setErrorEnvio(null);

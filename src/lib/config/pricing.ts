@@ -35,6 +35,15 @@ export const REGIONES: { value: Region; label: string }[] = [
 ];
 
 /**
+ * Departamentos que se preguntan en el paso 2, por región. Por ahora solo en
+ * el Caribe. Sirven para ocultar la nota de cobertura de los proveedores con
+ * `departamentosConfirmados` y viajan con la solicitud de cotización.
+ */
+export const DEPARTAMENTOS: Partial<Record<Region, string[]>> = {
+  caribe: ["Atlántico", "Bolívar", "Cesar", "Córdoba", "La Guajira", "Magdalena", "Sucre"],
+};
+
+/**
  * Tarifa comercial estimada COP/kWh, solo cuando el recibo no trae el valor
  * pagado. Supuesto por validar: debería salir del recibo, no de una tabla fija.
  */
@@ -63,6 +72,18 @@ export const COBERTURA_POR_HORARIO: Record<Horario, number> = {
 
 /** Mantenimiento anual como fracción de la inversión. */
 export const MANTENIMIENTO_ANUAL = 0.015;
+
+/**
+ * Un plan fijo aplica si cubre al menos esta fracción del sistema necesario
+ * (plan un poco más chico que lo necesario). Supuesto por validar.
+ */
+export const PLAN_COBERTURA_MINIMA = 0.8;
+
+/**
+ * Un plan fijo aplica si el negocio aprovecha al menos esta fracción de su
+ * potencia (si no, pagaría un plan demasiado grande). Supuesto por validar.
+ */
+export const PLAN_USO_MINIMO = 0.5;
 
 /** Umbrales de la recomendación. Supuestos por validar. */
 export const UMBRALES_RECOMENDACION = {

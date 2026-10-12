@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     fecha: new Date().toISOString(),
     sessionId: texto(body.sessionId, 64),
     proveedor: sistema.proveedor,
-    esSimulado: sistema.esSimulado ?? false,
+    estadoDatos: sistema.estadoDatos,
     solicitante,
     consentimiento: true,
     estado: "nueva",
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
     registro.fecha,
     registro.sessionId,
     registro.proveedor,
-    registro.esSimulado,
+    registro.estadoDatos,
     solicitante.nombre,
     solicitante.telefono,
     solicitante.municipio,
@@ -92,6 +92,8 @@ export async function POST(req: NextRequest) {
     numero(estimado.inversion),
     numero(estimado.retornoMeses),
     registro.estado,
+    texto(negocio.departamento, 40),
+    sistema.planes?.find((p) => p.nombre === body.plan)?.nombre ?? "",
   ]);
 
   if (!ok) {

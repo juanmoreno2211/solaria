@@ -48,9 +48,11 @@ export function StepQuote({
           Cotización pedida
         </h3>
         <p className="mt-2 text-sm leading-relaxed text-ink-800/70">
-          {oferta.esSimulado
+          {oferta.estadoDatos === "simulado"
             ? "En esta versión de prueba tu solicitud no llega a una empresa: la recibe el equipo de SolarIA, que la pasará a un instalador."
-            : `Tu solicitud le llegó a ${oferta.proveedor} con tu estimado ya calculado.`}
+            : oferta.estadoDatos === "referencial"
+              ? `Tu solicitud la recibe el equipo de SolarIA, que se la pasará a ${oferta.proveedor} con tu autorización.`
+              : `Tu solicitud le llegó a ${oferta.proveedor} con tu estimado ya calculado.`}
         </p>
 
         <div className="mt-6 rounded-xl border border-ink-950/8 bg-cream-100/60 p-5">
@@ -82,15 +84,17 @@ export function StepQuote({
     <div>
       <h3 data-step-title tabIndex={-1} className="text-lg font-bold text-ink-950 outline-none">
         Pedir cotización con {oferta.proveedor}
+        {oferta.plan && `: ${oferta.plan.nombre}`}
       </h3>
       <p className="mt-1 text-sm text-ink-800/60">
-        {oferta.esSimulado
+        {oferta.estadoDatos !== "confirmado"
           ? "Enviaremos tus datos y tu estimado de ahorro al equipo de SolarIA para que no tengas que explicar todo desde cero."
           : `Le enviaremos tus datos y tu estimado de ahorro a ${oferta.proveedor} para que no tengas que explicar todo desde cero.`}
       </p>
       <div className="mt-6">
         <CotizacionForm
           proveedor={oferta.proveedor}
+          estadoDatos={oferta.estadoDatos}
           value={value}
           onChange={onChange}
           errores={errores}

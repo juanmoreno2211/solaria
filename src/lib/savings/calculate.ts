@@ -49,13 +49,18 @@ function calcularPaneles(
 
   const ahorroMensual = Math.round(valorPagadoMensual * cobertura);
 
-  const ofertas = calcularOfertas(kwpRequeridos, ahorroMensual, input.negocio.region);
+  const ofertas = calcularOfertas(kwpRequeridos, ahorroMensual, {
+    region: input.negocio.region,
+    departamento: input.negocio.departamento,
+  });
   const mejorOferta = elegirMejorOferta(ofertas);
 
   // Los números principales salen del mejor proveedor; el costo genérico por
-  // kWp solo se usa como respaldo cuando ningún proveedor aplica.
+  // kWp solo se usa como respaldo cuando ningún proveedor aplica. Un plan fijo
+  // más chico que lo necesario ahorra menos.
   const inversion = mejorOferta?.inversion ?? kwpRequeridos * COSTO_PANELES_POR_KWP;
-  const ahorroAnualNeto = ahorroMensual * 12 - inversion * MANTENIMIENTO_ANUAL;
+  const ahorro = mejorOferta?.ahorroMensual ?? ahorroMensual;
+  const ahorroAnualNeto = ahorro * 12 - inversion * MANTENIMIENTO_ANUAL;
   const retornoMeses = mejorOferta
     ? mejorOferta.retornoMeses
     : ahorroAnualNeto > 0
@@ -69,8 +74,8 @@ function calcularPaneles(
     kwpRequeridos: Math.round(kwpRequeridos * 10) / 10,
     inversionEstimadaMin: Math.round(inversion * 0.9),
     inversionEstimadaMax: Math.round(inversion * (mejorOferta ? 1.1 : 1.15)),
-    ahorroMensualEstimado: ahorroMensual,
-    ahorroPorcentual: Math.round(cobertura * 100),
+    ahorroMensualEstimado: Math.round(ahorro),
+    ahorroPorcentual: valorPagadoMensual > 0 ? Math.round((ahorro / valorPagadoMensual) * 100) : 0,
     retornoMeses: retornoMeses === null ? null : Math.round(retornoMeses),
     ahorro5Anios: Math.round(ahorroAnualNeto * 5 - inversion),
     ahorro10Anios: Math.round(ahorroAnualNeto * 10 - inversion),
@@ -114,19 +119,25 @@ function decidirVeredicto(
     };
   }
   if (!mejor) {
+    const enZona = paneles.ofertas.find((o) => o.cubreZona);
     return {
       veredicto: "sin_proveedores",
-      motivo: `Con tus datos, un sistema de unos ${kwp} kWp ahorraría cerca de ${ahorro} al mes, pero todavía no hay un proveedor que atienda tu región o el tamaño de tu sistema.`,
+      motivo: enZona
+        ? `Con tus datos, un sistema de unos ${kwp} kWp ahorraría cerca de ${ahorro} al mes, pero los proveedores que atienden tu zona todavía no instalan un sistema de ese tamaño.`
+        : `Con tus datos, un sistema de unos ${kwp} kWp ahorraría cerca de ${ahorro} al mes, pero todavía no hay un proveedor que atienda tu región.`,
     };
   }
 
   const retornoAnios = mejor.retornoMeses! / 12;
+  const sistema = mejor.plan
+    ? `el ${mejor.plan.nombre} (${formatDecimal(mejor.plan.kwp)} kW)`
+    : `un sistema de unos ${kwp} kWp`;
   const anios = `${formatDecimal(retornoAnios)} años`;
 
   if (retornoAnios <= u.retornoConvieneAnios) {
     return {
       veredicto: "conviene",
-      motivo: `Con tu consumo, un sistema de unos ${kwp} kWp ahorraría cerca de ${ahorro} al mes y se pagaría en unos ${anios} con ${mejor.proveedor}.`,
+      motivo: `Con tu consumo, ${sistema} ahorraría cerca de ${ahorro} al mes y se pagaría en unos ${anios} con ${mejor.proveedor}.`,
     };
   }
   if (retornoAnios <= u.retornoCompararAnios) {

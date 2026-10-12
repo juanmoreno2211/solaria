@@ -18,7 +18,7 @@
         "tasaMensual": 0.017,
         "plazoMeses": 36
       },
-      "esSimulado": true
+      "estadoDatos": "simulado"
     },
     {
       "proveedor": "Proveedor 2",
@@ -34,7 +34,7 @@
       "instalacion": "2 a 3 semanas",
       "pagoDescripcion": "50 % de anticipo y 50 % al terminar la instalación",
       "financiacion": null,
-      "esSimulado": true
+      "estadoDatos": "simulado"
     },
     {
       "proveedor": "Proveedor 3",
@@ -54,7 +54,30 @@
         "tasaMensual": 0.021,
         "plazoMeses": 48
       },
-      "esSimulado": true
+      "estadoDatos": "simulado"
+    },
+    {
+      "proveedor": "Frío Solar",
+      "estadoDatos": "referencial",
+      "fuente": "Información reunida por el equipo (completar fecha y origen)",
+      "departamentosConfirmados": ["La Guajira"],
+      "regiones": [
+        "caribe"
+      ],
+      "instalacion": "3 a 4 semanas",
+      "planes": [
+        { "nombre": "Plan Básico", "kwp": 4, "precio": 18500000 },
+        { "nombre": "Plan Premium", "kwp": 6, "precio": 28750000 },
+        { "nombre": "Plan Empresarial", "kwp": 10, "precio": 45200000 }
+      ],
+      "financiacion": null,
+      "pagoDescripcion": "A confirmar con el proveedor",
+      "simulacionPago": {
+        "tasaMensual": 0.01,
+        "plazoMeses": 36,
+        "opcionesCuotaInicialPct": [0, 0.2, 0.3, 0.4],
+        "fuente": "Supuesto del equipo: 1 % mensual (≈ 12,7 % E.A.) a 36 meses. Decisión pendiente frente al 27 % E.A. del simulador de la página."
+      }
     }
   ],
   "iluminacion": [],

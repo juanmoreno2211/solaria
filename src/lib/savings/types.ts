@@ -1,4 +1,5 @@
 import type { Region } from "@/lib/config/pricing";
+import type { EstadoDatos } from "@/lib/catalog/types";
 
 export type TipoNegocio =
   | "tienda"
@@ -26,6 +27,8 @@ export interface ReciboInput {
 export interface NegocioInput {
   tipoNegocio: TipoNegocio;
   region: Region;
+  /** Solo se pregunta en las regiones de DEPARTAMENTOS (pricing.ts). */
+  departamento?: string;
   cargasCriticas: CargaCritica[];
   horario: Horario;
   fallaLuz?: FallaLuz;
@@ -43,29 +46,45 @@ export type Veredicto =
   | "por_ahora_no"
   | "sin_proveedores";
 
+export interface PagoSimulado {
+  cuotaInicialPct: number;
+  cuotaInicial: number;
+  monto: number;
+  cuotaMensual: number;
+  plazoMeses: number;
+  /** Ahorro − cuota − mantenimiento mensual. */
+  flujoMensual: number;
+}
+
 export interface OfertaProveedor {
   proveedor: string;
-  esSimulado: boolean;
+  estadoDatos: EstadoDatos;
+  /** Atiende la zona del negocio, aunque no aplique por tamaño. */
+  cubreZona: boolean;
   aplica: boolean;
   motivoNoAplica?: string;
+  /** Cobertura por confirmar fuera de los departamentos confirmados del proveedor. */
+  notaCobertura?: string;
   inversion: number;
   inversionMin: number;
   inversionMax: number;
+  /** Ahorro con este sistema: menor que el estimado si el plan cubre menos de lo necesario. */
+  ahorroMensual: number;
   mantenimientoMensual: number;
   /** Meses para recuperar la inversión; null si el ahorro no alcanza a pagarla. */
   retornoMeses: number | null;
+  /** Plan elegido, si el proveedor vende por planes fijos. */
+  plan?: { nombre: string; kwp: number };
   instalacion?: string;
   pagoDescripcion?: string;
-  financiacion?: {
-    cuotaInicial: number;
-    monto: number;
-    cuotaMensual: number;
-    plazoMeses: number;
-    /** Ahorro − cuota − mantenimiento mensual. */
-    flujoMensual: number;
-  };
-  /** Si no financia: 50 % de la inversión. */
+  /** Financiación que ofrece el proveedor. */
+  financiacion?: PagoSimulado;
+  /** Simulación del equipo (no es una oferta del proveedor): una opción por cuota inicial. */
+  simulacionPago?: { tasaMensual: number; plazoMeses: number; opciones: PagoSimulado[] };
+  /** Proveedores de ejemplo sin financiación: 50 % de la inversión. */
   primerPago?: number;
+  /** Segunda opción con un plan que cubre todo el sistema necesario. */
+  cubreMas?: OfertaProveedor;
 }
 
 export interface AlternativaResultado {

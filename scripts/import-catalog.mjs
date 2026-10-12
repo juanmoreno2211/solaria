@@ -109,6 +109,9 @@ function parsePaneles() {
         kwpMax,
         precioPorKwpCOP,
         regiones: parseRegiones(fila.regiones),
+        estadoDatos: ["simulado", "referencial", "confirmado"].includes(fila.estadoDatos)
+          ? fila.estadoDatos
+          : "referencial",
         url: fila.url ? String(fila.url).trim() : undefined,
         telefono: fila.telefono ? String(fila.telefono).trim() : undefined,
         notas: fila.notas ? String(fila.notas).trim() : undefined,

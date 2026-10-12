@@ -34,9 +34,16 @@ hay que configurarlo en Vercel antes de probar con usuarios.
 
 ## Columnas
 
-**solicitudes:** id, fecha, sessionId, proveedor, esSimulado, nombre, telefono, municipio,
+**solicitudes:** id, fecha, sessionId, proveedor, estadoDatos, nombre, telefono, municipio,
 consentimiento, tipo, region, horario, noPuedeFallar, comoFalla, constituido, consumoKwh,
-valorFactura, kwp, ahorroMensual, inversion, retornoMeses, estado.
+valorFactura, kwp, ahorroMensual, inversion, retornoMeses, estado, departamento, plan.
+
+`plan` es el plan pedido (por ejemplo, "Plan Básico") en proveedores que venden por planes; vacío
+en los demás. `ahorroMensual`, `inversion` y `retornoMeses` son los del plan pedido.
+
+`estadoDatos` es `simulado` (proveedor de ejemplo), `referencial` (empresa real con precios sin
+confirmar; la solicitud la recibe el equipo) o `confirmado`. Antes esta columna se llamaba
+`esSimulado` y guardaba verdadero o falso.
 
 **eventos:** fecha, sessionId, evento, detalle (JSON, sin datos personales).
 

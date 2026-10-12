@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generarRecomendacion } from "@/lib/ai/generateInsight";
+import { DEPARTAMENTOS } from "@/lib/config/pricing";
 import { calcularAhorro } from "@/lib/savings/calculate";
 import type {
   AnalisisInput,
@@ -37,10 +38,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const region = (formData.get("region") as NegocioInput["region"]) || "andina";
+    const departamento = formData.get("departamento");
+
     const negocio: NegocioInput = {
       tipoNegocio:
         (formData.get("tipoNegocio") as NegocioInput["tipoNegocio"]) || "otro",
-      region: (formData.get("region") as NegocioInput["region"]) || "andina",
+      region,
+      // Solo departamentos conocidos de la región: deciden si se muestra la nota de cobertura.
+      departamento:
+        typeof departamento === "string" && DEPARTAMENTOS[region]?.includes(departamento)
+          ? departamento
+          : undefined,
       cargasCriticas: formData.getAll("cargasCriticas") as CargaCritica[],
       horario: (formData.get("horario") as NegocioInput["horario"]) || "dia",
       fallaLuz: (formData.get("fallaLuz") as NegocioInput["fallaLuz"]) || undefined,

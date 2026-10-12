@@ -16,18 +16,64 @@ export interface FinanciacionProveedor {
   plazoMeses: number;
 }
 
-export interface CatalogoPanelSistema extends ProveedorInfo {
-  nombreSistema: string;
-  kwpMin: number;
-  kwpMax: number;
-  precioPorKwpCOP: number;
+/**
+ * simulado: proveedor de ejemplo, no es una empresa.
+ * referencial: empresa real con precios reunidos por el equipo, sin confirmar.
+ * confirmado: datos confirmados por el proveedor.
+ */
+export type EstadoDatos = "simulado" | "referencial" | "confirmado";
+
+export interface PlanProveedor {
+  nombre: string;
+  kwp: number;
+  precio: number;
+}
+
+/**
+ * Simulación de pago hecha por el equipo (no es una oferta del proveedor):
+ * cuota mensual según la cuota inicial que elija el usuario.
+ */
+export interface SimulacionPagoConfig {
+  tasaMensual: number;
+  plazoMeses: number;
+  opcionesCuotaInicialPct: number[];
+  fuente: string;
+}
+
+interface SistemaBase extends ProveedorInfo {
+  nombreSistema?: string;
   regiones: RegionesCobertura;
-  /** true mientras el proveedor sea de ejemplo y no una empresa real. */
-  esSimulado?: boolean;
+  /**
+   * Departamentos donde la cobertura está confirmada. En el resto de sus
+   * regiones se muestra, con una nota de cobertura por confirmar.
+   */
+  departamentosConfirmados?: string[];
+  estadoDatos: EstadoDatos;
+  /** De dónde salen los datos (origen y fecha). */
+  fuente?: string;
   instalacion?: string;
   pagoDescripcion?: string;
   financiacion?: FinanciacionProveedor | null;
+  simulacionPago?: SimulacionPagoConfig;
 }
+
+/** Precio por kWp dentro de un rango de tamaños. */
+interface PrecioPorKwp {
+  kwpMin: number;
+  kwpMax: number;
+  precioPorKwpCOP: number;
+  planes?: undefined;
+}
+
+/** Precio por planes de tamaño fijo. */
+interface PrecioPorPlanes {
+  planes: PlanProveedor[];
+  kwpMin?: undefined;
+  kwpMax?: undefined;
+  precioPorKwpCOP?: undefined;
+}
+
+export type CatalogoPanelSistema = SistemaBase & (PrecioPorKwp | PrecioPorPlanes);
 
 export interface CatalogoIluminacionProducto extends ProveedorInfo {
   nombre: string;

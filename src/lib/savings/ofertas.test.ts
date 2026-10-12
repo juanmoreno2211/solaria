@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CatalogoPanelSistema } from "@/lib/catalog/types";
-import { calcularOfertas, elegirMejorOferta } from "./ofertas";
+import { elegirPlan } from "@/lib/catalog/lookup";
+import { calcularOfertas, elegirMejorOferta, simularPago } from "./ofertas";
 
 const SISTEMAS: CatalogoPanelSistema[] = [
   {
@@ -11,7 +12,7 @@ const SISTEMAS: CatalogoPanelSistema[] = [
     precioPorKwpCOP: 4_200_000,
     regiones: ["caribe", "andina", "pacifico"],
     financiacion: { cuotaInicialPct: 0.3, tasaMensual: 0.017, plazoMeses: 36 },
-    esSimulado: true,
+    estadoDatos: "simulado",
   },
   {
     proveedor: "Proveedor 2",
@@ -21,12 +22,12 @@ const SISTEMAS: CatalogoPanelSistema[] = [
     precioPorKwpCOP: 3_600_000,
     regiones: ["caribe", "andina", "orinoquia"],
     financiacion: null,
-    esSimulado: true,
+    estadoDatos: "simulado",
   },
 ];
 
 describe("calcularOfertas (kWp = 4,5 y ahorro = $608.000)", () => {
-  const [p1, p2] = calcularOfertas(4.5, 608_000, "caribe", SISTEMAS);
+  const [p1, p2] = calcularOfertas(4.5, 608_000, { region: "caribe" }, SISTEMAS);
 
   it("Proveedor 1 financia", () => {
     expect(p1.aplica).toBe(true);
@@ -52,16 +53,142 @@ describe("calcularOfertas (kWp = 4,5 y ahorro = $608.000)", () => {
 
 describe("reglas de aplicación", () => {
   it("un sistema pequeño no aplica para quien instala desde 3 kWp", () => {
-    const [p1, p2] = calcularOfertas(1.6, 200_000, "caribe", SISTEMAS);
+    const [p1, p2] = calcularOfertas(1.6, 200_000, { region: "caribe" }, SISTEMAS);
     expect(p1.aplica).toBe(true);
     expect(p2.aplica).toBe(false);
     expect(p2.motivoNoAplica).toBe("Instala desde 3 kWp y tu sistema sería de 1,6 kWp.");
   });
 
   it("una región sin cobertura no tiene ofertas que apliquen", () => {
-    const ofertas = calcularOfertas(4.5, 608_000, "amazonia", SISTEMAS);
+    const ofertas = calcularOfertas(4.5, 608_000, { region: "amazonia" }, SISTEMAS);
     expect(ofertas.every((o) => !o.aplica)).toBe(true);
     expect(ofertas[0].motivoNoAplica).toBe("Todavía no llega a tu región.");
     expect(elegirMejorOferta(ofertas)).toBeUndefined();
+  });
+});
+
+const FRIO_SOLAR: CatalogoPanelSistema = {
+  proveedor: "Frío Solar",
+  estadoDatos: "referencial",
+  departamentosConfirmados: ["La Guajira"],
+  regiones: ["caribe"],
+  planes: [
+    { nombre: "Plan Básico", kwp: 4, precio: 18_500_000 },
+    { nombre: "Plan Premium", kwp: 6, precio: 28_750_000 },
+    { nombre: "Plan Empresarial", kwp: 10, precio: 45_200_000 },
+  ],
+  financiacion: null,
+  pagoDescripcion: "A confirmar con el proveedor",
+  simulacionPago: {
+    tasaMensual: 0.01,
+    plazoMeses: 36,
+    opcionesCuotaInicialPct: [0, 0.2, 0.3, 0.4],
+    fuente: "Supuesto del equipo",
+  },
+};
+
+describe("simulación de pago de Frío Solar (36 meses, 1 % mensual)", () => {
+  const casos = [
+    { plan: "Básico", precio: 18_500_000, ahorro: 420_000, pct: 0, cuota: 614_464, flujo: -217_589 },
+    { plan: "Básico", precio: 18_500_000, ahorro: 420_000, pct: 0.4, cuota: 368_678, flujo: 28_196 },
+    { plan: "Premium", precio: 28_750_000, ahorro: 630_000, pct: 0.3, cuota: 668_437, flujo: -74_375 },
+    { plan: "Empresarial", precio: 45_200_000, ahorro: 1_050_000, pct: 0.4, cuota: 900_772, flujo: 92_727 },
+  ];
+  for (const c of casos) {
+    it(`${c.plan} con ${c.pct * 100} % de cuota inicial`, () => {
+      const pago = simularPago(c.precio, c.ahorro, c.pct, 0.01, 36);
+      expect(pago.cuotaMensual).toBeCloseTo(c.cuota, -1);
+      expect(pago.flujoMensual).toBeCloseTo(c.flujo, -1);
+    });
+  }
+});
+
+describe("selección del plan (cobertura ≥ 80 % y uso ≥ 50 %)", () => {
+  const planes = FRIO_SOLAR.planes!;
+  // Ahorro de ≈ $105.000 por kWp necesario, como en los supuestos del equipo.
+  const ahorroDe = (kwp: number) => kwp * 105_000;
+
+  it.each([
+    [2.0, "Plan Básico", undefined],
+    [3.0, "Plan Básico", undefined],
+    [4.3, "Plan Básico", "Plan Premium"],
+    [4.5, "Plan Básico", "Plan Premium"],
+    [5.0, "Plan Básico", "Plan Premium"],
+    [5.5, "Plan Premium", undefined],
+    [8.0, "Plan Empresarial", undefined],
+    [12.0, "Plan Empresarial", undefined],
+  ])("%s kWp → %s (cubre más: %s)", (kwp, recomendado, cubreMas) => {
+    const r = elegirPlan(kwp, ahorroDe(kwp), planes);
+    expect(r.plan?.plan.nombre).toBe(recomendado);
+    expect(r.planCubreMas?.plan.nombre).toBe(cubreMas);
+    expect(r.motivoNoAplica).toBeUndefined();
+  });
+
+  it("un plan más chico que lo necesario ahorra en proporción a lo que cubre", () => {
+    const r = elegirPlan(5, 500_000, planes);
+    expect(r.plan?.cobertura).toBeCloseTo(0.8, 6);
+    expect(r.plan?.ahorroMensual).toBeCloseTo(400_000, 0);
+    expect(r.planCubreMas?.ahorroMensual).toBe(500_000);
+  });
+
+  it("1,6 kWp no aplica: el plan más pequeño es de 4 kW", () => {
+    const r = elegirPlan(1.6, ahorroDe(1.6), planes);
+    expect(r.plan).toBeUndefined();
+    expect(r.motivoNoAplica).toBe(
+      "Su plan más pequeño es de 4 kW y tu sistema necesario sería de 1,6 kWp."
+    );
+  });
+
+  it("14 kWp requiere un sistema a medida", () => {
+    expect(elegirPlan(14, ahorroDe(14), planes).motivoNoAplica).toBe(
+      "Tu consumo requiere un sistema a medida: cotiza directamente."
+    );
+  });
+});
+
+describe("proveedor real y de ejemplo", () => {
+  const todos = [...SISTEMAS, FRIO_SOLAR];
+
+  it("en La Guajira solo aparece Frío Solar, con el plan, su precio y la segunda opción", () => {
+    const ofertas = calcularOfertas(4.5, 608_000, { region: "caribe", departamento: "La Guajira" }, todos);
+    expect(ofertas.map((o) => o.proveedor)).toEqual(["Frío Solar"]);
+    const [frio] = ofertas;
+    expect(frio.aplica).toBe(true);
+    expect(frio.plan?.nombre).toBe("Plan Básico");
+    expect(frio.inversion).toBe(18_500_000);
+    const ahorroBasico = 608_000 * (4 / 4.5);
+    expect(frio.ahorroMensual).toBeCloseTo(ahorroBasico, 6);
+    expect(frio.retornoMeses).toBeCloseTo((18_500_000 / (ahorroBasico * 12 - 18_500_000 * 0.015)) * 12, 6);
+    expect(frio.financiacion).toBeUndefined();
+    expect(frio.primerPago).toBeUndefined();
+    expect(frio.simulacionPago?.opciones).toHaveLength(4);
+    expect(frio.notaCobertura).toBeUndefined();
+
+    expect(frio.cubreMas?.plan?.nombre).toBe("Plan Premium");
+    expect(frio.cubreMas?.inversion).toBe(28_750_000);
+    expect(frio.cubreMas?.ahorroMensual).toBe(608_000);
+    expect(elegirMejorOferta(ofertas)?.plan?.nombre).toBe("Plan Básico");
+  });
+
+  it("si Frío Solar no aplica por tamaño, los de ejemplo siguen ocultos", () => {
+    const ofertas = calcularOfertas(1.6, 200_000, { region: "caribe", departamento: "La Guajira" }, todos);
+    expect(ofertas).toHaveLength(1);
+    expect(ofertas[0].aplica).toBe(false);
+    expect(ofertas[0].cubreZona).toBe(true);
+    expect(ofertas[0].motivoNoAplica).toContain("Su plan más pequeño es de 4 kW");
+    expect(elegirMejorOferta(ofertas)).toBeUndefined();
+  });
+
+  it("en el resto del Caribe aparece Frío Solar con la nota de cobertura", () => {
+    const ofertas = calcularOfertas(4.5, 608_000, { region: "caribe", departamento: "Atlántico" }, todos);
+    expect(ofertas.map((o) => o.proveedor)).toEqual(["Frío Solar"]);
+    expect(ofertas[0].notaCobertura).toBe(
+      "Atiende La Guajira. En el resto del Caribe, por confirmar con el proveedor."
+    );
+  });
+
+  it("en la región Andina solo aparecen los de ejemplo", () => {
+    const ofertas = calcularOfertas(4.5, 608_000, { region: "andina" }, todos);
+    expect(ofertas.some((o) => o.proveedor === "Frío Solar")).toBe(false);
   });
 });

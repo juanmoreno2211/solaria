@@ -4,11 +4,14 @@ import type { NegocioInput } from "@/lib/savings/types";
 export interface SolicitudCotizacionInput {
   sessionId?: string;
   proveedor: string;
+  /** Plan pedido, si el proveedor vende por planes. */
+  plan?: string;
   solicitante: { nombre: string; telefono: string; municipio: string };
   consentimiento: boolean;
   negocio: {
     tipo: NegocioInput["tipoNegocio"];
     region: NegocioInput["region"];
+    departamento: string;
     horario: NegocioInput["horario"];
     noPuedeFallar: NegocioInput["cargasCriticas"];
     comoFalla: string;

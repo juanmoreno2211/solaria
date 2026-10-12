@@ -11,7 +11,7 @@ import {
 import clsx from "clsx";
 import { FieldLabel, OptionCard } from "./ui";
 import { Button } from "@/components/ui/Button";
-import { REGIONES } from "@/lib/config/pricing";
+import { DEPARTAMENTOS, REGIONES, type Region } from "@/lib/config/pricing";
 import type {
   CargaCritica,
   FallaLuz,
@@ -23,6 +23,7 @@ import type {
 export interface NegocioFormState {
   tipoNegocio: TipoNegocio | "";
   region: string;
+  departamento: string;
   cargasCriticas: CargaCritica[];
   horario: Horario | "";
   fallaLuz: FallaLuz | "";
@@ -65,8 +66,16 @@ const CONSTITUIDO = [
   { v: "nose", label: "No sé" },
 ] as const;
 
+const SELECT_CLASS =
+  "w-full rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm text-ink-950 outline-none focus:border-sun-500 focus:ring-2 focus:ring-sun-500/20";
+
 export function negocioCompleto(v: NegocioFormState): boolean {
   return Boolean(v.tipoNegocio && v.region && v.horario);
+}
+
+/** Departamentos que se preguntan para la región elegida (vacío si no se pregunta). */
+export function departamentosDe(region: string): string[] {
+  return DEPARTAMENTOS[region as Region] ?? [];
 }
 
 function Chip({
@@ -110,6 +119,8 @@ export function StepProperty({
   loading: boolean;
   error: string | null;
 }) {
+  const departamentos = departamentosDe(value.region);
+
   function toggleCarga(c: CargaCritica) {
     const cargasCriticas = value.cargasCriticas.includes(c)
       ? value.cargasCriticas.filter((x) => x !== c)
@@ -146,8 +157,8 @@ export function StepProperty({
         <FieldLabel>Región</FieldLabel>
         <select
           value={value.region}
-          onChange={(e) => onChange({ ...value, region: e.target.value })}
-          className="w-full rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm text-ink-950 outline-none focus:border-sun-500 focus:ring-2 focus:ring-sun-500/20"
+          onChange={(e) => onChange({ ...value, region: e.target.value, departamento: "" })}
+          className={SELECT_CLASS}
         >
           <option value="">Elige tu región</option>
           {REGIONES.map((r) => (
@@ -157,6 +168,24 @@ export function StepProperty({
           ))}
         </select>
       </div>
+
+      {departamentos.length > 0 && (
+        <div className="mt-5">
+          <FieldLabel>Departamento</FieldLabel>
+          <select
+            value={value.departamento}
+            onChange={(e) => onChange({ ...value, departamento: e.target.value })}
+            className={SELECT_CLASS}
+          >
+            <option value="">Elige tu departamento</option>
+            {departamentos.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div className="mt-5">
         <FieldLabel>¿Qué no puede fallar?</FieldLabel>

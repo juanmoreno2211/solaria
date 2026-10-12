@@ -3,6 +3,7 @@
 import clsx from "clsx";
 import { FieldLabel, TextInput } from "./ui";
 import { Button } from "@/components/ui/Button";
+import type { EstadoDatos } from "@/lib/catalog/types";
 import type { ErroresSolicitante } from "@/lib/cotizacion";
 
 export interface CotizacionFormState {
@@ -21,8 +22,18 @@ function ErrorCampo({ id, mensaje }: { id: string; mensaje?: string }) {
   );
 }
 
+/** Mientras los datos del proveedor no estén confirmados, la solicitud la recibe el equipo. */
+function textoAutorizacion(proveedor: string, estadoDatos: EstadoDatos): string {
+  if (estadoDatos === "confirmado") {
+    return `Autorizo compartir mi estimado y mis datos de contacto con ${proveedor} para que me cotice.`;
+  }
+  const destino = estadoDatos === "simulado" ? "un instalador" : proveedor;
+  return `Autorizo que el equipo de SolarIA reciba mi estimado y mis datos de contacto, y que se los pase a ${destino} para que me cotice. Sin esta autorización no se los pasa a nadie.`;
+}
+
 export function CotizacionForm({
   proveedor,
+  estadoDatos,
   value,
   onChange,
   errores,
@@ -32,6 +43,7 @@ export function CotizacionForm({
   onSubmit,
 }: {
   proveedor: string;
+  estadoDatos: EstadoDatos;
   value: CotizacionFormState;
   onChange: (v: CotizacionFormState) => void;
   errores: ErroresSolicitante;
@@ -100,10 +112,7 @@ export function CotizacionForm({
           aria-describedby="err-consentimiento"
           className="mt-0.5 h-4 w-4 shrink-0 accent-sun-500"
         />
-        <span>
-          Autorizo compartir mi estimado y mis datos de contacto con {proveedor}{" "}
-          para que me cotice.
-        </span>
+        <span>{textoAutorizacion(proveedor, estadoDatos)}</span>
       </label>
       <ErrorCampo id="err-consentimiento" mensaje={errores.consentimiento} />
 
