@@ -11,7 +11,7 @@ export function CTA() {
       <Container>
         <Reveal>
           <h2 className="text-balance text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            Sabe si los paneles le convienen a tu negocio antes de invertir
+            Conoce si los paneles le convienen a tu negocio antes de invertir
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-balance text-white/60">
             Con tu recibo de luz y unos datos de tu negocio, en un par de minutos
