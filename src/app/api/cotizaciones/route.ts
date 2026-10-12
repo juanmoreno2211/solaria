@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import catalogoJson from "@/lib/catalog/data/catalogo.json";
 import type { CatalogoData } from "@/lib/catalog/types";
 import { validarSolicitante, type SolicitudCotizacionInput } from "@/lib/cotizacion";
-import { enviarAHoja } from "@/lib/sheets";
+import { enviarAHoja, variablesHojaFaltantes } from "@/lib/sheets";
 
 export const runtime = "nodejs";
 
@@ -43,6 +43,14 @@ export async function POST(req: NextRequest) {
       { error: "Revisa los datos del formulario.", errores },
       { status: 400 }
     );
+  }
+
+  // En producción una solicitud sin dónde guardarse se perdería: mejor avisar.
+  // En desarrollo enviarAHoja la registra en consola para poder probar.
+  const faltantes = variablesHojaFaltantes();
+  if (process.env.NODE_ENV === "production" && faltantes.length > 0) {
+    console.error(`[cotizaciones] falta configurar: ${faltantes.join(", ")}`);
+    return NextResponse.json({ error: "No pudimos guardar tu solicitud" }, { status: 500 });
   }
 
   const registro = {

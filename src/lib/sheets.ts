@@ -1,5 +1,10 @@
 type Celda = string | number | boolean | null;
 
+/** Nombres (nunca valores) de las variables de la hoja que no están definidas. */
+export function variablesHojaFaltantes(): string[] {
+  return ["SHEETS_WEBHOOK_URL", "SHEETS_WEBHOOK_TOKEN"].filter((n) => !process.env[n]);
+}
+
 /**
  * Agrega una fila a una hoja de Google mediante un Apps Script publicado como
  * aplicación web (ver docs/hoja-google.md). Sin SHEETS_WEBHOOK_URL solo
