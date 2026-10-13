@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BatteryWarning, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import clsx from "clsx";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
@@ -114,12 +114,7 @@ export function ResultsView({
         )}
       </div>
 
-      <p className="mt-4 flex items-start gap-2.5 rounded-xl border border-black/8 bg-white px-4 py-3 text-sm text-ink-800/75">
-        <BatteryWarning className="mt-0.5 h-4 w-4 shrink-0 text-ember-600" />
-        Este cálculo estima tu ahorro en la factura. Para tener luz durante un
-        corte se necesitan baterías, que suben la inversión.
-      </p>
-      <p className="mt-3 text-xs leading-relaxed text-ink-800/45">
+      <p className="mt-4 text-xs leading-relaxed text-ink-800/45">
         La cifra final depende de la cotización de un instalador.
       </p>
 

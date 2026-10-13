@@ -17,10 +17,6 @@ const PREGUNTAS = [
     a: "Son estimaciones de referencia hechas con tu consumo, tu región, tu horario y supuestos de precio que todavía estamos validando. Sirven para decidir si vale la pena pedir una cotización; la cifra final la da el proveedor.",
   },
   {
-    q: "¿Voy a tener luz cuando haya cortes?",
-    a: "No con este cálculo. Estimamos el ahorro en tu factura con paneles sin baterías. Para tener luz durante un corte se necesitan baterías, que suben la inversión. Puedes pedírselas al proveedor en la cotización.",
-  },
-  {
     q: "¿Qué pasa con la foto de mi recibo?",
     a: "Si subes una foto, la enviamos a Google (Gemini) solo para leer el consumo y el valor, y tú confirmas los números antes de seguir. Nosotros no la guardamos, pero en esta versión de prueba Google puede usarla para mejorar sus productos: tapa tu nombre, tu dirección y tu número de cuenta antes de subirla. Si prefieres, escribe los datos a mano.",
   },
