@@ -7,6 +7,7 @@ import type {
   CatalogoPanelSistema,
   PlanProveedor,
   RegionesCobertura,
+  SistemaVendible,
 } from "./types";
 
 const catalogo = catalogoJson as CatalogoData;
@@ -26,7 +27,7 @@ export interface PlanEvaluado {
 }
 
 export interface SistemaEvaluado {
-  sistema: CatalogoPanelSistema;
+  sistema: SistemaVendible;
   /** Atiende la región del negocio. */
   cubreZona: boolean;
   aplica: boolean;
@@ -56,7 +57,8 @@ const EPSILON = 1e-9;
 export function elegirPlan(
   kwp: number,
   ahorroMensual: number,
-  planes: PlanProveedor[]
+  planes: PlanProveedor[],
+  motivoFueraDeRango?: string
 ): { plan?: PlanEvaluado; planCubreMas?: PlanEvaluado; motivoNoAplica?: string } {
   const ordenados = [...planes].sort((a, b) => a.kwp - b.kwp);
   const evaluados = ordenados.map((plan) => {
@@ -76,6 +78,7 @@ export function elegirPlan(
   );
 
   if (aplican.length === 0) {
+    if (motivoFueraDeRango) return { motivoNoAplica: motivoFueraDeRango };
     const menor = evaluados[0];
     const mayor = evaluados[evaluados.length - 1];
     if (menor.uso < PLAN_USO_MINIMO) {
@@ -110,7 +113,7 @@ export function elegirPlan(
 }
 
 function evaluar(
-  sistema: CatalogoPanelSistema,
+  sistema: SistemaVendible,
   kwp: number,
   ahorroMensual: number,
   { region }: Ubicacion
@@ -124,7 +127,12 @@ function evaluar(
     };
   }
   if (sistema.planes) {
-    const { plan, planCubreMas, motivoNoAplica } = elegirPlan(kwp, ahorroMensual, sistema.planes);
+    const { plan, planCubreMas, motivoNoAplica } = elegirPlan(
+      kwp,
+      ahorroMensual,
+      sistema.planes,
+      sistema.motivoFueraDeRango
+    );
     return { sistema, cubreZona: true, aplica: Boolean(plan), motivoNoAplica, plan, planCubreMas };
   }
   if (kwp < sistema.kwpMin) {
@@ -144,6 +152,39 @@ function evaluar(
     };
   }
   return { sistema, cubreZona: true, aplica: true };
+}
+
+/**
+ * Un proveedor con varias ofertas (EPC y PPA) se vuelve una entrada por oferta,
+ * cada una con su tarjeta. Los demás quedan igual, con el proveedor como id.
+ */
+export function separarOfertas(sistema: CatalogoPanelSistema): SistemaVendible[] {
+  if (!sistema.ofertas) return [{ ...sistema, id: sistema.proveedor }];
+  const { ofertas, ...base } = sistema;
+  return ofertas.map((o): SistemaVendible => {
+    const comun = {
+      ...base,
+      id: `${sistema.proveedor}:${o.tipo}`,
+      tipoOferta: o.tipo,
+      nombreOferta: o.nombre,
+      kwpMin: o.kwpMin,
+      kwpMax: o.kwpMax,
+    };
+    if (o.tipo === "PPA") {
+      return {
+        ...comun,
+        ppa: { descuentoSobreRed: o.descuentoSobreRed, contrato: o.contrato },
+      };
+    }
+    return {
+      ...comun,
+      precioPorKwpCOP: o.precioPorKwpCOP,
+      margenPrecio: o.margenPrecio,
+      instalacion: o.instalacion,
+      financiacion: o.financiacion,
+      pagoDescripcion: o.pagoDescripcion,
+    };
+  });
 }
 
 /**
@@ -167,5 +208,6 @@ export function buscarPanelesSistemas(
     .filter((s) =>
       s.estadoDatos === "simulado" ? !hayReal : cubreRegion(s.regiones, ubicacion.region)
     )
+    .flatMap(separarOfertas)
     .map((s) => evaluar(s, kwpRequeridos, ahorroMensual, ubicacion));
 }

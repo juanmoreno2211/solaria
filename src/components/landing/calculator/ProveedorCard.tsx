@@ -145,18 +145,26 @@ export function ProveedorCard({
   /** Sin plan: el plan recomendado (o el proveedor, si no vende por planes). */
   onPedir: (plan?: string) => void;
 }) {
-  const { financiacion: fin } = oferta;
-  const etiquetaDatos = ETIQUETA_DATOS[oferta.estadoDatos];
+  const { financiacion: fin, ppa } = oferta;
+  const etiquetaDatos = oferta.etiqueta ?? ETIQUETA_DATOS[oferta.estadoDatos];
+  const notas = (
+    <>
+      {oferta.notaCobertura && <p className="mt-2 text-xs">{oferta.notaCobertura}</p>}
+      {oferta.requiereVisitaTecnica && (
+        <p className="mt-1 text-xs">Requiere una visita técnica antes de instalar.</p>
+      )}
+    </>
+  );
 
   if (!oferta.aplica) {
     return (
       <article className="rounded-xl border border-dashed border-ink-950/12 bg-white/60 p-5 text-ink-800/60">
         <div className="flex flex-wrap items-center gap-2">
-          <h5 className="text-base font-bold text-ink-950/50">{oferta.proveedor}</h5>
+          <h5 className="text-base font-bold text-ink-950/50">{oferta.titulo}</h5>
           {etiquetaDatos && <Etiqueta>{etiquetaDatos}</Etiqueta>}
         </div>
         <p className="mt-2 text-sm">{oferta.motivoNoAplica}</p>
-        {oferta.notaCobertura && <p className="mt-2 text-xs">{oferta.notaCobertura}</p>}
+        {notas}
       </article>
     );
   }
@@ -164,57 +172,72 @@ export function ProveedorCard({
   return (
     <article className="flex flex-col rounded-xl border border-ink-950/10 bg-white p-5">
       <div className="flex flex-wrap items-center gap-2">
-        <h5 className="text-base font-bold text-ink-950">{oferta.proveedor}</h5>
+        <h5 className="text-base font-bold text-ink-950">{oferta.titulo}</h5>
         {etiquetaDatos && <Etiqueta>{etiquetaDatos}</Etiqueta>}
         {menorInversion && <Etiqueta>Menor inversión</Etiqueta>}
         {fin && <Etiqueta>Con financiación</Etiqueta>}
       </div>
-      {oferta.notaCobertura && (
-        <p className="mt-2 text-xs text-ink-800/60">{oferta.notaCobertura}</p>
-      )}
+      <div className="text-ink-800/60">{notas}</div>
 
-      <dl className="mt-3 divide-y divide-ink-950/6">
-        {oferta.plan && (
-          <Fila label="Plan">
-            {oferta.plan.nombre}
-            <Nota>{formatDecimal(oferta.plan.kwp)} kW</Nota>
+      {ppa ? (
+        <dl className="mt-3 divide-y divide-ink-950/6">
+          <Fila label="Inversión inicial">
+            {formatCOPMiles(0)}
+            <Nota>según {oferta.proveedor}, por confirmar</Nota>
           </Fila>
-        )}
-        <Fila label="Inversión estimada">
-          ≈ {formatCOPMiles(oferta.inversion)}
-          <Nota>
-            entre {formatCOPMiles(oferta.inversionMin)} y {formatCOPMiles(oferta.inversionMax)}
-          </Nota>
-        </Fila>
-        {fin ? (
-          <>
-            <Fila label="Cuota inicial">{formatCOPMiles(fin.cuotaInicial)}</Fila>
-            <Fila label="Cuota mensual">
-              {formatCOPMiles(fin.cuotaMensual)}
-              <Nota>durante {fin.plazoMeses} meses</Nota>
+          <Fila label="Pagarías por la energía generada">
+            ≈ {formatCOPMiles(ppa.pagoMensual)} al mes
+            <Nota>
+              estimado, {Math.round((1 - ppa.descuentoSobreRed) * 100)} % de tu tarifa
+            </Nota>
+          </Fila>
+          <Fila label="Ahorro estimado">≈ {formatCOPMiles(oferta.ahorroMensual)} al mes</Fila>
+          <Fila label="Contrato">{ppa.contrato ?? "A confirmar"}</Fila>
+        </dl>
+      ) : (
+        <dl className="mt-3 divide-y divide-ink-950/6">
+          {oferta.plan && (
+            <Fila label="Plan">
+              {oferta.plan.nombre}
+              <Nota>{formatDecimal(oferta.plan.kwp)} kW</Nota>
             </Fila>
-            <Fila label="Ahorro menos cuota">
-              <Flujo valor={fin.flujoMensual} />
-              <Nota>al mes mientras pagas</Nota>
-            </Fila>
-          </>
-        ) : (
-          <>
-            <Fila label="Forma de pago">
-              <span className="font-medium">{oferta.pagoDescripcion}</span>
-            </Fila>
-            {oferta.primerPago !== undefined && (
-              <Fila label="Primer pago">{formatCOPMiles(oferta.primerPago)}</Fila>
-            )}
-          </>
-        )}
-        <Fila label="Se paga en">
-          {oferta.retornoMeses !== null
-            ? `${formatDecimal(oferta.retornoMeses / 12)} años`
-            : "No se paga"}
-        </Fila>
-        {oferta.instalacion && <Fila label="Instalación">{oferta.instalacion}</Fila>}
-      </dl>
+          )}
+          <Fila label="Inversión estimada">
+            ≈ {formatCOPMiles(oferta.inversion)}
+            <Nota>
+              entre {formatCOPMiles(oferta.inversionMin)} y {formatCOPMiles(oferta.inversionMax)}
+            </Nota>
+          </Fila>
+          {fin ? (
+            <>
+              <Fila label="Cuota inicial">{formatCOPMiles(fin.cuotaInicial)}</Fila>
+              <Fila label="Cuota mensual">
+                {formatCOPMiles(fin.cuotaMensual)}
+                <Nota>durante {fin.plazoMeses} meses</Nota>
+              </Fila>
+              <Fila label="Ahorro menos cuota">
+                <Flujo valor={fin.flujoMensual} />
+                <Nota>al mes mientras pagas</Nota>
+              </Fila>
+            </>
+          ) : (
+            <>
+              <Fila label="Forma de pago">
+                <span className="font-medium">{oferta.pagoDescripcion}</span>
+              </Fila>
+              {oferta.primerPago !== undefined && (
+                <Fila label="Primer pago">{formatCOPMiles(oferta.primerPago)}</Fila>
+              )}
+            </>
+          )}
+          <Fila label="Se paga en">
+            {oferta.retornoMeses !== null
+              ? `${formatDecimal(oferta.retornoMeses / 12)} años`
+              : "No se paga"}
+          </Fila>
+          {oferta.instalacion && <Fila label="Instalación">{oferta.instalacion}</Fila>}
+        </dl>
+      )}
 
       {oferta.simulacionPago && (
         <SimulacionPago proveedor={oferta.proveedor} simulacion={oferta.simulacionPago} />

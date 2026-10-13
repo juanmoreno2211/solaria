@@ -1,5 +1,5 @@
 import type { Region } from "@/lib/config/pricing";
-import type { EstadoDatos } from "@/lib/catalog/types";
+import type { EstadoDatos, OrigenDatos, TipoOferta } from "@/lib/catalog/types";
 
 export type TipoNegocio =
   | "tienda"
@@ -57,8 +57,17 @@ export interface PagoSimulado {
 }
 
 export interface OfertaProveedor {
+  /** Identifica la tarjeta: el proveedor, o "proveedor:tipo" si tiene varias ofertas. */
+  id: string;
   proveedor: string;
+  /** Título de la tarjeta, p. ej. "Sunvolt, sin inversión inicial (PPA)". */
+  titulo: string;
+  tipoOferta?: TipoOferta;
   estadoDatos: EstadoDatos;
+  origenDatos?: OrigenDatos;
+  /** Etiqueta de la tarjeta, si el catálogo define una propia. */
+  etiqueta?: string;
+  requiereVisitaTecnica?: boolean;
   /** Atiende la zona del negocio, aunque no aplique por tamaño. */
   cubreZona: boolean;
   aplica: boolean;
@@ -77,6 +86,12 @@ export interface OfertaProveedor {
   plan?: { nombre: string; kwp: number };
   instalacion?: string;
   pagoDescripcion?: string;
+  /** PPA: sin inversión; el cliente paga la energía generada con descuento sobre la red. */
+  ppa?: {
+    pagoMensual: number;
+    descuentoSobreRed: number;
+    contrato?: string;
+  };
   /** Financiación que ofrece el proveedor. */
   financiacion?: PagoSimulado;
   /** Simulación del equipo (no es una oferta del proveedor): una opción por cuota inicial. */

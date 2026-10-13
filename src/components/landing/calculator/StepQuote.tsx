@@ -13,6 +13,19 @@ const PASOS_SIGUIENTES = [
   "Te entrega una propuesta con el precio final y las condiciones.",
 ];
 
+/**
+ * Proveedores con números del equipo o de prensa: nada debe sugerir que el
+ * proveedor contactará al usuario.
+ */
+function pasosSinContactoDe(proveedor: string) {
+  return [
+    "El equipo de SolarIA recibe tu solicitud con el resumen de tu negocio.",
+    "Te escribe por WhatsApp para confirmar los datos.",
+    `Le consulta a ${proveedor} si atiende tu municipio y en qué condiciones.`,
+    "Te cuenta lo que responda. Los precios de esta página son estimados, no una cotización.",
+  ];
+}
+
 export function StepQuote({
   oferta,
   value,
@@ -36,6 +49,11 @@ export function StepQuote({
   onSubmit: () => void;
   onReset: () => void;
 }) {
+  const pasos =
+    oferta.origenDatos === "estimacion_equipo" || oferta.origenDatos === "prensa"
+      ? pasosSinContactoDe(oferta.proveedor)
+      : PASOS_SIGUIENTES;
+
   if (enviada) {
     return (
       <div>
@@ -58,7 +76,7 @@ export function StepQuote({
         <div className="mt-6 rounded-xl border border-ink-950/8 bg-cream-100/60 p-5">
           <p className="text-sm font-semibold text-ink-950">Lo que pasa ahora (ejemplo)</p>
           <ol className="mt-3 space-y-2.5">
-            {PASOS_SIGUIENTES.map((paso, i) => (
+            {pasos.map((paso, i) => (
               <li key={paso} className="flex gap-3 text-sm text-ink-800/75">
                 <span className="tabular-nums font-semibold text-sun-600">{i + 1}.</span>
                 {paso}
@@ -83,7 +101,7 @@ export function StepQuote({
   return (
     <div>
       <h3 data-step-title tabIndex={-1} className="text-lg font-bold text-ink-950 outline-none">
-        Pedir cotización con {oferta.proveedor}
+        Pedir cotización con {oferta.titulo}
         {oferta.plan && `: ${oferta.plan.nombre}`}
       </h3>
       <p className="mt-1 text-sm text-ink-800/60">

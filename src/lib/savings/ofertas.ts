@@ -5,7 +5,7 @@ import {
   type SistemaEvaluado,
   type Ubicacion,
 } from "@/lib/catalog/lookup";
-import type { CatalogoPanelSistema } from "@/lib/catalog/types";
+import type { CatalogoPanelSistema, SistemaVendible } from "@/lib/catalog/types";
 import { calcularRetornoMeses } from "./retorno";
 import type { OfertaProveedor, PagoSimulado } from "./types";
 
@@ -50,37 +50,90 @@ const listaEs = new Intl.ListFormat("es", { type: "conjunction" });
 
 /** Nota para quien está fuera de los departamentos confirmados del proveedor. */
 function notaCobertura(
-  sistema: CatalogoPanelSistema,
+  sistema: SistemaVendible,
   { region, departamento }: Ubicacion
 ): string | undefined {
+  if (sistema.notaCobertura) return sistema.notaCobertura;
   const confirmados = sistema.departamentosConfirmados;
   if (!confirmados || (departamento && confirmados.includes(departamento))) return undefined;
   return `Atiende ${listaEs.format(confirmados)}. En el resto ${RESTO_REGION[region]}, por confirmar con el proveedor.`;
 }
 
+function titulo(sistema: SistemaVendible): string {
+  if (!sistema.tipoOferta || !sistema.nombreOferta) return sistema.proveedor;
+  const nombre = sistema.nombreOferta.charAt(0).toLowerCase() + sistema.nombreOferta.slice(1);
+  return `${sistema.proveedor}, ${nombre} (${sistema.tipoOferta})`;
+}
+
+/** Datos de la tarjeta que no dependen del precio. */
+function datosTarjeta(
+  { sistema, cubreZona, aplica, motivoNoAplica }: SistemaEvaluado,
+  nota: string | undefined
+) {
+  return {
+    id: sistema.id,
+    proveedor: sistema.proveedor,
+    titulo: titulo(sistema),
+    tipoOferta: sistema.tipoOferta,
+    estadoDatos: sistema.estadoDatos,
+    origenDatos: sistema.origenDatos,
+    etiqueta: sistema.etiqueta,
+    requiereVisitaTecnica: sistema.requiereVisitaTecnica,
+    cubreZona,
+    aplica,
+    motivoNoAplica,
+    notaCobertura: nota,
+  };
+}
+
+/**
+ * PPA: no hay inversión ni retorno. El cliente paga la energía que genera el
+ * sistema con un descuento sobre la tarifa de la red y se ahorra ese descuento.
+ * El mantenimiento lo hace el proveedor. ahorroMensual es el costo de red
+ * evitado (energía generada, con tope en la energía a cubrir, por la tarifa).
+ */
+function armarOfertaPPA(
+  evaluado: SistemaEvaluado,
+  ppa: { descuentoSobreRed: number; contrato?: string | null },
+  ahorroMensual: number,
+  nota: string | undefined
+): OfertaProveedor {
+  return {
+    ...datosTarjeta(evaluado, nota),
+    inversion: 0,
+    inversionMin: 0,
+    inversionMax: 0,
+    ahorroMensual: ahorroMensual * ppa.descuentoSobreRed,
+    mantenimientoMensual: 0,
+    retornoMeses: null,
+    ppa: {
+      pagoMensual: ahorroMensual * (1 - ppa.descuentoSobreRed),
+      descuentoSobreRed: ppa.descuentoSobreRed,
+      contrato: ppa.contrato ?? undefined,
+    },
+  };
+}
+
 /** Inversión, retorno y forma de pago de un proveedor (o de uno de sus planes). */
 function armarOferta(
-  { sistema, cubreZona, aplica, motivoNoAplica }: SistemaEvaluado,
+  evaluado: SistemaEvaluado,
   inversion: number,
   ahorroMensual: number,
   plan: PlanEvaluado | undefined,
   nota: string | undefined
 ): OfertaProveedor {
+  const { sistema, aplica } = evaluado;
+  const margen = sistema.margenPrecio ?? 0.1;
   const oferta: OfertaProveedor = {
-    proveedor: sistema.proveedor,
-    estadoDatos: sistema.estadoDatos,
-    cubreZona,
-    aplica,
-    motivoNoAplica,
-    notaCobertura: nota,
+    ...datosTarjeta(evaluado, nota),
     inversion,
-    inversionMin: inversion * 0.9,
-    inversionMax: inversion * 1.1,
+    inversionMin: plan?.plan.precioMin ?? inversion * (1 - margen),
+    inversionMax: plan?.plan.precioMax ?? inversion * (1 + margen),
     ahorroMensual,
     mantenimientoMensual: (inversion * MANTENIMIENTO_ANUAL) / 12,
     retornoMeses: calcularRetornoMeses(inversion, ahorroMensual),
     plan: plan && { nombre: plan.plan.nombre, kwp: plan.plan.kwp },
-    instalacion: sistema.instalacion,
+    instalacion: sistema.instalacion ?? undefined,
     pagoDescripcion: sistema.pagoDescripcion,
   };
 
@@ -146,11 +199,12 @@ export function calcularOfertas(
       }
       return oferta;
     }
+    if (sistema.ppa) return armarOfertaPPA(evaluado, sistema.ppa, ahorroMensual, nota);
     return armarOferta(evaluado, kwp * sistema.precioPorKwpCOP, ahorroMensual, undefined, nota);
   });
 }
 
-/** La oferta que aplica con el menor tiempo de retorno. */
+/** La oferta que aplica con el menor tiempo de retorno (un PPA no tiene retorno). */
 export function elegirMejorOferta(
   ofertas: OfertaProveedor[]
 ): OfertaProveedor | undefined {

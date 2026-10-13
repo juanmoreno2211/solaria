@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { CatalogoPanelSistema } from "@/lib/catalog/types";
+import catalogoJson from "@/lib/catalog/data/catalogo.json";
+import type { CatalogoData, CatalogoPanelSistema } from "@/lib/catalog/types";
+import { SUNVOLT_ESTIMACION } from "@/lib/config/pricing";
 import { elegirPlan } from "@/lib/catalog/lookup";
 import { calcularOfertas, elegirMejorOferta, simularPago } from "./ofertas";
 
@@ -190,5 +192,105 @@ describe("proveedor real y de ejemplo", () => {
   it("en la región Andina solo aparecen los de ejemplo", () => {
     const ofertas = calcularOfertas(4.5, 608_000, { region: "andina" }, todos);
     expect(ofertas.some((o) => o.proveedor === "Frío Solar")).toBe(false);
+  });
+});
+
+const CATALOGO = (catalogoJson as CatalogoData).paneles;
+const SUNVOLT = CATALOGO.find((s) => s.proveedor === "Sunvolt")!;
+const ERCO = CATALOGO.find((s) => s.proveedor === "Erco Energía")!;
+
+describe("Sunvolt: EPC y PPA (kWp = 4,5 y ahorro = $608.000)", () => {
+  const [epc, ppa] = calcularOfertas(4.5, 608_000, { region: "andina" }, [SUNVOLT]);
+
+  it("el catálogo coincide con la estimación de pricing.ts", () => {
+    const [cEpc, cPpa] = SUNVOLT.ofertas!;
+    expect(cEpc.tipo === "EPC" && cEpc.precioPorKwpCOP).toBe(SUNVOLT_ESTIMACION.precioEpcPorKwp);
+    expect(cEpc.kwpMin).toBe(SUNVOLT_ESTIMACION.kwpMinEpc);
+    expect(cPpa.tipo === "PPA" && cPpa.descuentoSobreRed).toBe(SUNVOLT_ESTIMACION.descuentoPpaSobreRed);
+    expect(cPpa.kwpMin).toBe(SUNVOLT_ESTIMACION.kwpMinPpa);
+    expect(SUNVOLT.fuente).toContain("2026-10-13");
+  });
+
+  it("dos tarjetas, una por oferta", () => {
+    expect([epc.id, ppa.id]).toEqual(["Sunvolt:EPC", "Sunvolt:PPA"]);
+    expect(epc.titulo).toBe("Sunvolt, sistema llave en mano (EPC)");
+    expect(ppa.titulo).toBe("Sunvolt, sin inversión inicial (PPA)");
+    expect(epc.etiqueta).toContain("No es una cotización de Sunvolt");
+    expect(ppa.notaCobertura).toBe("Sunvolt indica cobertura nacional. Por confirmar en tu municipio.");
+  });
+
+  it("EPC: inversión de $27.000.000 con ±15 % y retorno ≈ 3,9 años", () => {
+    expect(epc.aplica).toBe(true);
+    expect(epc.inversion).toBe(27_000_000);
+    expect(epc.inversionMin).toBeCloseTo(22_950_000, 0);
+    expect(epc.inversionMax).toBeCloseTo(31_050_000, 0);
+    expect(epc.retornoMeses).toBeCloseTo((27_000_000 / (608_000 * 12 - 405_000)) * 12, 6);
+    expect(epc.retornoMeses! / 12).toBeCloseTo(3.9, 1);
+    expect(epc.financiacion).toBeUndefined();
+  });
+
+  it("PPA: paga ≈ $516.800, ahorra ≈ $91.200, sin inversión ni retorno", () => {
+    expect(ppa.aplica).toBe(true);
+    expect(ppa.ppa?.pagoMensual).toBeCloseTo(516_800, 0);
+    expect(ppa.ahorroMensual).toBeCloseTo(91_200, 0);
+    expect(ppa.inversion).toBe(0);
+    expect(ppa.retornoMeses).toBeNull();
+    expect(elegirMejorOferta([epc, ppa])?.id).toBe("Sunvolt:EPC");
+  });
+
+  it("EPC con 1,5 kWp y PPA con 2,5 kWp no aplican", () => {
+    const [epcChico] = calcularOfertas(1.5, 200_000, { region: "andina" }, [SUNVOLT]);
+    expect(epcChico.aplica).toBe(false);
+    expect(epcChico.motivoNoAplica).toContain("Instala desde 2 kWp");
+    const [, ppaChico] = calcularOfertas(2.5, 300_000, { region: "andina" }, [SUNVOLT]);
+    expect(ppaChico.aplica).toBe(false);
+    expect(ppaChico.motivoNoAplica).toContain("desde 3 kWp");
+  });
+
+  it("con Sunvolt en todo el país, los de ejemplo dejan de verse", () => {
+    for (const region of ["andina", "pacifico", "orinoquia", "amazonia"] as const) {
+      const ofertas = calcularOfertas(4.5, 608_000, { region }, [...SISTEMAS, SUNVOLT]);
+      expect(ofertas.every((o) => o.estadoDatos !== "simulado")).toBe(true);
+    }
+  });
+});
+
+describe("Erco Energía (plan de referencia de ≈ 3,5 kWp)", () => {
+  const ofertaErco = (kwp: number) =>
+    calcularOfertas(kwp, kwp * 105_000, { region: "andina" }, [ERCO])[0];
+
+  it.each([3.0, 4.3])("%s kWp aplica", (kwp) => {
+    const o = ofertaErco(kwp);
+    expect(o.aplica).toBe(true);
+    expect(o.inversion).toBe(27_500_000);
+    expect(o.inversionMin).toBe(25_000_000);
+    expect(o.inversionMax).toBe(30_000_000);
+    expect(o.requiereVisitaTecnica).toBe(true);
+    expect(o.etiqueta).toBe("Precio de referencia de prensa, no es una cotización de Erco");
+  });
+
+  it.each([1.6, 6.0])("%s kWp no aplica: cotiza directamente", (kwp) => {
+    const o = ofertaErco(kwp);
+    expect(o.aplica).toBe(false);
+    expect(o.motivoNoAplica).toBe(
+      "Su sistema de referencia es de ≈ 3,5 kWp. Para tu consumo, cotiza directamente."
+    );
+  });
+
+  it("la fuente cita El Colombiano con la fecha de consulta", () => {
+    expect(ERCO.fuente).toContain("El Colombiano");
+    expect(ERCO.fuente).toContain("2026-10-13");
+  });
+});
+
+describe("catálogo completo", () => {
+  it("en el Caribe se ven Frío Solar, Sunvolt (EPC y PPA) y Erco, sin los de ejemplo", () => {
+    const ofertas = calcularOfertas(4.3, 450_000, { region: "caribe", departamento: "La Guajira" }, CATALOGO);
+    expect(ofertas.map((o) => o.id)).toEqual(["Frío Solar", "Sunvolt:EPC", "Sunvolt:PPA", "Erco Energía"]);
+  });
+
+  it("en las demás regiones, Sunvolt y Erco", () => {
+    const ofertas = calcularOfertas(4.3, 450_000, { region: "pacifico" }, CATALOGO);
+    expect(ofertas.map((o) => o.id)).toEqual(["Sunvolt:EPC", "Sunvolt:PPA", "Erco Energía"]);
   });
 });

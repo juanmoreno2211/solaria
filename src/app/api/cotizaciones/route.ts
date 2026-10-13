@@ -94,6 +94,7 @@ export async function POST(req: NextRequest) {
     registro.estado,
     texto(negocio.departamento, 40),
     sistema.planes?.find((p) => p.nombre === body.plan)?.nombre ?? "",
+    sistema.ofertas?.find((o) => o.tipo === body.oferta)?.tipo ?? "",
   ]);
 
   if (!ok) {

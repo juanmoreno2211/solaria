@@ -129,7 +129,7 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
   const [enviada, setEnviada] = useState(false);
 
   const paneles = data?.resultado.alternativas[0];
-  const ofertaProveedor = paneles?.ofertas.find((o) => o.proveedor === proveedorElegido);
+  const ofertaProveedor = paneles?.ofertas.find((o) => o.id === proveedorElegido);
   const ofertaElegida =
     planElegido && ofertaProveedor?.cubreMas?.plan?.nombre === planElegido
       ? ofertaProveedor.cubreMas
@@ -179,6 +179,9 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
     if (negocio.fallaLuz) formData.set("fallaLuz", negocio.fallaLuz);
     if (negocio.legalmenteConstituido)
       formData.set("legalmenteConstituido", negocio.legalmenteConstituido);
+    // Indicador solo para desarrollo (el servidor lo ignora en producción).
+    if (new URLSearchParams(window.location.search).get("simulados") === "1")
+      formData.set("simulados", "1");
 
     try {
       const res = await fetch("/api/analizar", {
@@ -212,15 +215,17 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
     }
   }
 
-  function handlePedirCotizacion(proveedor: string, plan?: string) {
-    if (proveedor !== proveedorElegido) setErroresCotizacion({});
-    setProveedorElegido(proveedor);
+  function handlePedirCotizacion(ofertaId: string, plan?: string) {
+    if (ofertaId !== proveedorElegido) setErroresCotizacion({});
+    setProveedorElegido(ofertaId);
     setPlanElegido(plan);
     setErrorEnvio(null);
     setEnviada(false);
     setStep("cotizacion");
+    const oferta = paneles?.ofertas.find((o) => o.id === ofertaId);
     registrarEvento("clic_pedir_cotizacion", {
-      proveedor,
+      proveedor: oferta?.proveedor ?? ofertaId,
+      oferta: oferta?.tipoOferta ?? null,
       plan: plan ?? null,
       region: negocio.region,
       veredicto: data?.resultado.veredicto,
@@ -260,6 +265,7 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
       sessionId: getSessionId(),
       proveedor: ofertaElegida.proveedor,
       plan: ofertaElegida.plan?.nombre,
+      oferta: ofertaElegida.tipoOferta,
       solicitante: {
         nombre: cotizacion.nombre.trim(),
         telefono: cotizacion.telefono.trim(),
@@ -303,6 +309,7 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
       setEnviada(true);
       registrarEvento("cotizacion_pedida", {
         proveedor: ofertaElegida.proveedor,
+        oferta: ofertaElegida.tipoOferta ?? null,
         plan: ofertaElegida.plan?.nombre ?? null,
         region: negocio.region,
         tipoNegocio: negocio.tipoNegocio,

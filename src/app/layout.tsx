@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: TITLE,
   description: DESCRIPTION,
+  // Piloto cerrado: muestra nombres de proveedores con datos sin confirmar.
+  robots: { index: false },
   openGraph: {
     title: TITLE,
     description: DESCRIPTION,

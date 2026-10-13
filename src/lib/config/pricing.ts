@@ -27,7 +27,7 @@ export const HORAS_SOL_PICO: Record<Region, number> = {
 
 export const REGIONES: { value: Region; label: string }[] = [
   { value: "caribe", label: "Caribe (Atlántico, Magdalena, La Guajira, Cesar, Córdoba, Sucre, Bolívar)" },
-  { value: "andina", label: "Andina (Bogotá, Antioquia, Santanderes, Eje Cafetero, Tolima, Huila)" },
+  { value: "andina", label: "Andina (Bogotá, Cundinamarca, Antioquia, Santanderes, Eje Cafetero, Tolima, Huila)" },
   { value: "pacifico", label: "Pacífico (Valle, Cauca, Nariño, Chocó)" },
   { value: "orinoquia", label: "Orinoquía (Meta, Casanare, Arauca, Vichada)" },
   { value: "amazonia", label: "Amazonía (Caquetá, Putumayo, Amazonas, Guaviare)" },
@@ -91,4 +91,27 @@ export const UMBRALES_RECOMENDACION = {
   retornoCompararAnios: 9,
   consumoMinimoKwh: 150,
   ahorroMinimoFraccion: 0.15,
+};
+
+/**
+ * Estimación del equipo para Sunvolt (no son datos de Sunvolt; todo por
+ * confirmar). Deben coincidir con su entrada en catalogo.json.
+ *
+ * | Parámetro                   | Valor            | De dónde sale                                                 |
+ * |-----------------------------|------------------|---------------------------------------------------------------|
+ * | Precio del EPC              | $6.000.000/kWp   | Entre la guía pública (≈ $2,3 a $4,2 M/kWp) y la referencia   |
+ * |                             |                  | de Erco (≈ $8 M/kWp). Antes era $4.000.000                    |
+ * | Tamaño mínimo del EPC       | 2 kWp            | Supuesto                                                      |
+ * | Financiación del EPC        | ninguna          | No hay dato ("a confirmar")                                   |
+ * | Descuento del PPA           | 15 %             | Supuesto: Sunvolt solo dice "a menor costo que la red"        |
+ * | Tamaño mínimo del PPA       | 3 kWp            | Supuesto: los PPA suelen pedir un consumo mínimo              |
+ * | Contrato PPA e instalación  | "a confirmar"    | No hay dato                                                   |
+ *
+ * Fuente: sunvolt.com.co, revisado el 2026-10-13.
+ */
+export const SUNVOLT_ESTIMACION = {
+  precioEpcPorKwp: 6_000_000,
+  kwpMinEpc: 2,
+  descuentoPpaSobreRed: 0.15,
+  kwpMinPpa: 3,
 };

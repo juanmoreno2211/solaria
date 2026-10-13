@@ -1,3 +1,4 @@
+import type { TipoOferta } from "@/lib/catalog/types";
 import type { NegocioInput } from "@/lib/savings/types";
 
 /** Lo que el navegador envía a POST /api/cotizaciones. */
@@ -6,6 +7,8 @@ export interface SolicitudCotizacionInput {
   proveedor: string;
   /** Plan pedido, si el proveedor vende por planes. */
   plan?: string;
+  /** Oferta pedida, si el proveedor tiene varias (EPC o PPA). */
+  oferta?: TipoOferta;
   solicitante: { nombre: string; telefono: string; municipio: string };
   consentimiento: boolean;
   negocio: {

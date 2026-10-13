@@ -25,9 +25,10 @@ function ProveedoresGrid({
   onPedir,
 }: {
   ofertas: OfertaProveedor[];
-  onPedir: (proveedor: string, plan?: string) => void;
+  onPedir: (ofertaId: string, plan?: string) => void;
 }) {
-  const aplican = ofertas.filter((o) => o.aplica);
+  // Un PPA no tiene inversión: no compite por "Menor inversión".
+  const aplican = ofertas.filter((o) => o.aplica && !o.ppa);
   const menorInversion =
     aplican.length > 1 ? Math.min(...aplican.map((o) => o.inversion)) : null;
 
@@ -35,10 +36,10 @@ function ProveedoresGrid({
     <div className="mt-4 grid gap-4 md:grid-cols-2">
       {ofertas.map((o) => (
         <ProveedorCard
-          key={o.proveedor}
+          key={o.id}
           oferta={o}
-          menorInversion={o.aplica && o.inversion === menorInversion}
-          onPedir={(plan) => onPedir(o.proveedor, plan)}
+          menorInversion={o.aplica && !o.ppa && o.inversion === menorInversion}
+          onPedir={(plan) => onPedir(o.id, plan)}
         />
       ))}
     </div>
@@ -55,7 +56,7 @@ export function ResultsView({
   resultado: AnalisisResultado;
   recomendacion: string;
   onCambiarDatos: () => void;
-  onPedirCotizacion: (proveedor: string, plan?: string) => void;
+  onPedirCotizacion: (ofertaId: string, plan?: string) => void;
   onInteresSinProveedor: () => void;
 }) {
   const [verProveedores, setVerProveedores] = useState(false);

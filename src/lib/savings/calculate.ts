@@ -8,6 +8,7 @@ import {
   UMBRALES_RECOMENDACION,
 } from "@/lib/config/pricing";
 import { formatCOPMiles, formatDecimal, formatNumber } from "@/lib/format";
+import type { CatalogoPanelSistema } from "@/lib/catalog/types";
 import { calcularOfertas, elegirMejorOferta } from "./ofertas";
 import type {
   AlternativaResultado,
@@ -38,7 +39,8 @@ function resolverConsumoYValor(input: AnalisisInput, tarifaEstimada: number) {
 function calcularPaneles(
   input: AnalisisInput,
   consumoMensualKwh: number,
-  valorPagadoMensual: number
+  valorPagadoMensual: number,
+  sistemas?: CatalogoPanelSistema[]
 ): AlternativaResultado {
   const hsp = HORAS_SOL_PICO[input.negocio.region];
 
@@ -52,7 +54,7 @@ function calcularPaneles(
   const ofertas = calcularOfertas(kwpRequeridos, ahorroMensual, {
     region: input.negocio.region,
     departamento: input.negocio.departamento,
-  });
+  }, sistemas);
   const mejorOferta = elegirMejorOferta(ofertas);
 
   // Los números principales salen del mejor proveedor; el costo genérico por
@@ -72,8 +74,8 @@ function calcularPaneles(
     nombre: "Paneles solares",
     aplica: kwpRequeridos > 0,
     kwpRequeridos: Math.round(kwpRequeridos * 10) / 10,
-    inversionEstimadaMin: Math.round(inversion * 0.9),
-    inversionEstimadaMax: Math.round(inversion * (mejorOferta ? 1.1 : 1.15)),
+    inversionEstimadaMin: Math.round(mejorOferta?.inversionMin ?? inversion * 0.9),
+    inversionEstimadaMax: Math.round(mejorOferta?.inversionMax ?? inversion * 1.15),
     ahorroMensualEstimado: Math.round(ahorro),
     ahorroPorcentual: valorPagadoMensual > 0 ? Math.round((ahorro / valorPagadoMensual) * 100) : 0,
     retornoMeses: retornoMeses === null ? null : Math.round(retornoMeses),
@@ -90,7 +92,7 @@ function calcularPaneles(
   };
 }
 
-function decidirVeredicto(
+function decidirVeredictoBase(
   paneles: AlternativaResultado,
   consumoMensualKwh: number
 ): { veredicto: Veredicto; motivo: string } {
@@ -152,11 +154,37 @@ function decidirVeredicto(
   };
 }
 
-export function calcularAhorro(input: AnalisisInput): AnalisisResultado {
+/**
+ * Si el sistema propio no se recomienda pero un PPA aplica y ahorra, se
+ * menciona como alternativa sin inversión.
+ */
+function decidirVeredicto(
+  paneles: AlternativaResultado,
+  consumoMensualKwh: number
+): { veredicto: Veredicto; motivo: string } {
+  const r = decidirVeredictoBase(paneles, consumoMensualKwh);
+  const ppa = paneles.ofertas.some((o) => o.ppa && o.aplica && o.ahorroMensual > 0);
+  if (r.veredicto === "por_ahora_no" && ppa) {
+    return {
+      ...r,
+      motivo: `${r.motivo} El sistema propio tarda en pagarse, pero podrías ahorrar sin inversión con un PPA (por confirmar).`,
+    };
+  }
+  return r;
+}
+
+/**
+ * `sistemas` reemplaza el catálogo (pruebas y el indicador de desarrollo que
+ * muestra solo los proveedores de ejemplo).
+ */
+export function calcularAhorro(
+  input: AnalisisInput,
+  sistemas?: CatalogoPanelSistema[]
+): AnalisisResultado {
   const tarifaEstimada = TARIFA_COMERCIAL_COP_KWH;
   const { consumo, valor } = resolverConsumoYValor(input, tarifaEstimada);
 
-  const paneles = calcularPaneles(input, consumo, valor);
+  const paneles = calcularPaneles(input, consumo, valor, sistemas);
   const { veredicto, motivo } = decidirVeredicto(paneles, consumo);
 
   return {

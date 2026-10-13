@@ -36,10 +36,14 @@ hay que configurarlo en Vercel antes de probar con usuarios.
 
 **solicitudes:** id, fecha, sessionId, proveedor, estadoDatos, nombre, telefono, municipio,
 consentimiento, tipo, region, horario, noPuedeFallar, comoFalla, constituido, consumoKwh,
-valorFactura, kwp, ahorroMensual, inversion, retornoMeses, estado, departamento, plan.
+valorFactura, kwp, ahorroMensual, inversion, retornoMeses, estado, departamento, plan, oferta.
 
 `plan` es el plan pedido (por ejemplo, "Plan Básico") en proveedores que venden por planes; vacío
 en los demás. `ahorroMensual`, `inversion` y `retornoMeses` son los del plan pedido.
+
+`oferta` es `EPC` (sistema llave en mano) o `PPA` (sin inversión inicial) en proveedores con
+varias ofertas, como Sunvolt; vacío en los demás. En un PPA, `inversion` es 0, `retornoMeses`
+queda vacío y `ahorroMensual` es el ahorro estimado frente a la tarifa de la red.
 
 `estadoDatos` es `simulado` (proveedor de ejemplo), `referencial` (empresa real con precios sin
 confirmar; la solicitud la recibe el equipo) o `confirmado`. Antes esta columna se llamaba
