@@ -1,6 +1,7 @@
 import { Sun } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
+import Link from "next/link";
 
 export function Footer() {
   return (
@@ -17,9 +18,9 @@ export function Footer() {
               </span>
             </div>
             <p className="mt-4 text-sm leading-relaxed">
-              El asesor solar con inteligencia artificial que lee tu recibo de
-              luz y te muestra, en minutos, cuánto puedes ahorrar con energía
-              solar en Colombia.
+              Una calculadora para micronegocios en Colombia: con tu recibo de
+              luz te mostramos si te conviene instalar paneles solares y, si es
+              así, te conectamos con un proveedor para que te cotice.
             </p>
           </div>
 
@@ -27,15 +28,15 @@ export function Footer() {
             <div>
               <h4 className="text-sm font-semibold text-white">Producto</h4>
               <ul className="mt-4 space-y-2.5 text-sm">
-                <li><a href="#como-funciona" className="hover:text-white">Cómo funciona</a></li>
-                <li><a href="#alternativas" className="hover:text-white">Alternativas solares</a></li>
-                <li><a href="#calculadora" className="hover:text-white">Calculadora IA</a></li>
+                <li><Link href="/#calculadora" className="hover:text-white">Calculadora</Link></li>
+                <li><Link href="/#como-funciona" className="hover:text-white">Cómo funciona</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="text-sm font-semibold text-white">Empresa</h4>
               <ul className="mt-4 space-y-2.5 text-sm">
-                <li><a href="#preguntas" className="hover:text-white">Preguntas frecuentes</a></li>
+                <li><Link href="/#preguntas" className="hover:text-white">Preguntas frecuentes</Link></li>
+                <li><Link href="/mision" className="hover:text-white">Nuestra misión</Link></li>
                 <li>
                   <a
                     href={buildWhatsAppLink()}
@@ -43,7 +44,7 @@ export function Footer() {
                     rel="noopener noreferrer"
                     className="hover:text-white"
                   >
-                    Habla con un asesor
+                    Escríbenos
                   </a>
                 </li>
               </ul>
@@ -57,7 +58,7 @@ export function Footer() {
             Las cifras de ahorro, inversión y retorno son estimaciones de
             referencia calculadas con datos del mercado colombiano y la
             información que proporcionas. Los valores reales pueden variar
-            según cotización, ubicación y proveedor.
+            según cotización, ubicación y proveedor. No incluyen baterías.
           </p>
         </div>
       </Container>
