@@ -1,44 +1,54 @@
-import { ClipboardList, FileScan, Sparkles, TrendingUp } from "lucide-react";
+import { Calculator, FileScan, Handshake, Store } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
 
+const PASO_RECIBO_FOTO = {
+  icon: FileScan,
+  title: "Sube tu recibo",
+  description:
+    "Toma una foto del recibo de luz de tu negocio o escribe el consumo y el valor a mano. Si usas la foto, la leemos y tú confirmas los números.",
+};
+
+const PASO_RECIBO_MANUAL = {
+  icon: FileScan,
+  title: "Escribe tu recibo",
+  description:
+    "Escribe el consumo y el valor del recibo de luz de tu negocio. Con uno de los dos basta.",
+};
+
 const PASOS = [
   {
-    icon: FileScan,
-    title: "Sube tu recibo",
+    icon: Store,
+    title: "Cuéntanos de tu negocio",
     description:
-      "Toma una foto de tu recibo de luz o ingresa el consumo y valor manualmente.",
+      "Qué tipo de negocio tienes, en qué región está, en qué horario trabajas y cómo te falla la luz.",
   },
   {
-    icon: ClipboardList,
-    title: "Cuéntanos tu predio",
+    icon: Calculator,
+    title: "Mira si te conviene",
     description:
-      "Casa, negocio o finca; si tienes neveras que proteger o iluminación exterior que mejorar.",
+      "Calculamos cuánto ahorrarías con paneles solares y, con cada proveedor, cuánto costaría y en cuánto tiempo recuperas la inversión. Si no te conviene, te lo decimos.",
   },
   {
-    icon: Sparkles,
-    title: "El agente analiza con IA",
+    icon: Handshake,
+    title: "Pide tu cotización",
     description:
-      "Cruza tu consumo, tu tarifa y tu contexto para dimensionar cada alternativa solar.",
-  },
-  {
-    icon: TrendingUp,
-    title: "Recibe tu plan de ahorro",
-    description:
-      "Ahorro en %, en dinero al mes y tiempo de retorno de cada solución, explicado en lenguaje simple.",
+      "Si te interesa, elige un proveedor de tu región y deja tus datos. Con tu autorización, le pasamos tu solicitud con tu estimado para que te cotice.",
   },
 ];
 
-export function HowItWorks() {
+export function HowItWorks({ fotoDisponible }: { fotoDisponible: boolean }) {
+  const pasos = [fotoDisponible ? PASO_RECIBO_FOTO : PASO_RECIBO_MANUAL, ...PASOS];
+
   return (
     <section id="como-funciona" className="bg-cream-100/50 py-24 sm:py-28">
       <Container>
         <Reveal>
           <SectionHeading
             eyebrow="Cómo funciona"
-            title="De tu recibo a tu plan de ahorro solar"
-            description="Todo el proceso toma un par de minutos y no necesitas saber nada de energía solar para empezar."
+            title="De tu recibo a una cotización para tu negocio"
+            description="En un par de minutos sabes si la energía solar le conviene a tu negocio y, si es así, quién te puede cotizar. No necesitas saber nada de paneles para empezar."
           />
         </Reveal>
 
@@ -47,7 +57,7 @@ export function HowItWorks() {
             aria-hidden
             className="absolute left-5 top-5 bottom-5 w-px bg-ink-950/10 sm:bottom-auto sm:left-0 sm:right-0 sm:h-px sm:w-auto"
           />
-          {PASOS.map((paso, i) => (
+          {pasos.map((paso, i) => (
             <Reveal key={paso.title} delay={i * 0.08} className="relative flex gap-5 sm:block">
               <span className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-sun-500/30 bg-cream-50 text-sun-600">
                 <paso.icon className="h-[1.1rem] w-[1.1rem]" strokeWidth={1.75} />

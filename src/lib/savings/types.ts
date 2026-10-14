@@ -1,42 +1,79 @@
 import type { Region } from "@/lib/config/pricing";
-import type { ProveedorRecomendado } from "@/lib/catalog/types";
 
-export type TipoPredio = "casa" | "negocio" | "finca";
-export type ConexionRed = "interconectado" | "zona_no_interconectada";
-export type Estrato = 1 | 2 | 3 | 4 | 5 | 6;
-export type TamanoRefrigeracion = "pequena" | "media" | "grande";
+export type TipoNegocio =
+  | "tienda"
+  | "restaurante"
+  | "consultorio"
+  | "taller"
+  | "finca"
+  | "otro";
+export type CargaCritica =
+  | "neveras"
+  | "aire"
+  | "medicos"
+  | "maquinaria"
+  | "computo"
+  | "luces";
+export type Horario = "dia" | "dia_noche" | "24h";
+export type FallaLuz = "cortes" | "bajones" | "ambos";
 
 export interface ReciboInput {
   fuente: "foto" | "manual";
   consumoMensualKwh: number | null;
   valorPagadoMensual: number | null;
-  periodoFacturado?: string | null;
-  ciudad?: string | null;
-  confianzaExtraccion?: "alta" | "media" | "baja" | null;
 }
 
-export interface PredioInput {
-  tipoPredio: TipoPredio;
-  estrato?: Estrato;
-  esComercialOIndustrial?: "comercial" | "industrial";
+export interface NegocioInput {
+  tipoNegocio: TipoNegocio;
   region: Region;
-  conexionRed: ConexionRed;
-  tieneRefrigeracionCritica: boolean;
-  tamanoRefrigeracion?: TamanoRefrigeracion;
-  interesIluminacionExterior: boolean;
-  puntosIluminacionAprox?: number;
+  cargasCriticas: CargaCritica[];
+  horario: Horario;
+  fallaLuz?: FallaLuz;
+  legalmenteConstituido?: "si" | "no" | "nose";
 }
 
 export interface AnalisisInput {
   recibo: ReciboInput;
-  predio: PredioInput;
+  negocio: NegocioInput;
+}
+
+export type Veredicto =
+  | "conviene"
+  | "comparar"
+  | "por_ahora_no"
+  | "sin_proveedores";
+
+export interface OfertaProveedor {
+  proveedor: string;
+  esSimulado: boolean;
+  aplica: boolean;
+  motivoNoAplica?: string;
+  inversion: number;
+  inversionMin: number;
+  inversionMax: number;
+  mantenimientoMensual: number;
+  /** Meses para recuperar la inversión; null si el ahorro no alcanza a pagarla. */
+  retornoMeses: number | null;
+  instalacion?: string;
+  pagoDescripcion?: string;
+  financiacion?: {
+    cuotaInicial: number;
+    monto: number;
+    cuotaMensual: number;
+    plazoMeses: number;
+    /** Ahorro − cuota − mantenimiento mensual. */
+    flujoMensual: number;
+  };
+  /** Si no financia: 50 % de la inversión. */
+  primerPago?: number;
 }
 
 export interface AlternativaResultado {
-  id: "paneles" | "iluminacion" | "refrigeracion";
+  id: "paneles";
   nombre: string;
   aplica: boolean;
   motivoNoAplica?: string;
+  kwpRequeridos: number;
   inversionEstimadaMin: number;
   inversionEstimadaMax: number;
   ahorroMensualEstimado: number;
@@ -45,8 +82,9 @@ export interface AlternativaResultado {
   ahorro5Anios: number;
   ahorro10Anios: number;
   idealPara: string[];
-  proveedorRecomendado?: ProveedorRecomendado;
   fuentePrecio: "catalogo" | "estimado";
+  ofertas: OfertaProveedor[];
+  mejorOferta?: OfertaProveedor;
 }
 
 export interface AnalisisResultado {
@@ -55,6 +93,6 @@ export interface AnalisisResultado {
   tarifaEstimadaKwh: number;
   alternativas: AlternativaResultado[];
   mejorAlternativaId: AlternativaResultado["id"] | null;
-  ahorroCombinadoMensual: number;
-  ahorroCombinadoPorcentual: number;
+  veredicto: Veredicto;
+  motivoVeredicto: string;
 }

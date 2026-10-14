@@ -5,6 +5,7 @@ import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 
 import type { TooltipContentProps } from "recharts";
 import { Landmark } from "lucide-react";
 import { formatCOP } from "@/lib/format";
+import { MANTENIMIENTO_ANUAL } from "@/lib/config/pricing";
 import type { AlternativaResultado } from "@/lib/savings/types";
 
 function cuotaMensual(monto: number, tasaAnualPct: number, plazoAnios: number): number {
@@ -42,7 +43,10 @@ export function FinancingSimulator({
     [inversionPromedio, tasaAnual, plazoAnios]
   );
 
-  const flujoNeto = mejor.ahorroMensualEstimado - cuota;
+  const mantenimientoMensual = Math.round(
+    (inversionPromedio * MANTENIMIENTO_ANUAL) / 12
+  );
+  const flujoNeto = mejor.ahorroMensualEstimado - cuota - mantenimientoMensual;
 
   const dataBarras = [
     { name: "Cuota estimada", value: cuota, color: "#cc6a2e" },
@@ -57,7 +61,7 @@ export function FinancingSimulator({
         </span>
         <div>
           <p className="text-sm font-semibold text-ink-950">
-            ¿Y si financias {mejor.nombre.toLowerCase()}?
+            ¿Y si lo financias con un banco?
           </p>
           <p className="text-xs text-ink-800/50">
             Compara la cuota estimada del crédito con tu ahorro mensual
@@ -97,6 +101,7 @@ export function FinancingSimulator({
           <p className="mt-2 text-[11px] leading-relaxed text-ink-800/40">
             Tasa de referencia para crédito de libre inversión en Colombia; ajústala
             según la oferta real de tu banco. Inversión financiada: {formatCOP(inversionPromedio)}.
+            Mantenimiento estimado: {formatCOP(mantenimientoMensual)}/mes.
           </p>
         </div>
 
@@ -130,13 +135,13 @@ export function FinancingSimulator({
       >
         {flujoNeto >= 0 ? (
           <>
-            Con estas condiciones, tu ahorro mensual cubre la cuota y te queda un{" "}
+            Con estas condiciones, tu ahorro mensual cubre la cuota y el mantenimiento, y te queda un{" "}
             <span className="font-semibold">flujo positivo de {formatCOP(flujoNeto)}/mes</span>{" "}
             desde el primer mes, aunque estés pagando el crédito.
           </>
         ) : (
           <>
-            Con estas condiciones, la cuota supera tu ahorro mensual por{" "}
+            Con estas condiciones, la cuota más el mantenimiento supera tu ahorro mensual por{" "}
             <span className="font-semibold">{formatCOP(Math.abs(flujoNeto))}/mes</span>.
             Prueba un plazo más largo o revisa una tasa más baja.
           </>

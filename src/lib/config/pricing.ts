@@ -1,3 +1,5 @@
+import type { Horario } from "@/lib/savings/types";
+
 /**
  * Valores de referencia para el mercado colombiano (COP).
  * Son estimados basados en promedios públicos de tarifas de energía y precios
@@ -32,53 +34,40 @@ export const REGIONES: { value: Region; label: string }[] = [
   { value: "insular", label: "Insular (San Andrés y Providencia)" },
 ];
 
-/** Tarifa estimada COP/kWh cuando no se conoce el valor exacto pagado. */
-export const TARIFA_ESTIMADA_COP_KWH = {
-  estrato1: 480,
-  estrato2: 560,
-  estrato3: 720,
-  estrato4: 880,
-  estrato5: 980,
-  estrato6: 1020,
-  comercial: 920,
-  industrial: 780,
-  rural_zni: 1350, // zona no interconectada, referencia diesel/planta
-};
+/**
+ * Tarifa comercial estimada COP/kWh, solo cuando el recibo no trae el valor
+ * pagado. Supuesto por validar: debería salir del recibo, no de una tabla fija.
+ */
+export const TARIFA_COMERCIAL_COP_KWH = 920;
 
-/** Costo estimado de instalación solar fotovoltaica por kWp instalado (COP). */
-export const COSTO_PANELES_POR_KWP = {
-  interconectado: 6_000_000,
-  zona_no_interconectada: 8_500_000, // incluye baterías, mayor costo
-};
+/**
+ * Costo estimado de instalación solar por kWp instalado (COP), sin baterías.
+ * Supuesto por validar: es más alto que los rangos públicos consultados
+ * ($2,3 a $4,2 millones por kWp). Calibrar con una cotización real.
+ */
+export const COSTO_PANELES_POR_KWP = 6_000_000;
 
 /** Factor de desempeño del sistema (pérdidas por inversor, cableado, suciedad, etc). */
 export const PERFORMANCE_RATIO = 0.78;
 
-/** Iluminación solar (linternas, reflectores y decorativos solares). */
-export const ILUMINACION_SOLAR = {
-  costoPromedioPorPunto: 95_000, // COP por lámpara/linterna/reflector solar
-  puntosSugeridos: {
-    casa: 4,
-    negocio: 8,
-    finca: 14,
-  },
-  fraccionConsumoIluminacionExterior: {
-    casa: 0.03,
-    negocio: 0.07,
-    finca: 0.05,
-  },
+/**
+ * Fracción del consumo que pueden cubrir los paneles sin baterías, según el
+ * horario del negocio (solo se aprovecha la energía que se usa de día).
+ * Supuestos por validar.
+ */
+export const COBERTURA_POR_HORARIO: Record<Horario, number> = {
+  dia: 0.8,
+  dia_noche: 0.6,
+  "24h": 0.45,
 };
 
-/** Refrigeración solar para proteger cadena de frío. */
-export const REFRIGERACION_SOLAR = {
-  costoBase: 4_500_000,
-  costoPorLitroCapacidad: 9_500,
-  fraccionConsumoPorTamano: {
-    pequena: 0.15, // < 200 L
-    media: 0.25, // 200 - 600 L
-    grande: 0.35, // > 600 L
-  },
-};
+/** Mantenimiento anual como fracción de la inversión. */
+export const MANTENIMIENTO_ANUAL = 0.015;
 
-/** Límite de cobertura: nunca se estima que el sistema cubra más del 95% del consumo. */
-export const COBERTURA_MAXIMA = 0.95;
+/** Umbrales de la recomendación. Supuestos por validar. */
+export const UMBRALES_RECOMENDACION = {
+  retornoConvieneAnios: 6,
+  retornoCompararAnios: 9,
+  consumoMinimoKwh: 150,
+  ahorroMinimoFraccion: 0.15,
+};

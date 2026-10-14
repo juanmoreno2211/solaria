@@ -69,7 +69,7 @@ export default function OgImage() {
             lineHeight: 1.25,
           }}
         >
-          Descubre cuánto puedes ahorrar con energía solar
+          ¿Le conviene la energía solar a tu negocio?
         </div>
 
         <div
@@ -81,8 +81,8 @@ export default function OgImage() {
             maxWidth: 860,
           }}
         >
-          Sube tu recibo de luz y deja que nuestro agente con IA calcule tu
-          ahorro en paneles, iluminación y refrigeración solar.
+          Con el recibo de luz de tu negocio, mira cuánto ahorrarías con
+          paneles solares y pide una cotización.
         </div>
       </div>
     ),

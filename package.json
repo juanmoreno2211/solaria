@@ -8,10 +8,11 @@
     "start": "next start",
     "lint": "eslint",
     "catalog:import": "node scripts/import-catalog.mjs",
-    "catalog:extract-pdf": "node scripts/extract-catalog-pdf.mjs"
+    "catalog:extract-pdf": "node scripts/extract-catalog-pdf.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.125.0",
+    "@google/genai": "^2.28.0",
     "clsx": "^2.1.1",
     "framer-motion": "^13.3.0",
     "lucide-react": "^1.46.0",
@@ -29,6 +30,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.5",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   }
 }

@@ -1,26 +1,98 @@
 "use client";
 
-import { Building2, Home, TreePine } from "lucide-react";
-import { FieldLabel, OptionCard, TextInput, ToggleCard } from "./ui";
+import {
+  HelpCircle,
+  Stethoscope,
+  Store,
+  Tractor,
+  UtensilsCrossed,
+  Wrench,
+} from "lucide-react";
+import clsx from "clsx";
+import { FieldLabel, OptionCard } from "./ui";
 import { Button } from "@/components/ui/Button";
 import { REGIONES } from "@/lib/config/pricing";
 import type {
-  ConexionRed,
-  Estrato,
-  TamanoRefrigeracion,
-  TipoPredio,
+  CargaCritica,
+  FallaLuz,
+  Horario,
+  NegocioInput,
+  TipoNegocio,
 } from "@/lib/savings/types";
 
-export interface PredioFormState {
-  tipoPredio: TipoPredio;
-  estrato: Estrato;
-  esComercialOIndustrial: "comercial" | "industrial";
+export interface NegocioFormState {
+  tipoNegocio: TipoNegocio | "";
   region: string;
-  conexionRed: ConexionRed;
-  tieneRefrigeracionCritica: boolean;
-  tamanoRefrigeracion: TamanoRefrigeracion;
-  interesIluminacionExterior: boolean;
-  puntosIluminacionAprox: string;
+  cargasCriticas: CargaCritica[];
+  horario: Horario | "";
+  fallaLuz: FallaLuz | "";
+  legalmenteConstituido: NonNullable<NegocioInput["legalmenteConstituido"]> | "";
+}
+
+const TIPOS: { v: TipoNegocio; label: string; icon: React.ReactNode }[] = [
+  { v: "tienda", label: "Tienda o supermercado", icon: <Store className="h-4 w-4" /> },
+  { v: "restaurante", label: "Restaurante o cafetería", icon: <UtensilsCrossed className="h-4 w-4" /> },
+  { v: "consultorio", label: "Consultorio o clínica", icon: <Stethoscope className="h-4 w-4" /> },
+  { v: "taller", label: "Taller o ferretería", icon: <Wrench className="h-4 w-4" /> },
+  { v: "finca", label: "Finca o agro", icon: <Tractor className="h-4 w-4" /> },
+  { v: "otro", label: "Otro", icon: <HelpCircle className="h-4 w-4" /> },
+];
+
+const CARGAS: { v: CargaCritica; label: string }[] = [
+  { v: "neveras", label: "Neveras o congeladores" },
+  { v: "aire", label: "Aire acondicionado" },
+  { v: "medicos", label: "Equipos médicos u odontológicos" },
+  { v: "maquinaria", label: "Maquinaria o motores" },
+  { v: "computo", label: "Computador y datáfono" },
+  { v: "luces", label: "Iluminación" },
+];
+
+const HORARIOS: { v: Horario; label: string }[] = [
+  { v: "dia", label: "De día" },
+  { v: "dia_noche", label: "De día y de noche" },
+  { v: "24h", label: "Las 24 horas" },
+];
+
+const FALLAS: { v: FallaLuz; label: string }[] = [
+  { v: "cortes", label: "Cortes largos" },
+  { v: "bajones", label: "Bajones y fluctuaciones" },
+  { v: "ambos", label: "Las dos cosas" },
+];
+
+const CONSTITUIDO = [
+  { v: "si", label: "Sí" },
+  { v: "no", label: "No" },
+  { v: "nose", label: "No sé" },
+] as const;
+
+export function negocioCompleto(v: NegocioFormState): boolean {
+  return Boolean(v.tipoNegocio && v.region && v.horario);
+}
+
+function Chip({
+  selected,
+  onClick,
+  children,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={selected}
+      className={clsx(
+        "rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
+        selected
+          ? "border-sun-500 bg-sun-500/10 text-sun-600"
+          : "border-black/10 text-ink-800/60 hover:border-black/20"
+      )}
+    >
+      {children}
+    </button>
+  );
 }
 
 export function StepProperty({
@@ -29,200 +101,143 @@ export function StepProperty({
   onBack,
   onSubmit,
   loading,
+  error,
 }: {
-  value: PredioFormState;
-  onChange: (v: PredioFormState) => void;
+  value: NegocioFormState;
+  onChange: (v: NegocioFormState) => void;
   onBack: () => void;
   onSubmit: () => void;
   loading: boolean;
+  error: string | null;
 }) {
+  function toggleCarga(c: CargaCritica) {
+    const cargasCriticas = value.cargasCriticas.includes(c)
+      ? value.cargasCriticas.filter((x) => x !== c)
+      : [...value.cargasCriticas, c];
+    onChange({ ...value, cargasCriticas });
+  }
+
   return (
     <div>
-      <h3 className="text-lg font-bold text-ink-950">
-        2. Cuéntanos sobre tu casa, negocio o finca
+      <h3 data-step-title tabIndex={-1} className="text-lg font-bold text-ink-950 outline-none">
+        Cuéntanos de tu negocio
       </h3>
       <p className="mt-1 text-sm text-ink-800/60">
-        Así el agente ajusta la recomendación a tu caso real.
+        Estas respuestas cambian el cálculo: cuánto de tu consumo pueden cubrir
+        los paneles y qué tan bien se ajusta a tu forma de trabajar.
       </p>
 
       <div className="mt-5">
-        <FieldLabel>Tipo de predio</FieldLabel>
-        <div className="grid grid-cols-3 gap-3">
-          <OptionCard
-            selected={value.tipoPredio === "casa"}
-            onClick={() => onChange({ ...value, tipoPredio: "casa" })}
-            title="Casa"
-            icon={<Home className="h-4 w-4" />}
-          />
-          <OptionCard
-            selected={value.tipoPredio === "negocio"}
-            onClick={() => onChange({ ...value, tipoPredio: "negocio" })}
-            title="Negocio"
-            icon={<Building2 className="h-4 w-4" />}
-          />
-          <OptionCard
-            selected={value.tipoPredio === "finca"}
-            onClick={() => onChange({ ...value, tipoPredio: "finca" })}
-            title="Finca / terreno"
-            icon={<TreePine className="h-4 w-4" />}
-          />
+        <FieldLabel>Tipo de negocio</FieldLabel>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {TIPOS.map((t) => (
+            <OptionCard
+              key={t.v}
+              selected={value.tipoNegocio === t.v}
+              onClick={() => onChange({ ...value, tipoNegocio: t.v })}
+              title={t.label}
+              icon={t.icon}
+            />
+          ))}
         </div>
       </div>
 
-      {value.tipoPredio === "casa" && (
-        <div className="mt-5">
-          <FieldLabel>Estrato</FieldLabel>
-          <div className="grid grid-cols-6 gap-2">
-            {[1, 2, 3, 4, 5, 6].map((e) => (
-              <button
-                key={e}
-                type="button"
-                onClick={() =>
-                  onChange({ ...value, estrato: e as Estrato })
-                }
-                className={`rounded-lg border py-2 text-sm font-semibold transition-colors ${
-                  value.estrato === e
-                    ? "border-sun-500 bg-sun-500/10 text-sun-600"
-                    : "border-black/10 text-ink-800/60 hover:border-black/20"
-                }`}
-              >
-                {e}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {value.tipoPredio === "negocio" && (
-        <div className="mt-5">
-          <FieldLabel>Tipo de tarifa</FieldLabel>
-          <div className="grid grid-cols-2 gap-3">
-            <OptionCard
-              selected={value.esComercialOIndustrial === "comercial"}
-              onClick={() =>
-                onChange({ ...value, esComercialOIndustrial: "comercial" })
-              }
-              title="Comercial"
-            />
-            <OptionCard
-              selected={value.esComercialOIndustrial === "industrial"}
-              onClick={() =>
-                onChange({ ...value, esComercialOIndustrial: "industrial" })
-              }
-              title="Industrial"
-            />
-          </div>
-        </div>
-      )}
-
-      <div className="mt-5 grid gap-4 sm:grid-cols-2">
-        <div>
-          <FieldLabel>Región</FieldLabel>
-          <select
-            value={value.region}
-            onChange={(e) => onChange({ ...value, region: e.target.value })}
-            className="w-full rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm text-ink-950 outline-none focus:border-sun-500 focus:ring-2 focus:ring-sun-500/20"
-          >
-            {REGIONES.map((r) => (
-              <option key={r.value} value={r.value}>
-                {r.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <FieldLabel>Conexión eléctrica</FieldLabel>
-          <select
-            value={value.conexionRed}
-            onChange={(e) =>
-              onChange({
-                ...value,
-                conexionRed: e.target.value as ConexionRed,
-              })
-            }
-            className="w-full rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm text-ink-950 outline-none focus:border-sun-500 focus:ring-2 focus:ring-sun-500/20"
-          >
-            <option value="interconectado">Conectado a la red</option>
-            <option value="zona_no_interconectada">
-              Zona no interconectada (planta / sin red)
+      <div className="mt-5">
+        <FieldLabel>Región</FieldLabel>
+        <select
+          value={value.region}
+          onChange={(e) => onChange({ ...value, region: e.target.value })}
+          className="w-full rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm text-ink-950 outline-none focus:border-sun-500 focus:ring-2 focus:ring-sun-500/20"
+        >
+          <option value="">Elige tu región</option>
+          {REGIONES.map((r) => (
+            <option key={r.value} value={r.value}>
+              {r.label}
             </option>
-          </select>
+          ))}
+        </select>
+      </div>
+
+      <div className="mt-5">
+        <FieldLabel>¿Qué no puede fallar?</FieldLabel>
+        <div className="flex flex-wrap gap-2">
+          {CARGAS.map((c) => (
+            <Chip
+              key={c.v}
+              selected={value.cargasCriticas.includes(c.v)}
+              onClick={() => toggleCarga(c.v)}
+            >
+              {c.label}
+            </Chip>
+          ))}
+        </div>
+        <p className="mt-2 text-xs text-ink-800/50">Marca todo lo que aplique.</p>
+      </div>
+
+      <div className="mt-5">
+        <FieldLabel>¿Cuándo trabajas?</FieldLabel>
+        <div className="flex flex-wrap gap-2">
+          {HORARIOS.map((h) => (
+            <Chip
+              key={h.v}
+              selected={value.horario === h.v}
+              onClick={() => onChange({ ...value, horario: h.v })}
+            >
+              {h.label}
+            </Chip>
+          ))}
         </div>
       </div>
 
-      <div className="mt-5 space-y-3">
-        <ToggleCard
-          active={value.tieneRefrigeracionCritica}
-          onClick={() =>
-            onChange({
-              ...value,
-              tieneRefrigeracionCritica: !value.tieneRefrigeracionCritica,
-            })
-          }
-          title="Tengo neveras o refrigeración que proteger"
-          description="Lácteos, alimentos, vacunas u otros productos que no pueden perder la cadena de frío"
-        />
-        {value.tieneRefrigeracionCritica && (
-          <div className="grid grid-cols-3 gap-2 pl-1">
-            {(
-              [
-                { v: "pequena", label: "Pequeña (<200L)" },
-                { v: "media", label: "Media (200-600L)" },
-                { v: "grande", label: "Grande (>600L)" },
-              ] as { v: TamanoRefrigeracion; label: string }[]
-            ).map((opt) => (
-              <button
-                key={opt.v}
-                type="button"
-                onClick={() =>
-                  onChange({ ...value, tamanoRefrigeracion: opt.v })
-                }
-                className={`rounded-lg border py-2 text-xs font-semibold transition-colors ${
-                  value.tamanoRefrigeracion === opt.v
-                    ? "border-leaf-500 bg-leaf-500/10 text-leaf-700"
-                    : "border-black/10 text-ink-800/55 hover:border-black/20"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        <ToggleCard
-          active={value.interesIluminacionExterior}
-          onClick={() =>
-            onChange({
-              ...value,
-              interesIluminacionExterior: !value.interesIluminacionExterior,
-            })
-          }
-          title="Me interesa iluminación solar exterior o decorativa"
-          description="Fachadas, senderos, parqueaderos, zonas comunes o decoración"
-        />
-        {value.interesIluminacionExterior && (
-          <div className="pl-1">
-            <FieldLabel>Puntos de luz aproximados</FieldLabel>
-            <TextInput
-              type="number"
-              min={1}
-              placeholder="Ej. 8"
-              value={value.puntosIluminacionAprox}
-              onChange={(e) =>
-                onChange({ ...value, puntosIluminacionAprox: e.target.value })
-              }
-              className="max-w-[160px]"
-            />
-          </div>
-        )}
+      <div className="mt-5">
+        <FieldLabel>¿Cómo falla la luz?</FieldLabel>
+        <div className="flex flex-wrap gap-2">
+          {FALLAS.map((f) => (
+            <Chip
+              key={f.v}
+              selected={value.fallaLuz === f.v}
+              onClick={() => onChange({ ...value, fallaLuz: f.v })}
+            >
+              {f.label}
+            </Chip>
+          ))}
+        </div>
       </div>
+
+      <div className="mt-5">
+        <FieldLabel>¿Tu negocio está legalmente constituido? (opcional)</FieldLabel>
+        <div className="flex flex-wrap gap-2">
+          {CONSTITUIDO.map((o) => (
+            <Chip
+              key={o.v}
+              selected={value.legalmenteConstituido === o.v}
+              onClick={() =>
+                onChange({
+                  ...value,
+                  legalmenteConstituido:
+                    value.legalmenteConstituido === o.v ? "" : o.v,
+                })
+              }
+            >
+              {o.label}
+            </Chip>
+          ))}
+        </div>
+        <p className="mt-2 text-xs text-ink-800/50">Algunos apoyos del Gobierno lo piden.</p>
+      </div>
+
+      {error && (
+        <p role="alert" className="mt-5 text-sm font-medium text-red-700">
+          {error}
+        </p>
+      )}
 
       <div className="mt-7 flex items-center justify-between">
         <Button variant="ghost" onClick={onBack} disabled={loading}>
           Atrás
         </Button>
         <Button onClick={onSubmit} disabled={loading}>
-          {loading ? "Analizando..." : "Ver mi ahorro"}
+          {loading ? "Calculando..." : "Ver mi ahorro"}
         </Button>
       </div>
     </div>

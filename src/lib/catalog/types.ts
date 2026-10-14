@@ -10,12 +10,23 @@ export interface ProveedorInfo {
   notas?: string;
 }
 
+export interface FinanciacionProveedor {
+  cuotaInicialPct: number; // 0.30 = 30 %
+  tasaMensual: number; // 0.017 = 1,7 % mensual
+  plazoMeses: number;
+}
+
 export interface CatalogoPanelSistema extends ProveedorInfo {
   nombreSistema: string;
   kwpMin: number;
   kwpMax: number;
   precioPorKwpCOP: number;
   regiones: RegionesCobertura;
+  /** true mientras el proveedor sea de ejemplo y no una empresa real. */
+  esSimulado?: boolean;
+  instalacion?: string;
+  pagoDescripcion?: string;
+  financiacion?: FinanciacionProveedor | null;
 }
 
 export interface CatalogoIluminacionProducto extends ProveedorInfo {
