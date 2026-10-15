@@ -3,6 +3,8 @@ import { Footer } from "@/components/layout/Footer";
 import { Hero } from "@/components/landing/Hero";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { CalculatorSection } from "@/components/landing/calculator/CalculatorSection";
+import { Mission } from "@/components/landing/Mission";
+import { ProblemSolution } from "@/components/landing/ProblemSolution";
 import { FAQ } from "@/components/landing/FAQ";
 import { CTA } from "@/components/landing/CTA";
 
@@ -17,6 +19,8 @@ export default function Home() {
         <Hero />
         <CalculatorSection fotoDisponible={fotoDisponible} />
         <HowItWorks fotoDisponible={fotoDisponible} />
+        <Mission />
+        <ProblemSolution />
         <FAQ />
         <CTA />
       </main>

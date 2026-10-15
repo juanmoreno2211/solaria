@@ -1,29 +1,23 @@
-import { Calculator, FileScan, Handshake, Store } from "lucide-react";
+import { Calculator, FileScan, Handshake } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
 
 const PASO_RECIBO_FOTO = {
   icon: FileScan,
-  title: "Sube tu recibo",
+  title: "Sube tu recibo y cuéntanos de tu negocio",
   description:
-    "Toma una foto del recibo de luz de tu negocio o escribe el consumo y el valor a mano. Si usas la foto, la leemos y tú confirmas los números.",
+    "Toma una foto del recibo de luz o escribe el consumo y el valor a mano; si usas la foto, la leemos y tú confirmas los números. Luego nos dices qué tipo de negocio tienes, en qué región está, en qué horario trabajas y cómo te falla la luz.",
 };
 
 const PASO_RECIBO_MANUAL = {
   icon: FileScan,
-  title: "Escribe tu recibo",
+  title: "Escribe tu recibo y cuéntanos de tu negocio",
   description:
-    "Escribe el consumo y el valor del recibo de luz de tu negocio. Con uno de los dos basta.",
+    "Escribe el consumo o el valor del recibo de luz; con uno de los dos basta. Luego nos dices qué tipo de negocio tienes, en qué región está, en qué horario trabajas y cómo te falla la luz.",
 };
 
 const PASOS = [
-  {
-    icon: Store,
-    title: "Cuéntanos de tu negocio",
-    description:
-      "Qué tipo de negocio tienes, en qué región está, en qué horario trabajas y cómo te falla la luz.",
-  },
   {
     icon: Calculator,
     title: "Mira si te conviene",
@@ -52,7 +46,7 @@ export function HowItWorks({ fotoDisponible }: { fotoDisponible: boolean }) {
           />
         </Reveal>
 
-        <div className="relative mt-16 grid gap-10 sm:grid-cols-4 sm:gap-6">
+        <div className="relative mt-16 grid gap-10 sm:grid-cols-3 sm:gap-6">
           <div
             aria-hidden
             className="absolute left-5 top-5 bottom-5 w-px bg-ink-950/10 sm:bottom-auto sm:left-0 sm:right-0 sm:h-px sm:w-auto"
