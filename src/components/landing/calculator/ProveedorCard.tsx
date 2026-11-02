@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { Check } from "lucide-react";
 import clsx from "clsx";
 import { Button } from "@/components/ui/Button";
 import type { EstadoDatos } from "@/lib/catalog/types";
 import { formatCOPMiles, formatDecimal } from "@/lib/format";
 import type { OfertaProveedor } from "@/lib/savings/types";
+import { Desplegable } from "./Desplegable";
 
 const ETIQUETA_DATOS: Record<EstadoDatos, string | null> = {
   simulado: "Proveedor de ejemplo",
@@ -13,33 +15,26 @@ const ETIQUETA_DATOS: Record<EstadoDatos, string | null> = {
   confirmado: null,
 };
 
-function Fila({ label, children }: { label: string; children: React.ReactNode }) {
+export function anios(meses: number | null): string {
+  return meses === null ? "Sin recuperación en 20 años" : `${formatDecimal(meses / 12)} años`;
+}
+
+function Cifra({ label, valor, nota }: { label: string; valor: string; nota?: string }) {
   return (
-    <div className="flex items-start justify-between gap-4 py-2.5">
-      <dt className="text-xs text-ink-800/55">{label}</dt>
-      <dd className="text-right text-sm font-semibold text-ink-950">{children}</dd>
+    <div>
+      <dt className="text-[11px] leading-snug text-ink-800/55">{label}</dt>
+      <dd className="mt-1 text-base font-semibold tracking-[-0.01em] text-ink-950 tabular-nums">{valor}</dd>
+      {nota && <dd className="text-[11px] text-ink-800/45">{nota}</dd>}
     </div>
   );
 }
 
-function Nota({ children }: { children: React.ReactNode }) {
-  return <span className="block text-xs font-normal text-ink-800/50">{children}</span>;
-}
-
-function Etiqueta({ children }: { children: React.ReactNode }) {
+function Fila({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <span className="rounded-md bg-ink-950/6 px-2 py-0.5 text-[11px] font-semibold text-ink-900/70">
-      {children}
-    </span>
-  );
-}
-
-function Flujo({ valor }: { valor: number }) {
-  return (
-    <span className={valor >= 0 ? "text-leaf-700" : "text-red-700"}>
-      {valor >= 0 ? "+" : "−"}
-      {formatCOPMiles(Math.abs(valor))}
-    </span>
+    <div className="flex items-start justify-between gap-4 py-2">
+      <dt className="text-xs text-ink-800/55">{label}</dt>
+      <dd className="text-right text-xs font-semibold text-ink-950">{children}</dd>
+    </div>
   );
 }
 
@@ -55,15 +50,14 @@ function SimulacionPago({
   const pago = simulacion.opciones[i];
 
   return (
-    <div className="mt-4 rounded-lg bg-cream-100/70 p-4">
-      <p className="text-xs font-semibold text-ink-950">Simulación de pago</p>
-      <p className="mt-1 text-xs leading-relaxed text-ink-800/60">
-        Esta es una simulación con tus datos, no una oferta de {proveedor}. Las
-        condiciones reales las confirma el proveedor.
+    <div className="mt-3 rounded-lg bg-cream-100/70 p-3">
+      <p className="text-xs font-semibold text-ink-950">Si pagas por cuotas</p>
+      <p className="mt-1 text-[11px] leading-relaxed text-ink-800/60">
+        Simulación con una tasa de {formatDecimal(simulacion.tasaMensual * 100)} % mensual a{" "}
+        {simulacion.plazoMeses} meses. No es una oferta de {proveedor}.
       </p>
-
-      <p className="mt-3 text-xs text-ink-800/55">Cuota inicial</p>
-      <div className="mt-1.5 flex flex-wrap gap-1.5">
+      <div className="mt-2 flex flex-wrap items-center gap-1.5" role="group" aria-label="Cuota inicial">
+        <span className="mr-1 text-[11px] text-ink-800/55">Cuota inicial</span>
         {simulacion.opciones.map((o, j) => (
           <button
             key={o.cuotaInicialPct}
@@ -71,188 +65,154 @@ function SimulacionPago({
             onClick={() => setI(j)}
             aria-pressed={i === j}
             className={clsx(
-              "rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors",
+              "rounded-md border px-2 py-0.5 text-[11px] font-semibold transition-colors",
               i === j
-                ? "border-sun-500 bg-sun-500/10 text-sun-700"
-                : "border-ink-950/10 bg-white text-ink-800/60 hover:border-ink-950/20"
+                ? "border-ink-900 bg-ink-900 text-white"
+                : "border-ink-950/10 bg-white text-ink-800/70 hover:border-ink-950/25"
             )}
           >
             {Math.round(o.cuotaInicialPct * 100)} %
           </button>
         ))}
       </div>
-
-      <dl className="mt-2 divide-y divide-ink-950/6">
-        <Fila label="Cuota inicial">{formatCOPMiles(pago.cuotaInicial)}</Fila>
-        <Fila label="Cuota mensual">
-          {formatCOPMiles(pago.cuotaMensual)}
-          <Nota>
-            durante {pago.plazoMeses} meses, al{" "}
-            {formatDecimal(simulacion.tasaMensual * 100)} % mensual
-          </Nota>
-        </Fila>
-        <Fila label="Ahorro menos cuota y mantenimiento">
-          <Flujo valor={pago.flujoMensual} />
-          <Nota>al mes mientras pagas</Nota>
-        </Fila>
-      </dl>
-    </div>
-  );
-}
-
-/** Plan que cubre todo el sistema necesario, debajo del recomendado y más pequeño. */
-function OpcionCubreMas({
-  oferta,
-  onPedir,
-}: {
-  oferta: OfertaProveedor;
-  onPedir: () => void;
-}) {
-  return (
-    <div className="mt-4 rounded-lg border border-ink-950/10 p-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <p className="text-sm font-semibold text-ink-950">{oferta.plan?.nombre}</p>
-        <Etiqueta>Cubre más de tu consumo</Etiqueta>
-      </div>
-      <dl className="mt-2 divide-y divide-ink-950/6">
-        {oferta.plan && <Fila label="Potencia">{formatDecimal(oferta.plan.kwp)} kW</Fila>}
-        <Fila label="Inversión estimada">
-          ≈ {formatCOPMiles(oferta.inversion)}
-          <Nota>
-            entre {formatCOPMiles(oferta.inversionMin)} y {formatCOPMiles(oferta.inversionMax)}
-          </Nota>
-        </Fila>
-        <Fila label="Se paga en">
-          {oferta.retornoMeses !== null
-            ? `${formatDecimal(oferta.retornoMeses / 12)} años`
-            : "No se paga"}
-        </Fila>
-      </dl>
-      <Button variant="secondary" size="md" className="mt-3 w-full" onClick={onPedir}>
-        Pedir cotización del {oferta.plan?.nombre}
-      </Button>
+      <p className="mt-2 text-xs leading-relaxed text-ink-900/80">
+        Pagas {formatCOPMiles(pago.cuotaInicial)} al inicio y {formatCOPMiles(pago.cuotaMensual)} al mes.{" "}
+        {pago.flujoMensual >= 0
+          ? `Con tu ahorro te quedan ${formatCOPMiles(pago.flujoMensual)} libres cada mes.`
+          : `Pondrías ${formatCOPMiles(-pago.flujoMensual)} de tu bolsillo cada mes mientras pagas.`}
+      </p>
     </div>
   );
 }
 
 export function ProveedorCard({
   oferta,
+  recomendada,
   menorInversion,
-  onPedir,
+  onElegir,
 }: {
   oferta: OfertaProveedor;
+  /** Es la oferta con la que se calcularon las cifras principales. */
+  recomendada: boolean;
   menorInversion: boolean;
   /** Sin plan: el plan recomendado (o el proveedor, si no vende por planes). */
-  onPedir: (plan?: string) => void;
+  onElegir: (plan?: string) => void;
 }) {
   const { financiacion: fin, ppa } = oferta;
   const etiquetaDatos = oferta.etiqueta ?? ETIQUETA_DATOS[oferta.estadoDatos];
-  const notas = (
-    <>
-      {oferta.notaCobertura && <p className="mt-2 text-xs">{oferta.notaCobertura}</p>}
-      {oferta.requiereVisitaTecnica && (
-        <p className="mt-1 text-xs">Requiere una visita técnica antes de instalar.</p>
-      )}
-    </>
-  );
 
   if (!oferta.aplica) {
     return (
-      <article className="rounded-xl border border-dashed border-ink-950/12 bg-white/60 p-5 text-ink-800/60">
-        <div className="flex flex-wrap items-center gap-2">
-          <h5 className="text-base font-bold text-ink-950/50">{oferta.titulo}</h5>
-          {etiquetaDatos && <Etiqueta>{etiquetaDatos}</Etiqueta>}
-        </div>
-        <p className="mt-2 text-sm">{oferta.motivoNoAplica}</p>
-        {notas}
+      <article className="rounded-xl border border-dashed border-ink-950/15 p-4 text-ink-800/60">
+        <h5 className="text-sm font-semibold text-ink-950/60">{oferta.titulo}</h5>
+        <p className="mt-1 text-xs leading-relaxed">{oferta.motivoNoAplica}</p>
+        {oferta.notaCobertura && <p className="mt-1 text-xs">{oferta.notaCobertura}</p>}
       </article>
     );
   }
 
   return (
-    <article className="flex flex-col rounded-xl border border-ink-950/10 bg-white p-5">
-      <div className="flex flex-wrap items-center gap-2">
-        <h5 className="text-base font-bold text-ink-950">{oferta.titulo}</h5>
-        {etiquetaDatos && <Etiqueta>{etiquetaDatos}</Etiqueta>}
-        {menorInversion && <Etiqueta>Menor inversión</Etiqueta>}
-        {fin && <Etiqueta>Con financiación</Etiqueta>}
-      </div>
-      <div className="text-ink-800/60">{notas}</div>
-
-      {ppa ? (
-        <dl className="mt-3 divide-y divide-ink-950/6">
-          <Fila label="Inversión inicial">
-            {formatCOPMiles(0)}
-            <Nota>según {oferta.proveedor}, por confirmar</Nota>
-          </Fila>
-          <Fila label="Pagarías por la energía generada">
-            ≈ {formatCOPMiles(ppa.pagoMensual)} al mes
-            <Nota>
-              estimado, {Math.round((1 - ppa.descuentoSobreRed) * 100)} % de tu tarifa
-            </Nota>
-          </Fila>
-          <Fila label="Ahorro estimado">≈ {formatCOPMiles(oferta.ahorroMensual)} al mes</Fila>
-          <Fila label="Contrato">{ppa.contrato ?? "A confirmar"}</Fila>
-        </dl>
-      ) : (
-        <dl className="mt-3 divide-y divide-ink-950/6">
-          {oferta.plan && (
-            <Fila label="Plan">
-              {oferta.plan.nombre}
-              <Nota>{formatDecimal(oferta.plan.kwp)} kW</Nota>
-            </Fila>
-          )}
-          <Fila label="Inversión estimada">
-            ≈ {formatCOPMiles(oferta.inversion)}
-            <Nota>
-              entre {formatCOPMiles(oferta.inversionMin)} y {formatCOPMiles(oferta.inversionMax)}
-            </Nota>
-          </Fila>
-          {fin ? (
-            <>
-              <Fila label="Cuota inicial">{formatCOPMiles(fin.cuotaInicial)}</Fila>
-              <Fila label="Cuota mensual">
-                {formatCOPMiles(fin.cuotaMensual)}
-                <Nota>durante {fin.plazoMeses} meses</Nota>
-              </Fila>
-              <Fila label="Ahorro menos cuota">
-                <Flujo valor={fin.flujoMensual} />
-                <Nota>al mes mientras pagas</Nota>
-              </Fila>
-            </>
+    <article
+      className={clsx(
+        "flex flex-col rounded-xl border bg-white p-4 sm:p-5",
+        recomendada ? "border-ink-900" : "border-ink-950/10"
+      )}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h5 className="text-base font-semibold leading-snug text-ink-950">{oferta.titulo}</h5>
+          {recomendada ? (
+            <p className="mt-1 flex items-center gap-1 text-xs font-semibold text-leaf-700">
+              <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+              Con esta oferta calculamos tu resultado
+            </p>
           ) : (
-            <>
-              <Fila label="Forma de pago">
-                <span className="font-medium">{oferta.pagoDescripcion}</span>
-              </Fila>
-              {oferta.primerPago !== undefined && (
-                <Fila label="Primer pago">{formatCOPMiles(oferta.primerPago)}</Fila>
-              )}
-            </>
+            menorInversion && <p className="mt-1 text-xs font-semibold text-sun-600">La menor inversión</p>
           )}
-          <Fila label="Se paga en">
-            {oferta.retornoMeses !== null
-              ? `${formatDecimal(oferta.retornoMeses / 12)} años`
-              : "No se paga"}
-          </Fila>
-          {oferta.instalacion && <Fila label="Instalación">{oferta.instalacion}</Fila>}
-        </dl>
-      )}
+          {etiquetaDatos && <p className="mt-1 text-xs text-ink-800/50">{etiquetaDatos}</p>}
+        </div>
+        {/* El botón ya trae inline-flex: se esconde con un contenedor, no con `hidden`. */}
+        <div className="hidden shrink-0 sm:block">
+          <Button size="md" onClick={() => onElegir()}>
+            Cotizar con {oferta.proveedor}
+          </Button>
+        </div>
+      </div>
 
-      {oferta.simulacionPago && (
-        <SimulacionPago proveedor={oferta.proveedor} simulacion={oferta.simulacionPago} />
-      )}
+      <dl className="mt-3 grid grid-cols-3 gap-3 border-t border-ink-950/8 pt-3">
+        {ppa ? (
+          <>
+            <Cifra label="Inversión" valor={formatCOPMiles(0)} />
+            <Cifra label="Pagas por la energía" valor={formatCOPMiles(ppa.pagoMensual)} nota="al mes" />
+            <Cifra label="Ahorras" valor={formatCOPMiles(oferta.ahorroMensual)} nota="al mes" />
+          </>
+        ) : (
+          <>
+            <Cifra label="Inversión" valor={formatCOPMiles(oferta.inversion)} />
+            <Cifra label="Ahorras" valor={formatCOPMiles(oferta.ahorroMensual)} nota="al mes" />
+            <Cifra label="Se paga en" valor={anios(oferta.retornoMeses)} />
+          </>
+        )}
+      </dl>
 
-      <Button size="md" className="mt-4 w-full" onClick={() => onPedir()}>
-        Pedir cotización con {oferta.proveedor}
+      <Button size="md" className="mt-4 w-full sm:hidden" onClick={() => onElegir()}>
+        Cotizar con {oferta.proveedor}
       </Button>
 
-      {oferta.cubreMas && (
-        <OpcionCubreMas
-          oferta={oferta.cubreMas}
-          onPedir={() => onPedir(oferta.cubreMas!.plan?.nombre)}
-        />
-      )}
+      <Desplegable titulo="Ver detalles de la oferta" variante="plano" className="mt-2">
+        <dl className="divide-y divide-ink-950/6">
+          {oferta.plan && (
+            <Fila label="Plan">
+              {oferta.plan.nombre}, {formatDecimal(oferta.plan.kwp)} kW
+            </Fila>
+          )}
+          {!ppa && (
+            <Fila label="Rango de inversión">
+              {formatCOPMiles(oferta.inversionMin)} a {formatCOPMiles(oferta.inversionMax)}
+            </Fila>
+          )}
+          {ppa && (
+            <Fila label="Descuento sobre tu tarifa">{Math.round(ppa.descuentoSobreRed * 100)} %</Fila>
+          )}
+          {ppa && <Fila label="Contrato">{ppa.contrato ?? "A confirmar"}</Fila>}
+          {fin ? (
+            <Fila label="Financiación del proveedor">
+              {formatCOPMiles(fin.cuotaInicial)} de cuota inicial y {formatCOPMiles(fin.cuotaMensual)} al mes
+              durante {fin.plazoMeses} meses
+            </Fila>
+          ) : (
+            oferta.pagoDescripcion && <Fila label="Forma de pago">{oferta.pagoDescripcion}</Fila>
+          )}
+          {oferta.instalacion && <Fila label="Instalación">{oferta.instalacion}</Fila>}
+        </dl>
+        {oferta.notaCobertura && (
+          <p className="mt-2 text-xs leading-relaxed text-ink-800/60">{oferta.notaCobertura}</p>
+        )}
+        {oferta.requiereVisitaTecnica && (
+          <p className="mt-1 text-xs text-ink-800/60">Requiere una visita técnica antes de instalar.</p>
+        )}
+        {oferta.simulacionPago && (
+          <SimulacionPago proveedor={oferta.proveedor} simulacion={oferta.simulacionPago} />
+        )}
+        {oferta.cubreMas && (
+          <div className="mt-3 rounded-lg border border-ink-950/10 p-3">
+            <p className="text-xs leading-relaxed text-ink-900/80">
+              También tiene el <b>{oferta.cubreMas.plan?.nombre}</b>
+              {oferta.cubreMas.plan && ` (${formatDecimal(oferta.cubreMas.plan.kwp)} kW)`}, que cubre todo
+              tu consumo: inversión de {formatCOPMiles(oferta.cubreMas.inversion)}, se paga en{" "}
+              {anios(oferta.cubreMas.retornoMeses)}.
+            </p>
+            <Button
+              variant="secondary"
+              size="md"
+              className="mt-2 w-full"
+              onClick={() => onElegir(oferta.cubreMas!.plan?.nombre)}
+            >
+              Cotizar el {oferta.cubreMas.plan?.nombre}
+            </Button>
+          </div>
+        )}
+      </Desplegable>
     </article>
   );
 }

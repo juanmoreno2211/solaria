@@ -1,3 +1,4 @@
+import { REGION_DEPARTMENTS } from "@/lib/geo/regions";
 import type { Horario } from "@/lib/savings/types";
 
 /**
@@ -34,14 +35,8 @@ export const REGIONES: { value: Region; label: string }[] = [
   { value: "insular", label: "Insular (San Andrés y Providencia)" },
 ];
 
-/**
- * Departamentos que se preguntan en el paso 2, por región. Por ahora solo en
- * el Caribe. Sirven para ocultar la nota de cobertura de los proveedores con
- * `departamentosConfirmados` y viajan con la solicitud de cotización.
- */
-export const DEPARTAMENTOS: Partial<Record<Region, string[]>> = {
-  caribe: ["Atlántico", "Bolívar", "Cesar", "Córdoba", "La Guajira", "Magdalena", "Sucre"],
-};
+/** Departamentos de las seis regiones del modelo; Bogotá D.C. se incluye como selección. */
+export const DEPARTAMENTOS: Partial<Record<Region, string[]>> = REGION_DEPARTMENTS;
 
 /**
  * Tarifa comercial estimada COP/kWh, solo cuando el recibo no trae el valor
@@ -84,6 +79,24 @@ export const PLAN_COBERTURA_MINIMA = 0.8;
  * potencia (si no, pagaría un plan demasiado grande). Supuesto por validar.
  */
 export const PLAN_USO_MINIMO = 0.5;
+
+/**
+ * Supuestos que se muestran tal cual al usuario (sin controles para moverlos).
+ * Revisa estos valores cada trimestre.
+ */
+export const SUPUESTOS = {
+  /**
+   * Inflación aproximada. Las cifras van en pesos de hoy: la tarifa y el
+   * mantenimiento suben a este ritmo, así que no cambian en la gráfica.
+   * Hipótesis del simulador; no es una lectura actual del IPC ni un pronóstico.
+   */
+  inflacionAnual: 0.06,
+  /** Crédito de libre inversión de referencia (efectivo anual). Verificar con bancos. */
+  tasaCreditoEA: 0.195,
+  plazoCreditoAnios: 5,
+  /** Potencia de panel para traducir kWp a número de paneles. */
+  wattsPanel: 550,
+};
 
 /** Umbrales de la recomendación. Supuestos por validar. */
 export const UMBRALES_RECOMENDACION = {

@@ -25,11 +25,12 @@ function TooltipBarra({ active, payload }: TooltipContentProps) {
     </div>
   );
 }
-
 export function FinancingSimulator({
   mejor,
+  embebido = false,
 }: {
   mejor: AlternativaResultado;
+  embebido?: boolean;
 }) {
   const [plazoAnios, setPlazoAnios] = useState(5);
   const [tasaAnual, setTasaAnual] = useState(19.5);
@@ -54,7 +55,14 @@ export function FinancingSimulator({
   ];
 
   return (
-    <div className="mt-6 rounded-2xl border border-black/8 bg-white p-6">
+    <div
+      className={
+        embebido
+          ? "border-t border-ink-950/8 pt-1"
+          : "mt-6 rounded-2xl border border-black/8 bg-white p-6"
+      }
+    >
+      {!embebido && (
       <div className="flex items-center gap-2.5">
         <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-ember-500/12 text-ember-600">
           <Landmark className="h-4 w-4" />
@@ -68,6 +76,7 @@ export function FinancingSimulator({
           </p>
         </div>
       </div>
+      )}
 
       <div className="mt-5 grid gap-5 sm:grid-cols-2">
         <div>

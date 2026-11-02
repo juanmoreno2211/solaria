@@ -1,5 +1,6 @@
+import type { AnalisisFinanciero, FinanzasInput } from "./financial-types";
 import type { Region } from "@/lib/config/pricing";
-import type { EstadoDatos, OrigenDatos, TipoOferta } from "@/lib/catalog/types";
+import type { ConexionElectrica, EstadoDatos, OrigenDatos, ProveedorCoincidente, SolucionSolar, TipoOferta, ZonaNegocio } from "@/lib/catalog/types";
 
 export type TipoNegocio =
   | "tienda"
@@ -27,12 +28,22 @@ export interface ReciboInput {
 export interface NegocioInput {
   tipoNegocio: TipoNegocio;
   region: Region;
-  /** Solo se pregunta en las regiones de DEPARTAMENTOS (pricing.ts). */
+  /**
+   * Departamento del negocio: define las horas de sol pico del cálculo.
+   * La API lo exige; es opcional aquí para no romper pruebas sin ubicación.
+   */
   departamento?: string;
   cargasCriticas: CargaCritica[];
   horario: Horario;
   fallaLuz?: FallaLuz;
+  conexion?: ConexionElectrica;
+  zona?: ZonaNegocio;
+  municipio?: string;
+  /** Potencia media de las cargas a respaldar, no potencia pico del inversor. */
+  potenciaCriticaW?: number;
+  horasAutonomia?: number;
   legalmenteConstituido?: "si" | "no" | "nose";
+  finanzas?: FinanzasInput;
 }
 
 export interface AnalisisInput {
@@ -57,6 +68,7 @@ export interface PagoSimulado {
 }
 
 export interface OfertaProveedor {
+  finanzas?: AnalisisFinanciero;
   /** Identifica la tarjeta: el proveedor, o "proveedor:tipo" si tiene varias ofertas. */
   id: string;
   proveedor: string;
@@ -103,6 +115,7 @@ export interface OfertaProveedor {
 }
 
 export interface AlternativaResultado {
+  finanzas?: AnalisisFinanciero;
   id: "paneles";
   nombre: string;
   aplica: boolean;
@@ -110,6 +123,8 @@ export interface AlternativaResultado {
   kwpRequeridos: number;
   inversionEstimadaMin: number;
   inversionEstimadaMax: number;
+  /** Base exacta del escenario, antes de redondear los kWp para mostrarlos. */
+  inversionBase?: number;
   ahorroMensualEstimado: number;
   ahorroPorcentual: number;
   retornoMeses: number | null;
@@ -121,12 +136,49 @@ export interface AlternativaResultado {
   mejorOferta?: OfertaProveedor;
 }
 
+/** Con qué sol se calculó: el del departamento o, si falta, el de la región. */
+export interface UbicacionCalculo {
+  region: Region;
+  departamento?: string;
+  municipio?: string;
+  /** HSP que usó el cálculo. */
+  hsp: number;
+  hspMin: number;
+  hspMax: number;
+  fuente: "departamento" | "region";
+}
+
 export interface AnalisisResultado {
+  energia?: OrientacionEnergetica;
+  proveedores?: ProveedorCoincidente[];
+  proveedoresComunitarios?: ProveedorCoincidente[];
+  ubicacion: UbicacionCalculo;
+  /** Parte del consumo que cubren los paneles según el horario (sin baterías). */
+  cobertura: number;
   consumoMensualKwh: number;
+  consumoEstimado?: boolean;
+  valorEstimado?: boolean;
   valorPagadoMensual: number;
   tarifaEstimadaKwh: number;
   alternativas: AlternativaResultado[];
   mejorAlternativaId: AlternativaResultado["id"] | null;
   veredicto: Veredicto;
   motivoVeredicto: string;
+}
+
+export interface OrientacionEnergetica {
+  conexion: ConexionElectrica;
+  solucion: SolucionSolar;
+  titulo: string;
+  motivo: string;
+  requiereEstudio: boolean;
+  consumoDiarioKwh: number;
+  /** Balance con HSP promedio: no garantiza suministro en el peor mes. */
+  potenciaSolarBaseKwp: number;
+  bateriaNominalKwh?: number;
+  energiaRespaldoKwh?: number;
+  autonomiaSolicitadaHoras?: number;
+  potenciaCriticaW?: number;
+  supuestosBateria?: { profundidadDescarga: number; eficiencia: number };
+  advertencias: string[];
 }

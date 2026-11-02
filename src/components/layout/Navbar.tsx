@@ -54,10 +54,6 @@ export function Navbar() {
             </Link>
           ))}
         </nav>
-
-        <Link href="/#calculadora">
-          <Button size="md">Calcula tu ahorro</Button>
-        </Link>
       </Container>
     </header>
   );

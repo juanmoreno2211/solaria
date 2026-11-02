@@ -1,62 +1,163 @@
-import { Compass, ReceiptText, Zap } from "lucide-react";
 import { Container } from "@/components/ui/Container";
-import { Reveal } from "@/components/ui/Reveal";
+import { ImagenSubida } from "@/components/ui/ImagenSubida";
+import { buscarImagen, EN_DESARROLLO } from "@/lib/imagenes";
 
-const PROBLEMAS = [
-  {
-    icon: Zap,
-    title: "La luz se va o se baja, y tu negocio se frena",
-    description:
-      "Cada corte o bajón puede parar la caja, dañar equipos o echar a perder mercancía, y aun así la factura llega igual.",
-  },
-  {
-    icon: ReceiptText,
-    title: "La factura de luz pesa cada mes",
-    description:
-      "Para un negocio pequeño, la energía es un costo fijo alto que se paga con tarifa comercial, venda mucho o poco.",
-  },
-  {
-    icon: Compass,
-    title: "No sabes si la energía solar te conviene",
-    description:
-      "La información es técnica y dispersa, y pedir cotizaciones sin saber si vale la pena es perder tiempo.",
-  },
-];
+/** Las 8 fotos del fondo: public/imagenes/por-que/1.jpg … 8.jpg */
+const FOTOS = ["A", "B", "C", "D", "E", "F2","G","H"].map((n) => `imagenes/por-que/${n}`);
+const FUENTE_MINENERGIA =
+  "https://minenergia.gov.co/es/sala-de-prensa/noticias-index/colombia-supera-los-24000-techos-solares-y-acelera-la-democratizacion-de-la-energia-limpia/";
+const FUENTE_DANE =
+  "https://www.dane.gov.co/files/operaciones/EMICRON/pres-EMICRON-Itrim2024.pdf";
+const FUENTE_XM =
+  "https://www.lafm.com.co/economia/xm-alerta-embalses-bajas-lluvias-riesgos-suministro-energia-verano-2027-415808";
+const FUENTE_PORTAFOLIO =
+"https://www.portafolio.co/energia/colombia-podria-enfrentar-un-deficit-de-energia-en-2027-xm-advierte-faltantes-de-hasta-7-669-gwh-504633";
+
+
+function Fuente({ enlaces }: { enlaces: { nombre: string; url: string }[] }) {
+  return (
+    <dd className="mt-3 text-xs text-white/40">
+      Fuente:{" "}
+      {enlaces.map((enlace, index) => (
+        <span key={enlace.nombre}>
+          {index > 0 && " · "}
+          <a
+            href={enlace.url}
+            target="_blank"
+            rel="noreferrer"
+            className="underline decoration-white/25 underline-offset-2 transition hover:text-white/75"
+          >
+            {enlace.nombre}
+          </a>
+        </span>
+      ))}
+    </dd>
+  );
+}
+
+function UnoDeDoscientos() {
+  const ENCENDIDO = 87;
+
+  return (
+    <div
+      aria-hidden
+      className="grid w-fit grid-cols-[repeat(20,minmax(0,1fr))] gap-[5px]"
+    >
+      {Array.from({ length: 200 }, (_, punto) => (
+        <span
+          key={punto}
+          className={
+            punto === ENCENDIDO
+              ? "size-1.5 rounded-full bg-sun-300 shadow-[0_0_10px_3px_rgba(231,184,118,0.65)]"
+              : "size-1.5 rounded-full bg-white/20"
+          }
+        />
+      ))}
+    </div>
+  );
+}
 
 export function ProblemSolution() {
-  return (
-    <section className="py-24 sm:py-28">
-      <Container>
-        <div className="grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20">
-          <Reveal>
-            <span className="inline-flex items-center gap-2.5 text-xs font-semibold tracking-[0.14em] text-sun-600 uppercase">
-              <span className="h-px w-6 bg-sun-500/60" />
-              El problema
-            </span>
-            <h2 className="mt-5 text-balance text-2xl font-bold leading-[1.25] tracking-tight text-ink-950 sm:text-3xl lg:sticky lg:top-28">
-              Saber si la energía solar le conviene a tu negocio toma tiempo y
-              estudio. <span className="text-stone-500">SolarIA te da una primera respuesta en minutos.</span>
-            </h2>
-          </Reveal>
+  const faltan = FOTOS.filter((foto) => !buscarImagen(foto)).length;
 
-          <div className="divide-y divide-ink-950/8 border-t border-ink-950/8">
-            {PROBLEMAS.map((p, i) => (
-              <Reveal key={p.title} delay={i * 0.08}>
-                <div className="flex gap-5 py-7 first:pt-0">
-                  <p.icon className="mt-1 h-5 w-5 shrink-0 text-sun-600" strokeWidth={1.75} />
-                  <div>
-                    <h3 className="text-base font-semibold text-ink-950 sm:text-lg">
-                      {p.title}
-                    </h3>
-                    <p className="mt-1.5 text-sm leading-relaxed text-stone-600 sm:text-[0.95rem]">
-                      {p.description}
-                    </p>
-                  </div>
-                </div>
-              </Reveal>
-            ))}
+  return (
+    <section
+      id="por-que"
+      className="relative overflow-hidden bg-ink-950 py-24 text-white sm:py-32"
+    >
+      {/* Fondo fotográfico */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-0 grid grid-cols-2 grid-rows-4 gap-px md:grid-cols-4 md:grid-rows-2"
+      >
+        {FOTOS.map((foto) => (
+          <ImagenSubida
+            key={foto}
+            base={foto}
+            ajuste="cover"
+            aviso={false}
+            sizes="(min-width: 768px) 25vw, 50vw"
+            className="h-full w-full bg-white/[0.06]"
+            respaldo={null}
+          />
+        ))}
+      </div>
+
+      {/* Degradado igual al Hero: oscuro a la izquierda, fotos visibles a la derecha */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-0"
+        style={{
+          background:
+            "linear-gradient(90deg, rgba(10,14,22,0.88) 0%, rgba(10,14,22,0.64) 55%, rgba(10,14,22,0.30) 100%)",
+        }}
+      />
+
+      <Container className="relative z-10">
+        <h2 className="inline-flex items-center gap-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-sun-200">
+          <span aria-hidden className="h-px w-6 bg-sun-300/60" />
+          El problema
+        </h2>
+
+        <dl className="mt-10 grid gap-14 border-t border-white/15 pt-10 md:grid-cols-2 md:gap-16">
+          <div className="space-y-12">
+            <div>
+              <dt className="text-5xl font-semibold tracking-[-0.045em] text-sun-300 tabular-nums sm:text-6xl">
+                266,56 GWh
+              </dt>
+              <dd className="mt-4 max-w-[38ch] text-base leading-[1.75] text-white/85 sm:text-lg">
+                Fue la demanda diaria máxima de electricidad en 2026, con un
+                pico de 12.706 MW. El sistema eléctrico está operando bajo
+                presión histórica.
+              </dd>
+              <Fuente enlaces={[{ nombre: "La FM", url: FUENTE_XM }]} />
+            </div>
+
+            <div>
+              <dt className="text-4xl font-semibold tracking-[-0.04em] text-sun-300 sm:text-5xl">
+                Riesgo de déficit
+              </dt>
+              <dd className="mt-4 max-w-[38ch] text-base leading-[1.75] text-white/85 sm:text-lg">
+                Si el verano de 2027 es severo y la generación térmica no
+                responde, Colombia podría no cubrir completamente la demanda
+                entre febrero y abril.
+              </dd>
+              <Fuente enlaces={[{ nombre: "Portafolio", url: FUENTE_PORTAFOLIO }]} />
+            </div>
           </div>
-        </div>
+
+          <div>
+            <dt className="text-5xl font-semibold tracking-[-0.045em] tabular-nums sm:text-6xl">
+              Menos de 1 de cada 200
+            </dt>
+            <dd className="mt-4 max-w-[38ch] text-base leading-[1.75] text-white/85 sm:text-lg">
+              micronegocios tiene un techo solar registrado.
+            </dd>
+
+            <dd className="mt-7">
+              <UnoDeDoscientos />
+            </dd>
+
+            <dd className="mt-6 max-w-[42ch] text-sm leading-relaxed text-white/70">
+              Colombia suma 24.447 sistemas solares de techo y autogeneración
+              registrados, frente a cerca de 5 millones de micronegocios.
+            </dd>
+
+            <Fuente
+              enlaces={[
+                { nombre: "MinEnergía", url: FUENTE_MINENERGIA },
+                { nombre: "DANE", url: FUENTE_DANE },
+              ]}
+            />
+          </div>
+        </dl>
+
+        {EN_DESARROLLO && faltan > 0 && (
+          <p className="mt-8 text-xs text-sun-300/80">
+            Faltan {faltan} de 8 fotos del fondo: súbelas como
+            public/imagenes/por-que/1.jpg a 8.jpg
+          </p>
+        )}
       </Container>
     </section>
   );

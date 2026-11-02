@@ -1,71 +1,121 @@
-import { Calculator, FileScan, Handshake } from "lucide-react";
+import { ArrowUp, HardHat, MessageCircle, ReceiptText } from "lucide-react";
 import { Container } from "@/components/ui/Container";
-import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
+import { ImagenSubida } from "@/components/ui/ImagenSubida";
+import { SolDelArco } from "./SolDelArco";
 
-const PASO_RECIBO_FOTO = {
-  icon: FileScan,
-  title: "Sube tu recibo y cuéntanos de tu negocio",
-  description:
-    "Toma una foto del recibo de luz o escribe el consumo y el valor a mano; si usas la foto, la leemos y tú confirmas los números. Luego nos dices qué tipo de negocio tienes, en qué región está, en qué horario trabajas y cómo te falla la luz.",
-};
+interface Paso {
+  /** Ilustración en /public, sin extensión. Ver docs/imagenes.md. */
+  imagen: string;
+  titulo: string;
+  texto: string;
+  Icono: typeof ReceiptText;
+}
 
-const PASO_RECIBO_MANUAL = {
-  icon: FileScan,
-  title: "Escribe tu recibo y cuéntanos de tu negocio",
-  description:
-    "Escribe el consumo o el valor del recibo de luz; con uno de los dos basta. Luego nos dices qué tipo de negocio tienes, en qué región está, en qué horario trabajas y cómo te falla la luz.",
-};
+function pasos(fotoDisponible: boolean): Paso[] {
+  return [
+    {
+      imagen: "imagenes/como-funciona/recibo",
+      titulo: "Calcula tu ahorro",
+      texto: fotoDisponible
+        ? "Sube una foto de tu recibo de luz y responde unas preguntas rápidas."
+        : "Ingresa los datos de tu recibo de luz y responde unas preguntas rápidas.",
+      Icono: ReceiptText,
+    },
+    {
+      imagen: "imagenes/como-funciona/whatsapp",
+      titulo: "Escríbenos por WhatsApp",
+      texto:
+        "Elige un proveedor y escríbenos por WhatsApp. Organizamos el contacto por ti.",
+      Icono: MessageCircle,
+    },
+    {
+      imagen: "imagenes/como-funciona/visita",
+      titulo: "Recibe tu precio final",
+      texto:
+        "El instalador visita tu negocio, revisa tu techo y te entrega el precio final.",
+      Icono: HardHat,
+    },
+  ];
+}
 
-const PASOS = [
-  {
-    icon: Calculator,
-    title: "Mira si te conviene",
-    description:
-      "Calculamos cuánto ahorrarías con paneles solares y, con cada proveedor, cuánto costaría y en cuánto tiempo recuperas la inversión. Si no te conviene, te lo decimos.",
-  },
-  {
-    icon: Handshake,
-    title: "Pide tu cotización",
-    description:
-      "Si te interesa, elige un proveedor de tu región y deja tus datos. Con tu autorización, le pasamos tu solicitud con tu estimado para que te cotice.",
-  },
-];
-
+/**
+ * El recorrido completo, del recibo a la visita técnica. Un arco de sol une
+ * los tres momentos en pantallas grandes. Los detalles de cada paso viven en
+ * la calculadora y en las preguntas frecuentes; aquí solo va lo esencial.
+ */
 export function HowItWorks({ fotoDisponible }: { fotoDisponible: boolean }) {
-  const pasos = [fotoDisponible ? PASO_RECIBO_FOTO : PASO_RECIBO_MANUAL, ...PASOS];
+  const lista = pasos(fotoDisponible);
 
   return (
-    <section id="como-funciona" className="bg-cream-100/50 py-24 sm:py-28">
+    <section id="como-funciona" className="bg-cream-100/50 py-24 pb-28 sm:py-28 sm:pb-32">
       <Container>
+        <h2 className="inline-flex items-center gap-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-sun-600">
+          <span aria-hidden className="h-px w-6 bg-sun-600/50" />
+          Cómo funciona
+        </h2>
         <Reveal>
-          <SectionHeading
-            eyebrow="Cómo funciona"
-            title="De tu recibo a una cotización para tu negocio"
-            description="En un par de minutos sabes si la energía solar le conviene a tu negocio y, si es así, quién te puede cotizar. No necesitas saber nada de paneles para empezar."
-          />
+          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+            <h2 className="max-w-[18ch] text-balance text-3xl font-bold leading-[1.1] tracking-[-0.03em] text-ink-950 sm:text-4xl md:text-[2.75rem]">
+              De tu recibo a la visita del instalador
+            </h2>
+            <p className="max-w-md text-base leading-relaxed text-stone-600 sm:text-lg lg:justify-self-end">
+              Solo necesitas tu recibo de luz y tu WhatsApp.
+            </p>
+          </div>
         </Reveal>
 
-        <div className="relative mt-16 grid gap-10 sm:grid-cols-3 sm:gap-6">
-          <div
-            aria-hidden
-            className="absolute left-5 top-5 bottom-5 w-px bg-ink-950/10 sm:bottom-auto sm:left-0 sm:right-0 sm:h-px sm:w-auto"
-          />
-          {pasos.map((paso, i) => (
-            <Reveal key={paso.title} delay={i * 0.08} className="relative flex gap-5 sm:block">
-              <span className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-sun-500/30 bg-cream-50 text-sun-600">
-                <paso.icon className="h-[1.1rem] w-[1.1rem]" strokeWidth={1.75} />
-              </span>
-              <div className="sm:mt-5 sm:pr-4">
-                <h3 className="text-base font-semibold text-ink-950">
-                  {paso.title}
-                </h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-stone-600">
-                  {paso.description}
-                </p>
-              </div>
-            </Reveal>
-          ))}
+        <div className="relative mt-14 md:mt-20 md:pt-16">
+          {/* Arco del sol: amanece en el primer paso, está en lo alto en el segundo. */}
+          <div aria-hidden className="pointer-events-none absolute inset-x-[16.6%] top-0 z-10 hidden h-16 md:block">
+            <svg viewBox="0 0 100 20" preserveAspectRatio="none" className="h-full w-full overflow-visible">
+              <path
+                d="M0 20 Q50 -18 100 20"
+                fill="none"
+                stroke="#d9842b"
+                strokeOpacity="0.45"
+                strokeWidth="1.5"
+                strokeDasharray="2 6"
+                strokeLinecap="round"
+                vectorEffect="non-scaling-stroke"
+              />
+            </svg>
+            <SolDelArco />
+            <span className="absolute bottom-[-4px] left-0 h-2.5 w-2.5 -translate-x-1/2 rounded-full bg-sun-500" />
+            <span className="absolute bottom-[-4px] right-0 h-2.5 w-2.5 translate-x-1/2 rounded-full bg-sun-500" />
+          </div>
+
+          <ol className="grid gap-12 md:grid-cols-3 md:gap-8">
+            {lista.map((paso, i) => (
+              <li key={paso.titulo}>
+                <ImagenSubida
+                  base={paso.imagen}
+                  sizes="(min-width: 768px) 30vw, 90vw"
+                  className="aspect-[4/3] rounded-2xl bg-cream-200/70"
+                  respaldo={<paso.Icono className="h-14 w-14 text-sun-500/70" strokeWidth={1.25} />}
+                />
+                <div className="mt-6 flex gap-4">
+                  <span className="text-3xl font-semibold leading-none tracking-[-0.04em] text-sun-500 tabular-nums">
+                    {i + 1}
+                  </span>
+                  <div>
+                    <h3 className="text-lg font-semibold leading-snug text-ink-950">{paso.titulo}</h3>
+                    <p className="mt-1.5 max-w-[38ch] text-sm leading-relaxed text-stone-600">{paso.texto}</p>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <div className="mt-14 flex justify-center">
+          <a
+            href="#calculadora"
+            className="inline-flex items-center gap-2 rounded-md border border-ink-950/15 px-5 py-2.5 text-sm font-semibold text-ink-950 transition-colors hover:border-ink-950/30 hover:bg-white"
+          >
+            <ArrowUp className="h-4 w-4" />
+            Calcular mi ahorro
+          </a>
         </div>
       </Container>
     </section>

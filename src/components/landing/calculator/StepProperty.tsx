@@ -1,17 +1,19 @@
 "use client";
 
-import {
-  HelpCircle,
-  Stethoscope,
-  Store,
-  Tractor,
-  UtensilsCrossed,
-  Wrench,
-} from "lucide-react";
+import { useId } from "react";
+import { Check, SlidersHorizontal } from "lucide-react";
 import clsx from "clsx";
-import { FieldLabel, OptionCard } from "./ui";
+import { FieldLabel } from "./ui";
+import { IlustracionNegocio } from "./IlustracionNegocio";
 import { Button } from "@/components/ui/Button";
-import { DEPARTAMENTOS, REGIONES, type Region } from "@/lib/config/pricing";
+import { COBERTURA_POR_HORARIO } from "@/lib/config/pricing";
+import { LocationSelector } from "./LocationSelector";
+import { Desplegable } from "./Desplegable";
+import { EnergyContextFields } from "./EnergyContextFields";
+import { FinancialFields } from "./FinancialFields";
+import type { FinanzasFormState } from "@/lib/savings/financial-types";
+import styles from "./SolarWidgets.module.css";
+import type { ConexionElectrica, ZonaNegocio } from "@/lib/catalog/types";
 import type {
   CargaCritica,
   FallaLuz,
@@ -21,22 +23,28 @@ import type {
 } from "@/lib/savings/types";
 
 export interface NegocioFormState {
+  finanzas?: FinanzasFormState;
   tipoNegocio: TipoNegocio | "";
   region: string;
   departamento: string;
+  conexion: ConexionElectrica | "";
+  zona: ZonaNegocio | "";
+  municipio: string;
+  potenciaCriticaW: string;
+  horasAutonomia: string;
   cargasCriticas: CargaCritica[];
   horario: Horario | "";
   fallaLuz: FallaLuz | "";
   legalmenteConstituido: NonNullable<NegocioInput["legalmenteConstituido"]> | "";
 }
 
-const TIPOS: { v: TipoNegocio; label: string; icon: React.ReactNode }[] = [
-  { v: "tienda", label: "Tienda o supermercado", icon: <Store className="h-4 w-4" /> },
-  { v: "restaurante", label: "Restaurante o cafetería", icon: <UtensilsCrossed className="h-4 w-4" /> },
-  { v: "consultorio", label: "Consultorio o clínica", icon: <Stethoscope className="h-4 w-4" /> },
-  { v: "taller", label: "Taller o ferretería", icon: <Wrench className="h-4 w-4" /> },
-  { v: "finca", label: "Finca o agro", icon: <Tractor className="h-4 w-4" /> },
-  { v: "otro", label: "Otro", icon: <HelpCircle className="h-4 w-4" /> },
+const TIPOS: { v: TipoNegocio; label: string }[] = [
+  { v: "tienda", label: "Tienda o supermercado" },
+  { v: "restaurante", label: "Restaurante o cafetería" },
+  { v: "consultorio", label: "Consultorio o clínica" },
+  { v: "taller", label: "Taller o ferretería" },
+  { v: "finca", label: "Finca o agro" },
+  { v: "otro", label: "Otro tipo de negocio" },
 ];
 
 const CARGAS: { v: CargaCritica; label: string }[] = [
@@ -66,16 +74,23 @@ const CONSTITUIDO = [
   { v: "nose", label: "No sé" },
 ] as const;
 
-const SELECT_CLASS =
-  "w-full rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm text-ink-950 outline-none focus:border-sun-500 focus:ring-2 focus:ring-sun-500/20";
+const ZONAS: Record<ZonaNegocio, string> = {
+  urbana: "Zona urbana",
+  rural: "Zona rural",
+  apartada: "Zona rural apartada",
+};
 
-export function negocioCompleto(v: NegocioFormState): boolean {
-  return Boolean(v.tipoNegocio && v.region && v.horario);
+export function etiquetaTipoNegocio(v: string): string | undefined {
+  return TIPOS.find((t) => t.v === v)?.label;
 }
 
-/** Departamentos que se preguntan para la región elegida (vacío si no se pregunta). */
-export function departamentosDe(region: string): string[] {
-  return DEPARTAMENTOS[region as Region] ?? [];
+export function etiquetaHorario(v: string): string | undefined {
+  return HORARIOS.find((h) => h.v === v)?.label;
+}
+
+/** La conexión se pregunta explícitamente: la ubicación no basta para inferirla. */
+export function negocioCompleto(v: NegocioFormState): boolean {
+  return Boolean(v.tipoNegocio && v.departamento && v.horario && v.conexion);
 }
 
 function Chip({
@@ -104,6 +119,68 @@ function Chip({
   );
 }
 
+/** Una pregunta del formulario, separada de la anterior por una línea. */
+function Bloque({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+  return (
+    <section className="border-t border-ink-950/8 pt-7">
+      <h4 className="text-[clamp(20px,2.4vw,24px)] font-semibold leading-tight tracking-[-0.035em] text-ink-950">
+        {titulo}
+      </h4>
+      <div className="mt-4">{children}</div>
+    </section>
+  );
+}
+
+/** Tarjeta con dibujo: elegir el tipo de negocio. */
+function TarjetaNegocio({
+  tipo,
+  label,
+  selected,
+  onClick,
+}: {
+  tipo: TipoNegocio;
+  label: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={selected}
+      className={clsx(
+        "relative flex flex-col overflow-hidden rounded-xl border text-left transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sun-500/50",
+        selected ? "border-ink-900 ring-1 ring-ink-900" : "border-ink-950/10 hover:border-ink-950/30"
+      )}
+    >
+      <span className={clsx("flex h-20 items-center justify-center", selected ? "bg-cream-200/70" : "bg-cream-100")}>
+        <IlustracionNegocio tipo={tipo} className="h-14 w-auto" />
+      </span>
+      <span className="px-3 py-2.5 text-sm font-semibold leading-snug text-ink-950">{label}</span>
+      {selected && (
+        <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-ink-900 text-white">
+          <Check className="h-3 w-3" strokeWidth={3} />
+        </span>
+      )}
+    </button>
+  );
+}
+
+function resumenOpcional(v: NegocioFormState): string {
+  const partes = [
+    v.zona && ZONAS[v.zona],
+    v.municipio.trim(),
+    v.cargasCriticas.length > 0 &&
+      CARGAS.filter((c) => v.cargasCriticas.includes(c.v)).map((c) => c.label).join(", "),
+    FALLAS.find((f) => f.v === v.fallaLuz)?.label,
+    v.legalmenteConstituido &&
+      `Constituido: ${CONSTITUIDO.find((o) => o.v === v.legalmenteConstituido)?.label}`,
+  ].filter(Boolean);
+  return partes.length > 0
+    ? partes.join(" · ")
+    : "Zona, municipio, equipos importantes y otros detalles que ayudan al instalador.";
+}
+
 export function StepProperty({
   value,
   onChange,
@@ -119,7 +196,7 @@ export function StepProperty({
   loading: boolean;
   error: string | null;
 }) {
-  const departamentos = departamentosDe(value.region);
+  const id = useId();
 
   function toggleCarga(c: CargaCritica) {
     const cargasCriticas = value.cargasCriticas.includes(c)
@@ -128,131 +205,171 @@ export function StepProperty({
     onChange({ ...value, cargasCriticas });
   }
 
+  const cobertura = value.horario ? Math.round(COBERTURA_POR_HORARIO[value.horario] * 100) : null;
+
   return (
     <div>
-      <h3 data-step-title tabIndex={-1} className="text-lg font-bold text-ink-950 outline-none">
-        Cuéntanos de tu negocio
-      </h3>
-      <p className="mt-1 text-sm text-ink-800/60">
-        Estas respuestas cambian el cálculo: cuánto de tu consumo pueden cubrir
-        los paneles y qué tan bien se ajusta a tu forma de trabajar.
-      </p>
+      <div className="mt-7 space-y-8">
+        <LocationSelector
+          value={{
+            region: value.region,
+            departamento: value.departamento,
+            conexion: value.conexion,
+            zona: value.zona,
+            municipio: value.municipio,
+          }}
+          onChange={(ubicacion) => {
+            const cambiaConexion = ubicacion.conexion !== value.conexion;
+            const quitarRespaldo = cambiaConexion && (ubicacion.conexion === "estable" || ubicacion.conexion === "no_se");
+            onChange({
+              ...value,
+              ...ubicacion,
+              ...(cambiaConexion ? { finanzas: undefined } : {}),
+              ...(quitarRespaldo ? { potenciaCriticaW: "", horasAutonomia: "", fallaLuz: "" as const } : {}),
+              ...(cambiaConexion && ubicacion.conexion === "sin_red" ? { fallaLuz: "" as const } : {}),
+            });
+          }}
+        />
 
-      <div className="mt-5">
-        <FieldLabel>Tipo de negocio</FieldLabel>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {TIPOS.map((t) => (
-            <OptionCard
-              key={t.v}
-              selected={value.tipoNegocio === t.v}
-              onClick={() => onChange({ ...value, tipoNegocio: t.v })}
-              title={t.label}
-              icon={t.icon}
-            />
-          ))}
-        </div>
-      </div>
+        <EnergyContextFields value={value} onChange={onChange} />
 
-      <div className="mt-5">
-        <FieldLabel>Región</FieldLabel>
-        <select
-          value={value.region}
-          onChange={(e) => onChange({ ...value, region: e.target.value, departamento: "" })}
-          className={SELECT_CLASS}
-        >
-          <option value="">Elige tu región</option>
-          {REGIONES.map((r) => (
-            <option key={r.value} value={r.value}>
-              {r.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {departamentos.length > 0 && (
-        <div className="mt-5">
-          <FieldLabel>Departamento</FieldLabel>
-          <select
-            value={value.departamento}
-            onChange={(e) => onChange({ ...value, departamento: e.target.value })}
-            className={SELECT_CLASS}
-          >
-            <option value="">Elige tu departamento</option>
-            {departamentos.map((d) => (
-              <option key={d} value={d}>
-                {d}
-              </option>
+        <Bloque titulo="¿Qué tipo de negocio tienes?">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {TIPOS.map((t) => (
+              <TarjetaNegocio
+                key={t.v}
+                tipo={t.v}
+                label={t.label}
+                selected={value.tipoNegocio === t.v}
+                onClick={() => onChange({ ...value, tipoNegocio: t.v })}
+              />
             ))}
-          </select>
-        </div>
-      )}
+          </div>
+        </Bloque>
 
-      <div className="mt-5">
-        <FieldLabel>¿Qué no puede fallar?</FieldLabel>
-        <div className="flex flex-wrap gap-2">
-          {CARGAS.map((c) => (
-            <Chip
-              key={c.v}
-              selected={value.cargasCriticas.includes(c.v)}
-              onClick={() => toggleCarga(c.v)}
-            >
-              {c.label}
-            </Chip>
-          ))}
-        </div>
-        <p className="mt-2 text-xs text-ink-800/50">Marca todo lo que aplique.</p>
-      </div>
+        <Bloque titulo="¿Cuándo trabajas?">
+          <div className="flex flex-wrap gap-2">
+            {HORARIOS.map((h) => (
+              <Chip
+                key={h.v}
+                selected={value.horario === h.v}
+                onClick={() => onChange({ ...value, horario: h.v })}
+              >
+                {h.label}
+              </Chip>
+            ))}
+          </div>
+          <p className="mt-3 text-xs leading-relaxed text-ink-800/55" aria-live="polite">
+            {value.conexion && value.conexion !== "estable"
+              ? "Con cortes o sin red, el horario ayuda a dimensionar cargas y baterías. La autonomía se debe validar con un estudio técnico."
+              : cobertura !== null
+              ? `Con este horario, los paneles podrían cubrir cerca del ${cobertura} % de tu factura: sin baterías, solo aprovechas el sol mientras trabajas.`
+              : "Sin baterías, los paneles solo cubren lo que consumes de día."}
+          </p>
+        </Bloque>
 
-      <div className="mt-5">
-        <FieldLabel>¿Cuándo trabajas?</FieldLabel>
-        <div className="flex flex-wrap gap-2">
-          {HORARIOS.map((h) => (
-            <Chip
-              key={h.v}
-              selected={value.horario === h.v}
-              onClick={() => onChange({ ...value, horario: h.v })}
-            >
-              {h.label}
-            </Chip>
-          ))}
-        </div>
-      </div>
+        <Desplegable
+          titulo="Más detalles para tu cotización (opcional)"
+          resumen={resumenOpcional(value)}
+          icono={<SlidersHorizontal className="h-4 w-4" />}
+        >
+          <div className="space-y-5 border-t border-ink-950/8 pt-4">
+            <div>
+              <FieldLabel>¿Qué no puede fallar?</FieldLabel>
+              <div className="flex flex-wrap gap-2">
+                {CARGAS.map((c) => (
+                  <Chip
+                    key={c.v}
+                    selected={value.cargasCriticas.includes(c.v)}
+                    onClick={() => toggleCarga(c.v)}
+                  >
+                    {c.label}
+                  </Chip>
+                ))}
+              </div>
+              <p className="mt-2 text-xs text-ink-800/50">Marca todo lo que aplique.</p>
+            </div>
 
-      <div className="mt-5">
-        <FieldLabel>¿Cómo falla la luz?</FieldLabel>
-        <div className="flex flex-wrap gap-2">
-          {FALLAS.map((f) => (
-            <Chip
-              key={f.v}
-              selected={value.fallaLuz === f.v}
-              onClick={() => onChange({ ...value, fallaLuz: f.v })}
-            >
-              {f.label}
-            </Chip>
-          ))}
-        </div>
-      </div>
+            <div>
+              <FieldLabel>¿Cómo falla la luz?</FieldLabel>
+              <div className="flex flex-wrap gap-2">
+                {FALLAS.map((f) => (
+                  <Chip
+                    key={f.v}
+                    selected={value.fallaLuz === f.v}
+                    onClick={() =>
+                      onChange({ ...value, fallaLuz: value.fallaLuz === f.v ? "" : f.v, ...(value.conexion !== "sin_red" && (f.v === "cortes" || f.v === "ambos") ? { conexion: "intermitente" as const } : {}) })
+                    }
+                  >
+                    {f.label}
+                  </Chip>
+                ))}
+              </div>
+            </div>
 
-      <div className="mt-5">
-        <FieldLabel>¿Tu negocio está legalmente constituido? (opcional)</FieldLabel>
-        <div className="flex flex-wrap gap-2">
-          {CONSTITUIDO.map((o) => (
-            <Chip
-              key={o.v}
-              selected={value.legalmenteConstituido === o.v}
-              onClick={() =>
-                onChange({
-                  ...value,
-                  legalmenteConstituido:
-                    value.legalmenteConstituido === o.v ? "" : o.v,
-                })
-              }
-            >
-              {o.label}
-            </Chip>
-          ))}
-        </div>
-        <p className="mt-2 text-xs text-ink-800/50">Algunos apoyos del Gobierno lo piden.</p>
+            <div>
+              <FieldLabel>¿Tu negocio está legalmente constituido?</FieldLabel>
+              <div className="flex flex-wrap gap-2">
+                {CONSTITUIDO.map((o) => (
+                  <Chip
+                    key={o.v}
+                    selected={value.legalmenteConstituido === o.v}
+                    onClick={() =>
+                      onChange({
+                        ...value,
+                        legalmenteConstituido: value.legalmenteConstituido === o.v ? "" : o.v,
+                      })
+                    }
+                  >
+                    {o.label}
+                  </Chip>
+                ))}
+              </div>
+              <p className="mt-2 text-xs text-ink-800/50">Algunos apoyos del Gobierno lo piden.</p>
+            </div>
+
+            <FinancialFields value={value.finanzas ?? {}} onChange={(finanzas) => onChange({ ...value, finanzas })} conexion={value.conexion} />
+
+            <div className={styles.camposUbicacion}>
+              <div>
+                <label htmlFor={`${id}-zona`}>Zona</label>
+                <p id={`${id}-zona-ayuda`} className={styles.ayudaCampo}>
+                  Opcional. Ayuda a revisar el acceso al predio y la logística de instalación.
+                </p>
+                <select
+                  id={`${id}-zona`}
+                  value={value.zona}
+                  aria-describedby={`${id}-zona-ayuda`}
+                  onChange={(event) =>
+                    onChange({ ...value, zona: event.target.value as NegocioFormState["zona"] })
+                  }
+                >
+                  <option value="">Selecciona la zona</option>
+                  <option value="urbana">Urbana</option>
+                  <option value="rural">Rural</option>
+                  <option value="apartada">Rural apartada o de difícil acceso</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor={`${id}-municipio`}>Municipio o localidad</label>
+                <p id={`${id}-municipio-ayuda`} className={styles.ayudaCampo}>
+                  Opcional. Nos ayuda a ubicar mejor tu negocio.
+                </p>
+                <input
+                  id={`${id}-municipio`}
+                  type="text"
+                  value={value.municipio}
+                  maxLength={100}
+                  autoComplete="address-level2"
+                  aria-describedby={`${id}-municipio-ayuda`}
+                  placeholder="Ej. Puerto Carreño"
+                  onChange={(event) => onChange({ ...value, municipio: event.target.value })}
+                />
+              </div>
+            </div>
+          </div>
+        </Desplegable>
       </div>
 
       {error && (
@@ -261,12 +378,12 @@ export function StepProperty({
         </p>
       )}
 
-      <div className="mt-7 flex items-center justify-between">
+      <div className="mt-8 flex items-center justify-between">
         <Button variant="ghost" onClick={onBack} disabled={loading}>
           Atrás
         </Button>
         <Button onClick={onSubmit} disabled={loading}>
-          {loading ? "Calculando..." : "Ver mi ahorro"}
+          {loading ? "Calculando..." : "Ver mi resultado"}
         </Button>
       </div>
     </div>

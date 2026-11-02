@@ -199,7 +199,7 @@ export function buscarPanelesSistemas(
   kwpRequeridos: number,
   ahorroMensual: number,
   ubicacion: Ubicacion,
-  sistemas: CatalogoPanelSistema[] = catalogo.paneles
+  sistemas: CatalogoPanelSistema[] = catalogo.paneles.filter((s) => !s.soloReferenciaInterna)
 ): SistemaEvaluado[] {
   const hayReal = sistemas.some(
     (s) => s.estadoDatos !== "simulado" && cubreRegion(s.regiones, ubicacion.region)

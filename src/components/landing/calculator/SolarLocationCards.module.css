@@ -1,0 +1,231 @@
+.solarCard,
+.emptyCard,
+.estimateNote {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  font-family: inherit;
+  text-align: left;
+}
+
+.solarCard p,
+.emptyCard p,
+.estimateNote p {
+  margin: 0;
+}
+
+.solarCard {
+  margin-top: 18px;
+  overflow: hidden;
+  border: 1px solid #e6e1d8;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #171d27;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 18px;
+  border-bottom: 1px solid #ece7de;
+  background: #f7f2e8;
+}
+
+.heading {
+  min-width: 0;
+}
+
+.solarCard .eyebrow {
+  color: #746b5f;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.solarCard .department {
+  margin: 2px 0 0;
+  color: #171d27;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.sunBadge {
+  display: grid;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff8ee;
+  color: #c36b17;
+}
+
+.sunBadge svg {
+  display: block;
+  width: 27px;
+  height: 27px;
+}
+
+.solarCard .metric {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  padding: 18px 18px 0;
+}
+
+.metricValue {
+  color: #171d27;
+  font-size: 46px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.045em;
+  font-variant-numeric: tabular-nums;
+}
+
+.metricLabel {
+  color: #6e675e;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.solarCard .ranking {
+  margin-top: 9px;
+  padding: 0 18px;
+  color: #746b5f;
+  font-size: 11.5px;
+  line-height: 1.6;
+}
+
+.ranking strong {
+  color: #4b443b;
+  font-weight: 500;
+}
+
+.generation {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 16px 18px 0;
+  padding-top: 14px;
+  border-top: 1px solid #eeebe5;
+}
+
+.generationIcon {
+  display: block;
+  flex: 0 0 17px;
+  width: 17px;
+  height: 17px;
+  margin-top: 1px;
+  color: #c36b17;
+}
+
+.generationContent {
+  min-width: 0;
+}
+
+.solarCard .generationLabel {
+  color: #746b5f;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.solarCard .generationValue {
+  margin-top: 4px;
+  color: #171d27;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+}
+
+.generationValue span {
+  color: #6e675e;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.solarCard .generationDetail {
+  margin-top: 2px;
+  color: #746b5f;
+  font-size: 11.5px;
+  line-height: 1.6;
+}
+
+.solarCard .range {
+  margin-top: 12px;
+  padding: 0 18px 16px;
+  color: #746b5f;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.estimateNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 11px;
+  padding: 0 2px;
+  color: #746b5f;
+}
+
+.noteIcon {
+  display: block;
+  flex: 0 0 15px;
+  width: 15px;
+  height: 15px;
+  margin-top: 2px;
+  color: #8a7a65;
+}
+
+.estimateNote p {
+  min-width: 0;
+  font-size: 11.5px;
+  line-height: 1.65;
+}
+
+.estimateNote strong {
+  color: #655c50;
+  font-weight: 500;
+}
+
+.emptyCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid #e6e1d8;
+  border-radius: 14px;
+  background: #faf8f3;
+  color: #746b5f;
+}
+
+.emptyCard > svg {
+  display: block;
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  color: #c36b17;
+}
+
+.emptyCard p {
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.emptyCard strong {
+  display: block;
+  margin-bottom: 3px;
+  color: #171d27;
+  font-size: 13px;
+  font-weight: 500;
+}

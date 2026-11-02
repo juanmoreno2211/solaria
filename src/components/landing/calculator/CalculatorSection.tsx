@@ -14,27 +14,26 @@ import {
 } from "./StepReceipt";
 import {
   StepProperty,
-  departamentosDe,
+  etiquetaHorario,
+  etiquetaTipoNegocio,
   negocioCompleto,
   type NegocioFormState,
 } from "./StepProperty";
+import { PanelResumen, type PasoCalculadora } from "./PanelResumen";
 import { ResultsView } from "./ResultsView";
 import { LoadingState } from "./LoadingState";
 import { StepQuote } from "./StepQuote";
-import type { CotizacionFormState } from "./CotizacionForm";
-import {
-  validarSolicitante,
-  type ErroresSolicitante,
-  type SolicitudCotizacionInput,
-} from "@/lib/cotizacion";
-import type { AnalisisResultado, NegocioInput } from "@/lib/savings/types";
+import type { AnalisisResultado } from "@/lib/savings/types";
+import { CONTACTO_SOLARIA_ID, proveedorDelDestino, type DestinoCotizacion } from "@/lib/cotizacion-contacto";
+import { cifrasPrincipales } from "@/lib/savings/cifras";
 import { registrarEvento } from "@/lib/eventos";
-import { getSessionId } from "@/lib/session";
+import { regionForDepartment } from "@/lib/geo/regions";
+import typography from "./CalculatorTypography.module.css";
 
-type Step = "recibo" | "negocio" | "resultado" | "cotizacion";
+type Step = PasoCalculadora;
 
 const PASOS: { key: Step; label: string }[] = [
-  { key: "recibo", label: "Tu recibo" },
+  { key: "recibo", label: "Tu consumo" },
   { key: "negocio", label: "Tu negocio" },
   { key: "resultado", label: "Tu resultado" },
   { key: "cotizacion", label: "Tu cotización" },
@@ -44,17 +43,15 @@ const INITIAL_NEGOCIO: NegocioFormState = {
   tipoNegocio: "",
   region: "",
   departamento: "",
+  conexion: "",
+  zona: "",
+  municipio: "",
+  potenciaCriticaW: "",
+  horasAutonomia: "",
   cargasCriticas: [],
   horario: "",
   fallaLuz: "",
   legalmenteConstituido: "",
-};
-
-const INITIAL_COTIZACION: CotizacionFormState = {
-  nombre: "",
-  telefono: "",
-  municipio: "",
-  consentimiento: false,
 };
 
 interface ApiResponse {
@@ -101,7 +98,8 @@ function BarraProgreso({ step }: { step: Step }) {
                 activo ? "text-ink-950" : "text-ink-950/40"
               )}
             >
-              {p.label}
+              <span className="sm:hidden">{{ recibo: "Consumo", negocio: "Negocio", resultado: "Resultado", cotizacion: "Cotización" }[p.key]}</span>
+              <span className="hidden sm:inline">{p.label}</span>
             </span>
           </li>
         );
@@ -112,6 +110,7 @@ function BarraProgreso({ step }: { step: Step }) {
 
 export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean }) {
   const [step, setStep] = useState<Step>("recibo");
+  const anchoCompleto = step === "resultado" || step === "cotizacion";
   const [recibo, setRecibo] = useState<ReciboFormState>(() => reciboInicial(fotoDisponible));
   const [errorRecibo, setErrorRecibo] = useState<string | null>(null);
   const [negocio, setNegocio] = useState<NegocioFormState>(INITIAL_NEGOCIO);
@@ -122,11 +121,6 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
   const [proveedorElegido, setProveedorElegido] = useState<string | null>(null);
   // Plan pedido cuando no es el recomendado ("Cubre más de tu consumo").
   const [planElegido, setPlanElegido] = useState<string | undefined>(undefined);
-  const [cotizacion, setCotizacion] = useState<CotizacionFormState>(INITIAL_COTIZACION);
-  const [erroresCotizacion, setErroresCotizacion] = useState<ErroresSolicitante>({});
-  const [errorEnvio, setErrorEnvio] = useState<string | null>(null);
-  const [enviando, setEnviando] = useState(false);
-  const [enviada, setEnviada] = useState(false);
 
   const paneles = data?.resultado.alternativas[0];
   const ofertaProveedor = paneles?.ofertas.find((o) => o.id === proveedorElegido);
@@ -134,6 +128,14 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
     planElegido && ofertaProveedor?.cubreMas?.plan?.nombre === planElegido
       ? ofertaProveedor.cubreMas
       : ofertaProveedor;
+  const proveedorDirectorio = [...(data?.resultado.proveedores ?? []), ...(data?.resultado.proveedoresComunitarios ?? [])]
+    .find((p) => p.id === proveedorElegido);
+  const destinoCotizacion: DestinoCotizacion | undefined = ofertaElegida
+    ? { tipo: "oferta", oferta: ofertaElegida }
+    : proveedorDirectorio
+      ? { tipo: "consulta", proveedor: proveedorDirectorio }
+      : proveedorElegido === CONTACTO_SOLARIA_ID ? { tipo: "consulta" } : undefined;
+
 
   const cardRef = useRef<HTMLDivElement>(null);
   const primerRender = useRef(true);
@@ -148,15 +150,22 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
     if (!card) return;
     card.scrollIntoView({ behavior: "smooth", block: "start" });
     card.querySelector<HTMLElement>("[data-step-title]")?.focus({ preventScroll: true });
-  }, [step, loading, enviada]);
+  }, [step, loading]);
 
   async function handleSubmit() {
-    if (!negocioCompleto(negocio)) {
-      setErrorNegocio("Elige el tipo de negocio, tu región y cuándo trabajas.");
+    const region = regionForDepartment(negocio.departamento);
+    if (!region) {
+      setErrorNegocio("Elige el departamento donde está tu negocio.");
       return;
     }
-    if (departamentosDe(negocio.region).length > 0 && !negocio.departamento) {
-      setErrorNegocio("Elige el departamento donde está tu negocio.");
+    if (!negocioCompleto(negocio)) {
+      setErrorNegocio("Elige el tipo de negocio, el horario y cómo llega la energía.");
+      return;
+    }
+    if (negocio.conexion === "sin_red" && !(Number(recibo.consumoMensualKwh) > 0)) {
+      setRecibo((v) => ({ ...v, fuente: "manual" }));
+      setErrorRecibo("Sin red, ingresa el consumo mensual estimado en kWh. El valor de una compra de combustible no sirve para inferirlo con una tarifa urbana.");
+      setStep("recibo");
       return;
     }
     setErrorNegocio(null);
@@ -172,13 +181,25 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
       formData.set("valorPagadoMensual", recibo.valorPagadoMensual);
 
     formData.set("tipoNegocio", negocio.tipoNegocio);
-    formData.set("region", negocio.region);
-    if (negocio.departamento) formData.set("departamento", negocio.departamento);
+    // El servidor calcula con el departamento y deduce la región.
+    formData.set("departamento", negocio.departamento);
+    formData.set("region", region);
     for (const c of negocio.cargasCriticas) formData.append("cargasCriticas", c);
     formData.set("horario", negocio.horario);
+    formData.set("conexion", negocio.conexion);
+    if (negocio.zona) formData.set("zona", negocio.zona);
+    if (negocio.municipio) formData.set("municipio", negocio.municipio);
+    if (negocio.conexion === "sin_red" || negocio.conexion === "intermitente") {
+      if (negocio.potenciaCriticaW) formData.set("potenciaCriticaW", negocio.potenciaCriticaW);
+      if (negocio.horasAutonomia) formData.set("horasAutonomia", negocio.horasAutonomia);
+    }
     if (negocio.fallaLuz) formData.set("fallaLuz", negocio.fallaLuz);
     if (negocio.legalmenteConstituido)
       formData.set("legalmenteConstituido", negocio.legalmenteConstituido);
+    for (const [key, value] of Object.entries(negocio.finanzas ?? {})) {
+      if (typeof value === "boolean") formData.set(`finanzas.${key}`, value ? "1" : "0");
+      else if (value?.trim()) formData.set(`finanzas.${key}`, value);
+    }
     // Indicador solo para desarrollo (el servidor lo ignora en producción).
     if (new URLSearchParams(window.location.search).get("simulados") === "1")
       formData.set("simulados", "1");
@@ -216,16 +237,15 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
   }
 
   function handlePedirCotizacion(ofertaId: string, plan?: string) {
-    if (ofertaId !== proveedorElegido) setErroresCotizacion({});
+    const oferta = paneles?.ofertas.find((o) => o.id === ofertaId);
+    const proveedor = [...(data?.resultado.proveedores ?? []), ...(data?.resultado.proveedoresComunitarios ?? [])].find((p) => p.id === ofertaId);
+    if (!oferta && !proveedor && ofertaId !== CONTACTO_SOLARIA_ID) return;
     setProveedorElegido(ofertaId);
     setPlanElegido(plan);
-    setErrorEnvio(null);
-    setEnviada(false);
     setStep("cotizacion");
-    const oferta = paneles?.ofertas.find((o) => o.id === ofertaId);
     registrarEvento("clic_pedir_cotizacion", {
-      proveedor: oferta?.proveedor ?? ofertaId,
-      oferta: oferta?.tipoOferta ?? null,
+      proveedor: oferta?.proveedor ?? proveedor?.nombre ?? "Orientación SolarIA",
+      oferta: oferta?.tipoOferta ?? "consulta",
       plan: plan ?? null,
       region: negocio.region,
       veredicto: data?.resultado.veredicto,
@@ -254,73 +274,22 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
     });
   }
 
-  async function handleEnviarCotizacion() {
-    if (!data || !paneles || !ofertaElegida) return;
-
-    const errores = validarSolicitante(cotizacion, ofertaElegida.proveedor);
-    setErroresCotizacion(errores);
-    if (Object.keys(errores).length > 0) return;
-
-    const solicitud: SolicitudCotizacionInput = {
-      sessionId: getSessionId(),
-      proveedor: ofertaElegida.proveedor,
-      plan: ofertaElegida.plan?.nombre,
-      oferta: ofertaElegida.tipoOferta,
-      solicitante: {
-        nombre: cotizacion.nombre.trim(),
-        telefono: cotizacion.telefono.trim(),
-        municipio: cotizacion.municipio.trim(),
-      },
-      consentimiento: cotizacion.consentimiento,
-      negocio: {
-        tipo: negocio.tipoNegocio as NegocioInput["tipoNegocio"],
-        region: negocio.region as NegocioInput["region"],
-        departamento: negocio.departamento,
-        horario: negocio.horario as NegocioInput["horario"],
-        noPuedeFallar: negocio.cargasCriticas,
-        comoFalla: negocio.fallaLuz,
-        constituido: negocio.legalmenteConstituido,
-      },
-      estimado: {
-        consumoKwh: data.resultado.consumoMensualKwh,
-        valorFactura: data.resultado.valorPagadoMensual,
-        kwp: paneles.kwpRequeridos,
-        ahorroMensual: Math.round(ofertaElegida.ahorroMensual),
-        inversion: Math.round(ofertaElegida.inversion),
-        retornoMeses:
-          ofertaElegida.retornoMeses === null ? null : Math.round(ofertaElegida.retornoMeses),
-      },
-    };
-
-    setEnviando(true);
-    setErrorEnvio(null);
-    try {
-      const res = await fetch("/api/cotizaciones", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(solicitud),
-      });
-      if (!res.ok) {
-        const json = await res.json().catch(() => ({}));
-        if (json.errores) setErroresCotizacion(json.errores);
-        setErrorEnvio(json.error ?? "No pudimos enviar tu solicitud. Intenta de nuevo.");
-        return;
-      }
-      setEnviada(true);
-      registrarEvento("cotizacion_pedida", {
-        proveedor: ofertaElegida.proveedor,
-        oferta: ofertaElegida.tipoOferta ?? null,
-        plan: ofertaElegida.plan?.nombre ?? null,
-        region: negocio.region,
-        tipoNegocio: negocio.tipoNegocio,
-        ahorroMensual: solicitud.estimado.ahorroMensual,
-        retornoMeses: solicitud.estimado.retornoMeses,
-      });
-    } catch {
-      setErrorEnvio("No pudimos enviar tu solicitud. Revisa tu conexión e intenta de nuevo.");
-    } finally {
-      setEnviando(false);
-    }
+  /** El enlace solo se abre cuando la persona decide contactar al agente. */
+  function handleAbrirWhatsApp(ref: string) {
+    if (!destinoCotizacion) return;
+    const oferta = destinoCotizacion.tipo === "oferta" ? destinoCotizacion.oferta : undefined;
+    registrarEvento("whatsapp_abierto", {
+      ref,
+      proveedor: proveedorDelDestino(destinoCotizacion) ?? "Orientación SolarIA",
+      oferta: oferta?.tipoOferta ?? "consulta",
+      plan: oferta?.plan?.nombre ?? null,
+      region: negocio.region,
+      departamento: negocio.departamento || null,
+      tipoNegocio: negocio.tipoNegocio,
+      ahorroMensual: oferta ? Math.round(oferta.ahorroMensual) : null,
+      inversion: oferta ? Math.round(oferta.inversion) : null,
+      retornoMeses: oferta?.retornoMeses != null ? Math.round(oferta.retornoMeses) : null,
+    });
   }
 
   function handleReset() {
@@ -332,25 +301,35 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
     setError(null);
     setProveedorElegido(null);
     setPlanElegido(undefined);
-    setCotizacion(INITIAL_COTIZACION);
-    setErroresCotizacion({});
-    setErrorEnvio(null);
-    setEnviada(false);
   }
 
   return (
-    <section id="calculadora" className="bg-cream-100/50 py-24 sm:py-28">
+    <section id="calculadora" className={`${typography.calculator} bg-cream-100/50 py-24 sm:py-28`}>
       <Container>
         <SectionHeading
           eyebrow="Calculadora para negocios"
-          title="¿Le conviene la energía solar a tu negocio?"
-          description="Con tu recibo y unos datos de tu negocio te mostramos cuánto ahorrarías con paneles, cuánto costarían y quién te puede cotizar."
+          title="Calcula tu potencial solar"
+          description="Puedes volver y cambiar tus respuestas en cualquier momento."
         />
 
-        <div className="relative mx-auto mt-12 max-w-3xl">
+        {/* En el resultado y en WhatsApp no hay columna lateral: la tarjeta usa todo el ancho. */}
+        <div
+          className={clsx(
+            "relative mx-auto mt-12 grid gap-6 lg:items-start",
+            !anchoCompleto && "lg:grid-cols-[minmax(0,1fr)_300px]"
+          )}
+        >
+          <div className={anchoCompleto ? "hidden" : "lg:order-2"}>
+            <PanelResumen
+              step={step}
+              recibo={recibo}
+              negocio={negocio}
+              resultado={data?.resultado ?? null}
+            />
+          </div>
           <div
             ref={cardRef}
-            className="scroll-mt-24 rounded-xl border border-ink-950/10 bg-white p-6 sm:p-9"
+            className="min-w-0 scroll-mt-24 rounded-xl border border-ink-950/10 bg-white p-4 sm:p-9"
           >
             <BarraProgreso step={step} />
 
@@ -388,24 +367,35 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
               <ResultsView
                 resultado={data.resultado}
                 recomendacion={data.recomendacion}
+                horario={etiquetaHorario(negocio.horario)}
                 onCambiarDatos={() => setStep("negocio")}
                 onPedirCotizacion={handlePedirCotizacion}
                 onInteresSinProveedor={handleInteresSinProveedor}
               />
             )}
 
-            {step === "cotizacion" && ofertaElegida && (
+            {step === "cotizacion" && destinoCotizacion && data && paneles && (
               <StepQuote
-                oferta={ofertaElegida}
-                value={cotizacion}
-                onChange={setCotizacion}
-                errores={erroresCotizacion}
-                errorEnvio={errorEnvio}
-                enviando={enviando}
-                enviada={enviada}
+                key={`${proveedorElegido}-${planElegido ?? ""}`}
+                destino={destinoCotizacion}
+                datos={{
+                  departamento: negocio.departamento,
+                  municipio: negocio.municipio || undefined,
+                  conexion: { estable: "red estable", intermitente: "red con cortes", sin_red: "sin conexión a red", no_se: "por confirmar" }[negocio.conexion || "no_se"],
+                  zona: negocio.zona || undefined,
+                  tipoNegocio: etiquetaTipoNegocio(negocio.tipoNegocio),
+                  horario: etiquetaHorario(negocio.horario),
+                  consumoKwh: data.resultado.consumoMensualKwh,
+                  valorFactura: data.resultado.valorPagadoMensual,
+                  kwp: ofertaElegida?.plan?.kwp ?? data.resultado.energia?.potenciaSolarBaseKwp ?? paneles.kwpRequeridos,
+                  energia: data.resultado.energia,
+                  presupuestoFinanciero: paneles.finanzas,
+                  valorFacturaEstimado: data.resultado.valorEstimado,
+                  referenciaEconomica: paneles.finanzas?.proyeccion || !data.resultado.energia?.requiereEstudio ? cifrasPrincipales(paneles) : undefined,
+                }}
                 onBack={() => setStep("resultado")}
-                onSubmit={handleEnviarCotizacion}
                 onReset={handleReset}
+                onAbrirWhatsApp={handleAbrirWhatsApp}
               />
             )}
           </div>

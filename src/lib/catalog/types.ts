@@ -47,6 +47,8 @@ export interface SimulacionPagoConfig {
 }
 
 interface SistemaBase extends ProveedorInfo {
+  /** Borrador o escenario histórico: no se publica como oferta comercial. */
+  soloReferenciaInterna?: boolean;
   nombreSistema?: string;
   regiones: RegionesCobertura;
   /**
@@ -183,4 +185,37 @@ export interface ProveedorRecomendado {
   marca?: string;
   url?: string;
   telefono?: string;
+}
+
+export type ConexionElectrica = "estable" | "intermitente" | "sin_red" | "no_se";
+export type ZonaNegocio = "urbana" | "rural" | "apartada";
+export type SolucionSolar = "conectado" | "hibrido" | "aislado" | "comunitario";
+
+export interface FuenteProveedor {
+  titulo: string;
+  url: string;
+  consultadoEl: string;
+}
+
+/** Directorio comercial: la existencia de una empresa no confirma precio ni cobertura local. */
+export interface ProveedorDirectorio {
+  id: string;
+  nombre: string;
+  url: string;
+  rol: "instalador" | "operador_servicio" | "integrador" | "equipos";
+  soluciones: SolucionSolar[];
+  modelos: string[];
+  departamentosReferencia: string[];
+  alcance: "nacional_declarado" | "por_consultar" | "proyectos_localizados";
+  contratacion: "directa" | "servicio_zonal" | "proyecto_colectivo" | "equipos";
+  descripcion: string;
+  condiciones: string;
+  notaCobertura: string;
+  consumoMinimoExclusivoKwh?: number;
+  fuentes: FuenteProveedor[];
+}
+
+export interface ProveedorCoincidente extends ProveedorDirectorio {
+  motivo: string;
+  experienciaEnDepartamento: boolean;
 }

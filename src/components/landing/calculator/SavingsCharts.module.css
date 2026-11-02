@@ -1,0 +1,49 @@
+.savings { min-width: 0; color: #11161f; }
+.heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.heading > p { margin: 0; font-size: 13px; font-weight: 500; }
+.payback { padding: 5px 9px; border-radius: 6px; background: #f7f5ee; color: #6c6356; font-size: 10px; line-height: 1.6; }
+.balance { margin-top: 20px; }
+.balance > p { margin: 0; color: #6c6356; font-size: 12px; line-height: 1.7; }
+.balance > strong { display: block; margin-top: 3px; font-size: clamp(27px, 4vw, 34px); font-weight: 500; line-height: 1.2; letter-spacing: -.045em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.balance > span { display: block; margin-top: 7px; color: #8a8071; font-size: 11px; line-height: 1.7; }
+.chart { width: 100%; min-width: 0; height: 230px; margin-top: 16px; }
+.chart :global(.recharts-surface):focus { outline: none; }
+.chart :global(.recharts-surface):focus-visible { outline: 2px solid #b56a1d; outline-offset: 2px; border-radius: 4px; }
+.axisNote { margin: 0; color: #8a8071; font-size: 10px; line-height: 1.7; text-align: center; }
+.explorer { margin-top: 19px; }
+.explorer > div { display: flex; justify-content: space-between; gap: 12px; color: #6c6356; font-size: 11px; line-height: 1.6; }
+.explorer label { min-width: 0; }
+.explorer output { flex-shrink: 0; color: #11161f; font-weight: 500; font-variant-numeric: tabular-nums; }
+.explorer input { display: block; width: 100%; height: 32px; margin: 2px 0; padding: 0; accent-color: #2f7d50; cursor: pointer; }
+.explorer input:focus-visible { outline: 2px solid #b56a1d; outline-offset: 3px; border-radius: 4px; }
+.explorer .rangeEnds { color: #8a8071; font-size: 10px; }
+.assumptions { margin: 21px 0 16px; padding: 13px 14px; border-radius: 10px; background: #faf8f4; color: #6c6356; font-size: 11px; line-height: 1.9; }
+.assumptions p { margin: 0; }
+.assumptions p + p { margin-top: 8px; }
+.assumptions strong { color: #4b4943; font-weight: 500; }
+.details { border-top: 1px solid #eeeae3; }
+.details summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 12px 0; color: #11161f; font-size: 12px; font-weight: 500; line-height: 1.6; cursor: pointer; list-style: none; }
+.details summary::-webkit-details-marker { display: none; }
+.details summary > span { min-width: 0; }
+.details summary small { display: block; margin-top: 2px; color: #8a8071; font-size: 10px; font-weight: 400; }
+.details summary svg { flex: 0 0 15px; width: 15px; height: 15px; margin-right: 3px; color: #8a8071; transition: transform .15s ease; }
+.details[open] summary svg { transform: rotate(180deg); }
+.details summary:focus-visible { outline: 2px solid #b56a1d; outline-offset: 3px; border-radius: 4px; }
+.credit { padding: 2px 0 15px; }
+.credit dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 0 0 12px; }
+.credit dt { color: #6c6356; font-size: 11px; line-height: 1.7; }
+.credit dd { margin: 5px 0 0; color: #11161f; font-size: 19px; font-weight: 500; line-height: 1.3; letter-spacing: -.025em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.credit p { margin: 7px 0 0; color: #6c6356; font-size: 11px; line-height: 1.9; }
+.tableScroll { max-width: 100%; overflow-x: auto; max-height: 300px; margin: 0 0 14px; border: 1px solid #eeeae3; border-radius: 8px; }
+.tableScroll table { width: 100%; border-collapse: collapse; font-size: 11px; font-variant-numeric: tabular-nums; }
+.tableScroll caption { padding: 10px; color: #8a8071; font-size: 10px; line-height: 1.7; text-align: left; }
+.tableScroll th, .tableScroll td { padding: 10px; border-bottom: 1px solid #eeeae3; text-align: right; white-space: nowrap; }
+.tableScroll th { font-weight: 500; }
+.tableScroll thead { background: #faf8f4; color: #6c6356; }
+.tableScroll th:first-child { text-align: left; }
+.tooltip { max-width: 225px; padding: 11px 13px; border: 1px solid #e8e3d9; border-radius: 10px; background: #fff; box-shadow: 0 5px 20px #11161f0a; }
+.tooltip p, .tooltip span { display: block; margin: 0; color: #6c6356; font-size: 10px; line-height: 1.7; }
+.tooltip strong { display: block; margin: 3px 0 1px; color: #11161f; font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.note { color: #6c6356; font-size: 12px; line-height: 1.8; }
+@media (max-width: 420px) { .chart { height: 205px; } .credit dl { grid-template-columns: 1fr; gap: 12px; } }
+@media (prefers-reduced-motion: reduce) { .details summary svg { transition: none; } }

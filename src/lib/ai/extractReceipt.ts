@@ -10,7 +10,9 @@ const MODELO_POR_DEFECTO = "gemini-3.5-flash-lite";
 const INSTRUCCIONES = `Lees fotos de recibos de energía eléctrica de Colombia.
 Devuelve:
 - consumoMensualKwh: la energía consumida en el periodo facturado, en kWh (no el promedio histórico).
-- valorPagadoMensual: el total a pagar del periodo, en pesos colombianos, como número sin puntos ni signos.
+- valorPagadoMensual: el valor de la energía del periodo (el subtotal o "total energía"), en pesos
+  colombianos, como número sin puntos ni signos. No sumes aseo, alumbrado público, gas ni otros
+  servicios. Si el recibo no separa la energía de lo demás, usa el total a pagar.
   En Colombia el punto separa miles: "$ 760.000" es 760000.
 - periodoFacturado: el periodo tal como aparece en el recibo.
 - ciudad: el municipio del servicio.
@@ -21,7 +23,10 @@ const ESQUEMA = {
   type: "object",
   properties: {
     consumoMensualKwh: { type: ["number", "null"], description: "kWh del periodo facturado" },
-    valorPagadoMensual: { type: ["number", "null"], description: "Total a pagar en COP" },
+    valorPagadoMensual: {
+      type: ["number", "null"],
+      description: "Valor de la energía en COP, sin aseo ni alumbrado público",
+    },
     periodoFacturado: { type: ["string", "null"] },
     ciudad: { type: ["string", "null"] },
     confianza: { type: "string", enum: ["alta", "media", "baja"] },
@@ -35,7 +40,7 @@ const ESQUEMA = {
   ],
 };
 
-const FALLO = "No pudimos leer la foto. Escribe tu consumo y el valor de tu recibo.";
+const FALLO = "No pudimos leer la foto. Escribe el consumo y el valor de la energía.";
 
 let cliente: GoogleGenAI | null = null;
 

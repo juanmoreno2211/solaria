@@ -1,10 +1,8 @@
-import { MANTENIMIENTO_ANUAL } from "@/lib/config/pricing";
+import { proyectar20Anios } from "./projection";
 
-/**
- * Meses para recuperar la inversión: inversión ÷ (ahorro anual − mantenimiento)
- * × 12. null si no hay inversión o si el ahorro no alcanza a cubrir el mantenimiento.
- */
+/** Retorno estimado con degradación y mantenimiento, dentro del horizonte de 20 años. */
 export function calcularRetornoMeses(inversion: number, ahorroMensual: number): number | null {
-  const ahorroAnualNeto = ahorroMensual * 12 - inversion * MANTENIMIENTO_ANUAL;
-  return inversion > 0 && ahorroAnualNeto > 0 ? (inversion / ahorroAnualNeto) * 12 : null;
+  if (!Number.isFinite(inversion) || !Number.isFinite(ahorroMensual) || inversion <= 0 || ahorroMensual < 0) return null;
+  const retorno = proyectar20Anios({ inversion, ahorroMensual }).retornoAnios;
+  return retorno === null ? null : retorno * 12;
 }
