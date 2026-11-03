@@ -1,4 +1,4 @@
-import { formatCOP, formatDecimal, formatNumber } from "@/lib/format";
+import { formatCOP, formatCOPConSigno, formatDecimal, formatNumber } from "@/lib/format";
 import type { Estadisticas as Datos, Meta } from "@/lib/recibos/estadisticas";
 import { actualizarRecibo, borrarRecibo } from "../actions";
 import { ayuda, botonPrimario, botonSecundario, campo, etiqueta } from "./estilos";
@@ -150,7 +150,7 @@ export function Estadisticas({ est, metas }: { est: Datos; metas: Meta[] }) {
             label="Contra el mes anterior"
             valor={cambio(est.cambioKwhPct, "Subió", "Bajó")}
             cambio={tono(est.cambioKwhPct)}
-            nota={est.cambioValorPct != null ? `En pesos: ${cambio(est.cambioValorPct, "subió", "bajó")}` : undefined}
+            nota={est.cambioValor != null ? `En pesos: ${formatCOPConSigno(est.cambioValor)}` : undefined}
           />
           <Tile
             Icono={TrendingUp}

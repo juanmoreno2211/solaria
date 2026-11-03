@@ -38,6 +38,13 @@ describe("calcularEstadisticas", () => {
     expect(est.anterior?.mes).toBe("2026-09-01");
   });
 
+  it("en pesos, la diferencia es en pesos (no otro porcentaje)", () => {
+    // 334.800 − 257.600
+    expect(est.cambioValor).toBe(77_200);
+    expect(calcularEstadisticas([r("2026-09-01", 300, 270_000), r("2026-10-01", 200, 180_000)]).cambioValor).toBe(-90_000);
+    expect(calcularEstadisticas([r("2026-10-01", 360, 334_800)]).cambioValor).toBeNull();
+  });
+
   it("cambio contra el mes anterior y contra el promedio", () => {
     expect(est.cambioKwhPct).toBeCloseTo(((360 - 280) / 280) * 100, 6);
     expect(est.vsPromedioKwhPct).toBeCloseTo(((360 - 315) / 315) * 100, 6);

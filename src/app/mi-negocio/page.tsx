@@ -20,6 +20,7 @@ import { CONEXIONES, HORARIOS, TEXTO_VEREDICTO, TIPOS_NEGOCIO, esOpcion, etiquet
 import type { Region } from "@/lib/config/pricing";
 import type { Veredicto } from "@/lib/savings/types";
 import { actualizarRecibo, guardarPerfil, guardarTarifa } from "./actions";
+import { fechaCorta, resultadoParaMostrar, type ResultadoMostrado } from "@/lib/negocio/coherencia";
 import { cargarMiInvitacion, cargarMiNegocio, tarifaVigente, type AparatoFila } from "./datos";
 import { ImportarResultado } from "./componentes/ImportarResultado";
 import { AgregarAparato } from "./componentes/AgregarAparato";
@@ -71,6 +72,13 @@ function usoDeFila(a: AparatoFila): UsoAparato & { id: string; fila: AparatoFila
 function deReferencia(a: AparatoFila): boolean {
   const c = aparatoDelCatalogo(a.tipo_catalogo);
   return Boolean(c && !c.generaEnergia && !a.kwh_anio_etiqueta && a.potencia_w === c.potenciaW && a.horas_dia === c.horasDia && Math.round(a.factor_ciclo * 100) === Math.round(c.factorCiclo * 100));
+}
+
+/** "Calculado el 2/11 con 400 kWh: Todavía no lo necesitas…" */
+function textoGuardado(g: NonNullable<ResultadoMostrado["guardado"]>, hayActual: boolean): string {
+  const cuando = g.fecha ? `Calculado el ${fechaCorta(g.fecha)}` : "Calculado en la calculadora";
+  const con = g.consumoKwh != null ? ` con ${formatNumber(Math.round(g.consumoKwh))} kWh` : g.valor != null ? ` con un recibo de ${formatCOP(g.valor)}` : "";
+  return `${cuando}${con}${hayActual ? `: ${TEXTO_VEREDICTO[g.veredicto].toLowerCase()}.` : "."}`;
 }
 
 function Dato({ label, children, nota }: { label: string; children: React.ReactNode; nota?: string }) {
@@ -187,7 +195,15 @@ export default async function MiNegocioPage() {
     ajustable?.consejo ? { nombre: ajustable.nombre, texto: ajustable.consejo.texto, ahorroMes: ajustable.consejo.ahorroMes! } : null
   );
 
-  const veredicto = negocio?.resultado_veredicto as Veredicto | null;
+  // Mismo perfil, recibo y función que el simulador: los dos dicen lo mismo.
+  const resultado = resultadoParaMostrar({
+    veredictoGuardado: (negocio?.resultado_veredicto as Veredicto | null) ?? null,
+    guardadoEn: negocio?.resultado_guardado_en ?? null,
+    recibos,
+    perfil: { tipo: negocio?.tipo_negocio, departamento: negocio?.departamento, municipio: negocio?.municipio, horario: negocio?.horario, conexion: negocio?.conexion },
+    reciboActual: recibo,
+    tarifa,
+  });
   const tipoNegocio = esOpcion(TIPOS_NEGOCIO, negocio?.tipo_negocio) ? negocio.tipo_negocio : null;
   const mostrarProgreso = !(aparatos.length >= 2 && (vecesRanking ?? 0) > 0);
 
@@ -398,19 +414,33 @@ export default async function MiNegocioPage() {
                   <Estadisticas est={estadisticas} metas={metas} />
                 </div>
 
-                {veredicto && (
+                {(resultado.actual || resultado.guardado) && (
                   <div className="border-t border-ink-950/10 pt-5">
-                    <h3 className="text-base font-bold text-ink-950">Tu resultado de la calculadora</h3>
-                    <p className="mt-1 text-sm font-semibold text-ink-950">{TEXTO_VEREDICTO[veredicto]}</p>
-                    <p className="mt-1 text-sm text-ink-950/75">
-                      {[
-                        negocio?.resultado_kwp != null && `Sistema de ${formatDecimal(negocio.resultado_kwp)} kWp`,
-                        negocio?.resultado_ahorro_mensual != null && `ahorro de ~${pesos(negocio.resultado_ahorro_mensual)} al mes`,
-                        `retorno: ${retornoTexto(negocio?.resultado_retorno_meses ?? null)}`,
-                      ].filter(Boolean).join(" · ")}
-                      . Estimado de la calculadora{negocio?.resultado_guardado_en ? ` del ${new Intl.DateTimeFormat("es-CO", { dateStyle: "medium" }).format(new Date(negocio.resultado_guardado_en))}` : ""}.
-                    </p>
-                    {veredicto === "conviene" && (
+                    <h3 className="text-base font-bold text-ink-950">¿Te convienen los paneles?</h3>
+                    {resultado.actual ? (
+                      <>
+                        <p className="mt-1 text-sm font-semibold text-ink-950">{TEXTO_VEREDICTO[resultado.actual.veredicto]}</p>
+                        <p className="mt-0.5 text-sm text-ink-950/75">
+                          Con tu recibo actual ({formatNumber(Math.round(resultado.actual.consumoKwh))} kWh). Es el mismo cálculo del simulador.
+                        </p>
+                      </>
+                    ) : (
+                      resultado.guardado && <p className="mt-1 text-sm font-semibold text-ink-950">{TEXTO_VEREDICTO[resultado.guardado.veredicto]}</p>
+                    )}
+                    {resultado.guardado && (
+                      <p className={clsx("text-sm text-ink-950/75", resultado.actual ? "mt-3 border-l-2 border-ink-950/15 pl-3" : "mt-0.5")}>
+                        {textoGuardado(resultado.guardado, Boolean(resultado.actual))}
+                        {" "}
+                        {[
+                          negocio?.resultado_kwp != null && `Sistema de ${formatDecimal(negocio.resultado_kwp)} kWp`,
+                          negocio?.resultado_ahorro_mensual != null && `ahorro de ~${pesos(negocio.resultado_ahorro_mensual)} al mes`,
+                          `retorno: ${retornoTexto(negocio?.resultado_retorno_meses ?? null)}`,
+                        ].filter(Boolean).join(" · ")}
+                        {" (estimado de ese día)."}
+                        {resultado.cambio && " Cambió porque tu recibo o tus datos son otros."}
+                      </p>
+                    )}
+                    {(resultado.actual?.veredicto ?? resultado.guardado?.veredicto) === "conviene" && (
                       <Link href="/#calculadora" className={`${botonPrimario} mt-3`}>Pedir cotización</Link>
                     )}
                   </div>

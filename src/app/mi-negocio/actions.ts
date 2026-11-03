@@ -5,14 +5,13 @@ import { redirect } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { registrarEventoCuenta } from "@/lib/supabase/eventos";
-import { datosDepartamento } from "@/lib/geo/departamentos";
-import { regionForDepartment } from "@/lib/geo/regions";
 import { aparatoDelCatalogo } from "@/lib/aparatos/catalogo";
 import { DIAS_MES_DEFECTO, type UsoAparato } from "@/lib/aparatos/calculo";
 import { simularAparato, type ResultadoSimulacion } from "@/lib/aparatos/simulador";
-import { CONEXIONES, HORARIOS, TIPOS_NEGOCIO, VEREDICTOS, esOpcion } from "@/lib/negocio/opciones";
+import { VEREDICTOS } from "@/lib/negocio/opciones";
 import type { Veredicto } from "@/lib/savings/types";
 import { cargarMiNegocio, tarifaVigente } from "./datos";
+import { baseDelRecibo, perfilNegocio, perfilParaSimular } from "@/lib/negocio/coherencia";
 import { generarCodigo } from "@/lib/invitaciones/codigo";
 
 function texto(formData: FormData, campo: string, max = 120): string | null {
@@ -59,17 +58,8 @@ async function asegurarNegocio(supabase: SupabaseClient): Promise<string | null>
   return nuevo.id;
 }
 
-function perfilDesde(datos: { tipo?: unknown; departamento?: unknown; municipio?: unknown; horario?: unknown; conexion?: unknown }) {
-  const departamento = typeof datos.departamento === "string" && datosDepartamento(datos.departamento) ? datos.departamento : null;
-  return {
-    tipo_negocio: esOpcion(TIPOS_NEGOCIO, datos.tipo) ? datos.tipo : null,
-    departamento,
-    region: departamento ? regionForDepartment(departamento) ?? null : null,
-    municipio: typeof datos.municipio === "string" ? datos.municipio.trim().slice(0, 80) || null : null,
-    horario: esOpcion(HORARIOS, datos.horario) ? datos.horario : null,
-    conexion: esOpcion(CONEXIONES, datos.conexion) ? datos.conexion : null,
-  };
-}
+/** Mismo perfil que valida el simulador (ver lib/negocio/coherencia). */
+const perfilDesde = perfilNegocio;
 
 export async function guardarPerfil(formData: FormData) {
   const supabase = await clienteConSesion();
@@ -230,12 +220,12 @@ export async function simular(nuevo: UsoAparato): Promise<RespuestaSimulacion> {
   const tarifa = tarifaVigente(negocio, recibo);
   if (!tarifa) return { ok: false, error: "Guarda tu recibo o escribe tu tarifa para simular." };
 
-  const consumo = recibo?.consumo_kwh ?? (recibo?.valor ? recibo.valor / tarifa : null);
-  const valor = recibo?.valor ?? (consumo ? consumo * tarifa : null);
-  if (!consumo || !valor) return { ok: false, error: "Guarda tu recibo para simular." };
+  // La misma base y el mismo perfil que usa la página para su veredicto.
+  const base = baseDelRecibo(recibo, tarifa);
+  if (!base) return { ok: false, error: "Guarda tu recibo para simular." };
 
-  const perfil = perfilDesde({ tipo: negocio?.tipo_negocio, departamento: negocio?.departamento, municipio: negocio?.municipio, horario: negocio?.horario, conexion: negocio?.conexion });
-  if (!perfil.tipo_negocio || !perfil.departamento || !perfil.region || !perfil.horario || !perfil.conexion) {
+  const perfil = perfilParaSimular({ tipo: negocio?.tipo_negocio, departamento: negocio?.departamento, municipio: negocio?.municipio, horario: negocio?.horario, conexion: negocio?.conexion });
+  if (!perfil) {
     return { ok: false, error: "Completa el tipo de negocio, el departamento, el horario y cómo te llega la luz para simular." };
   }
 
@@ -250,22 +240,7 @@ export async function simular(nuevo: UsoAparato): Promise<RespuestaSimulacion> {
     kwhAnioEtiqueta: aNumero(nuevo?.kwhAnioEtiqueta) || null,
   };
 
-  const resultado = simularAparato(
-    {
-      perfil: {
-        tipoNegocio: perfil.tipo_negocio,
-        departamento: perfil.departamento,
-        region: perfil.region,
-        horario: perfil.horario,
-        conexion: perfil.conexion,
-        municipio: perfil.municipio ?? undefined,
-      },
-      consumoKwh: consumo,
-      valor,
-      tarifaKwh: tarifa,
-    },
-    aparato
-  );
+  const resultado = simularAparato({ perfil, consumoKwh: base.consumoKwh, valor: base.valor, tarifaKwh: tarifa }, aparato);
   return { ok: true, resultado };
 }
 

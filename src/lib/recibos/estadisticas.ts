@@ -71,6 +71,8 @@ export interface Estadisticas {
   /** Último mes contra el anterior con dato. */
   cambioKwhPct: number | null;
   cambioValorPct: number | null;
+  /** Diferencia en pesos entre el último recibo y el anterior (+ subió, − bajó). */
+  cambioValor: number | null;
   /** Último mes contra el promedio de todos. */
   vsPromedioKwhPct: number | null;
   mejorMes: MesConsumo | null;
@@ -99,6 +101,7 @@ export function calcularEstadisticas(recibos: ReciboGuardado[]): Estadisticas {
     promedioValor: promedio(conValor.map((m) => m.valor!)),
     cambioKwhPct: cambioPct(ultimo?.consumoKwh ?? null, anterior?.consumoKwh ?? null),
     cambioValorPct: cambioPct(ultimo?.valor ?? null, anterior?.valor ?? null),
+    cambioValor: ultimo?.valor != null && anterior?.valor != null ? ultimo.valor - anterior.valor : null,
     vsPromedioKwhPct: conKwh.length > 1 ? cambioPct(ultimo?.consumoKwh ?? null, promedioKwh) : null,
     mejorMes: conKwh.length > 1 ? ordenKwh[0] : null,
     peorMes: conKwh.length > 1 ? ordenKwh.at(-1)! : null,
