@@ -3,6 +3,7 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { rutaSegura } from "@/lib/supabase/redireccion";
 import { registrarEventoCuenta } from "@/lib/supabase/eventos";
+import { atribuirInvitacion } from "@/lib/invitaciones/atribuir";
 
 /** Destino del enlace del correo de confirmación de cuenta. */
 export async function GET(request: NextRequest) {
@@ -20,7 +21,10 @@ export async function GET(request: NextRequest) {
       : await supabase.auth.verifyOtp({ type: tipo!, token_hash: tokenHash! });
     if (!error) {
       // El enlace de confirmación solo se envía al registrarse.
-      if (codigo || tipo === "signup" || tipo === "email") await registrarEventoCuenta(supabase, "cuenta_creada");
+      if (codigo || tipo === "signup" || tipo === "email") {
+        await registrarEventoCuenta(supabase, "cuenta_creada");
+        await atribuirInvitacion(supabase, searchParams.get("invitacion"), registrarEventoCuenta);
+      }
       return NextResponse.redirect(new URL(siguiente, request.url));
     }
   }

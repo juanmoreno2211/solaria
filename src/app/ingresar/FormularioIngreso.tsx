@@ -8,8 +8,18 @@ import { ingresar, registrarse, type EstadoIngreso } from "./actions";
 
 type Modo = "ingresar" | "registrarse";
 
-export function FormularioIngreso({ siguiente, error }: { siguiente?: string; error?: string }) {
-  const [modo, setModo] = useState<Modo>("ingresar");
+export function FormularioIngreso({
+  siguiente,
+  error,
+  invitacion,
+  modoInicial = "ingresar",
+}: {
+  siguiente?: string;
+  error?: string;
+  invitacion?: string;
+  modoInicial?: Modo;
+}) {
+  const [modo, setModo] = useState<Modo>(modoInicial);
   const [estadoIngreso, accionIngreso, ingresando] = useActionState<EstadoIngreso, FormData>(ingresar, {
     error: error === "enlace" ? "El enlace no es válido o ya venció. Ingresa o regístrate de nuevo." : undefined,
   });
@@ -38,6 +48,7 @@ export function FormularioIngreso({ siguiente, error }: { siguiente?: string; er
 
       <form action={modo === "ingresar" ? accionIngreso : accionRegistro} className="space-y-4">
         <input type="hidden" name="siguiente" value={siguiente ?? ""} />
+        {invitacion && <input type="hidden" name="invitacion" value={invitacion} />}
         <div>
           <FieldLabel>Correo</FieldLabel>
           <TextInput name="correo" type="email" autoComplete="email" required />

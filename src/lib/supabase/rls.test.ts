@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { generarCodigo } from "@/lib/invitaciones/codigo";
 
 /**
  * Prueba de integración contra el proyecto real de Supabase: crea dos cuentas
@@ -44,8 +45,11 @@ describe.skipIf(!URL_SUPABASE || !CLAVE_PUBLICA)("RLS: cada cuenta solo ve sus f
   const admin = CLAVE_SECRETA ? createClient(URL_SUPABASE!, CLAVE_SECRETA, sinSesion) : null;
   let a: Cuenta;
   let b: Cuenta;
+  /** Cuenta creada después de la invitación de A: la única que puede atribuirse. */
+  let c: Cuenta | undefined;
   const TABLAS = ["negocios", "aparatos", "eventos", "invitaciones", "recibos"];
-  const deA: Record<"negocio" | "aparato" | "invitacion" | "recibo", string> & { evento: number } = {
+  const deA: Record<"negocio" | "aparato" | "invitacion" | "recibo" | "codigo", string> & { evento: number } = {
+    codigo: "",
     negocio: "",
     aparato: "",
     invitacion: "",
@@ -73,7 +77,8 @@ describe.skipIf(!URL_SUPABASE || !CLAVE_PUBLICA)("RLS: cada cuenta solo ve sus f
     if (evento.error) throw evento.error;
     deA.evento = evento.data.id;
 
-    const invitacion = await a.db.from("invitaciones").insert({ correo: "socio@example.com" }).select("id").single();
+    deA.codigo = generarCodigo();
+    const invitacion = await a.db.from("invitaciones").insert({ correo: "socio@example.com", codigo: deA.codigo }).select("id").single();
     if (invitacion.error) throw invitacion.error;
     deA.invitacion = invitacion.data.id;
 
@@ -85,7 +90,7 @@ describe.skipIf(!URL_SUPABASE || !CLAVE_PUBLICA)("RLS: cada cuenta solo ve sus f
   afterAll(async () => {
     if (!admin) return;
     // Borrar la cuenta borra sus filas en cascada.
-    for (const cuenta of [a, b]) if (cuenta) await admin.auth.admin.deleteUser(cuenta.id);
+    for (const cuenta of [a, b, c]) if (cuenta) await admin.auth.admin.deleteUser(cuenta.id);
   });
 
   it("A ve sus propias filas", async () => {
@@ -157,4 +162,78 @@ describe.skipIf(!URL_SUPABASE || !CLAVE_PUBLICA)("RLS: cada cuenta solo ve sus f
       expect(data ?? [], tabla).toEqual([]);
     }
   });
+  it("B no ve ni toca la invitación de A, ni puede cambiar su código", async () => {
+    const editada = await b.db.from("invitaciones").update({ estado: "cancelada" }).eq("id", deA.invitacion).select();
+    expect(editada.data).toEqual([]);
+    // Ni el dueño puede cambiar el código una vez creado.
+    const cambio = await a.db.from("invitaciones").update({ codigo: generarCodigo() }).eq("id", deA.invitacion);
+    expect(cambio.error).not.toBeNull();
+  });
+
+  it("aperturas: se cuentan sin sesión una vez por navegador y no se pueden leer", async () => {
+    const anonimo = createClient(URL_SUPABASE!, CLAVE_PUBLICA!, sinSesion);
+    const visitante = crypto.randomUUID();
+
+    expect((await anonimo.rpc("registrar_apertura", { p_codigo: deA.codigo, p_visitante: visitante })).data).toBe("contada");
+    expect((await anonimo.rpc("registrar_apertura", { p_codigo: deA.codigo, p_visitante: visitante })).data).toBe("repetida");
+    // El dueño con su sesión no cuenta.
+    expect((await a.db.rpc("registrar_apertura", { p_codigo: deA.codigo, p_visitante: crypto.randomUUID() })).data).toBe("propia");
+    expect((await anonimo.rpc("registrar_apertura", { p_codigo: generarCodigo(), p_visitante: visitante })).data).toBe("no_existe");
+
+    // Nadie lee ni escribe aperturas directamente.
+    for (const cliente of [anonimo, b.db, a.db]) {
+      const lectura = await cliente.from("aperturas").select("*");
+      expect(lectura.data ?? []).toEqual([]);
+      const escritura = await cliente.from("aperturas").insert({ invitacion_id: deA.invitacion, visitante: crypto.randomUUID() });
+      expect(escritura.error).not.toBeNull();
+    }
+
+    // El dueño ve solo el total; B ve ceros.
+    const resumenA = await a.db.rpc("resumen_mis_invitaciones");
+    expect(Number(resumenA.data?.[0]?.aperturas)).toBe(1);
+    const resumenB = await b.db.rpc("resumen_mis_invitaciones");
+    expect(Number(resumenB.data?.[0]?.aperturas)).toBe(0);
+    // El evento de apertura no tiene dueño: nadie lo ve desde un cliente.
+    const eventosA = await a.db.from("eventos").select("evento").eq("evento", "invitacion_abierta");
+    expect(eventosA.data).toEqual([]);
+  });
+
+  it("atribución: solo la cuenta nueva de la sesión, una vez y para siempre", async () => {
+    // B tiene su propio enlace para intentar cambiarse de invitación.
+    const codigoB = generarCodigo();
+    const invB = await b.db.from("invitaciones").insert({ codigo: codigoB });
+    expect(invB.error).toBeNull();
+
+    c = await crearCuenta(admin, "c");
+    expect((await c.db.rpc("atribuir_invitacion", { p_codigo: deA.codigo })).data).toBe(true);
+    // No puede cambiarse a la invitación de B ni repetir.
+    expect((await c.db.rpc("atribuir_invitacion", { p_codigo: codigoB })).data).toBe(false);
+    expect((await c.db.rpc("atribuir_invitacion", { p_codigo: deA.codigo })).data).toBe(false);
+    const propia = await c.db.from("atribuciones").select("invitacion_id, invitado_id");
+    expect(propia.data).toEqual([{ invitacion_id: deA.invitacion, invitado_id: c.id }]);
+
+    // B se creó antes de la invitación de A: no puede colgarse de ella.
+    expect((await b.db.rpc("atribuir_invitacion", { p_codigo: deA.codigo })).data).toBe(false);
+    // El dueño no puede atribuirse su propio enlace.
+    expect((await a.db.rpc("atribuir_invitacion", { p_codigo: deA.codigo })).data).toBe(false);
+
+    // Nadie escribe atribuciones directamente, ni a su nombre ni al de otro.
+    const directa = await b.db.from("atribuciones").insert({ invitacion_id: deA.invitacion, invitado_id: b.id });
+    expect(directa.error).not.toBeNull();
+    const ajena = await b.db.from("atribuciones").insert({ invitacion_id: deA.invitacion, invitado_id: c.id });
+    expect(ajena.error).not.toBeNull();
+    const cambio = await c.db.from("atribuciones").update({ invitacion_id: deA.invitacion }).eq("invitado_id", c.id).select();
+    expect(cambio.error ?? cambio.data?.length === 0).toBeTruthy();
+    const borrado = await c.db.from("atribuciones").delete().eq("invitado_id", c.id).select();
+    expect(borrado.error ?? borrado.data?.length === 0).toBeTruthy();
+
+    // B no ve la atribución de C; A solo ve el total.
+    expect((await b.db.from("atribuciones").select("*")).data).toEqual([]);
+    expect(Number((await a.db.rpc("resumen_mis_invitaciones")).data?.[0]?.cuentas)).toBe(1);
+
+    // Sin sesión no se puede atribuir.
+    const anonimo = createClient(URL_SUPABASE!, CLAVE_PUBLICA!, sinSesion);
+    const sinCuenta = await anonimo.rpc("atribuir_invitacion", { p_codigo: deA.codigo });
+    expect(sinCuenta.data === true).toBe(false);
+  }, 30_000);
 });

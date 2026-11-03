@@ -1,7 +1,14 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export type EventoCuenta = "cuenta_creada" | "aparato_registrado" | "ranking_visto" | "resultado_guardado";
+export type EventoCuenta =
+  | "cuenta_creada"
+  | "aparato_registrado"
+  | "ranking_visto"
+  | "resultado_guardado"
+  | "invitacion_creada"
+  | "invitado_registrado";
+// invitacion_abierta no pasa por aquí: no hay sesión y lo guarda la función registrar_apertura.
 
 /**
  * Guarda un evento de la cuenta. user_id lo pone la base de datos con

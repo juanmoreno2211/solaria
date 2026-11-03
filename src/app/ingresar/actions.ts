@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { rutaSegura } from "@/lib/supabase/redireccion";
 import { registrarEventoCuenta } from "@/lib/supabase/eventos";
+import { normalizarCodigo } from "@/lib/invitaciones/codigo";
+import { atribuirInvitacion } from "@/lib/invitaciones/atribuir";
 
 export type EstadoIngreso = { error?: string; mensaje?: string };
 
@@ -37,11 +39,15 @@ export async function registrarse(_: EstadoIngreso, formData: FormData): Promise
   const origen = (await headers()).get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? "";
   const siguiente = rutaSegura(String(formData.get("siguiente") ?? ""));
 
+  const invitacion = normalizarCodigo(formData.get("invitacion"));
+  // Con confirmación de correo, el código viaja en el enlace y se atribuye al confirmar.
+  const confirmar = `${origen}/auth/confirmar?siguiente=${encodeURIComponent(siguiente)}${invitacion ? `&invitacion=${invitacion}` : ""}`;
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email: correo,
     password: contrasena,
-    options: { emailRedirectTo: `${origen}/auth/confirmar?siguiente=${encodeURIComponent(siguiente)}` },
+    options: { emailRedirectTo: confirmar },
   });
   if (error) {
     if (error.code === "weak_password") return { error: "Esa contraseña es muy débil. Prueba con una más larga." };
@@ -52,6 +58,7 @@ export async function registrarse(_: EstadoIngreso, formData: FormData): Promise
   if (!data.session) return { mensaje: "Te enviamos un correo. Abre el enlace para activar tu cuenta." };
   // Sin confirmación de correo ya hay sesión; si no, el evento se guarda al confirmar.
   await registrarEventoCuenta(supabase, "cuenta_creada");
+  if (invitacion) await atribuirInvitacion(supabase, invitacion, registrarEventoCuenta);
   redirect(siguiente);
 }
 

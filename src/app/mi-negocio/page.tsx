@@ -14,13 +14,18 @@ import { formatCOP, formatDecimal, formatNumber } from "@/lib/format";
 import { CONEXIONES, HORARIOS, TEXTO_VEREDICTO, TIPOS_NEGOCIO, etiqueta as etiquetaDe } from "@/lib/negocio/opciones";
 import type { Region } from "@/lib/config/pricing";
 import type { Veredicto } from "@/lib/savings/types";
-import { actualizarRecibo, guardarPerfil, guardarTarifa } from "./actions";
-import { cargarMiNegocio, tarifaVigente, type AparatoFila } from "./datos";
+import { guardarPerfil, guardarTarifa } from "./actions";
+import { cargarMiInvitacion, cargarMiNegocio, tarifaVigente, type AparatoFila } from "./datos";
+import { TarjetaInvitar } from "./componentes/TarjetaInvitar";
+import { enlaceInvitacion } from "@/lib/invitaciones/enlace";
+import { headers } from "next/headers";
 import { ImportarResultado } from "./componentes/ImportarResultado";
 import { FormularioAparato } from "./componentes/FormularioAparato";
 import { FilaAparato } from "./componentes/FilaAparato";
 import { Simulador } from "./componentes/Simulador";
 import { RankingVisto } from "./componentes/RankingVisto";
+import { Estadisticas, FormularioRecibo } from "./componentes/Estadisticas";
+import { calcularEstadisticas, calcularMetas } from "@/lib/recibos/estadisticas";
 import { ayuda, botonPrimario, botonSecundario, campo, etiqueta, tarjeta, tituloTarjeta } from "./componentes/estilos";
 
 export const metadata: Metadata = {
@@ -78,7 +83,14 @@ export default async function MiNegocioPage() {
   if (!sesion?.claims) redirect("/ingresar?siguiente=/mi-negocio");
   const correo = typeof sesion.claims.email === "string" ? sesion.claims.email : "";
 
-  const { negocio, recibo, aparatos } = await cargarMiNegocio(supabase);
+  const [{ negocio, recibo, recibos, aparatos }, invitacion, cabeceras] = await Promise.all([
+    cargarMiNegocio(supabase),
+    cargarMiInvitacion(supabase),
+    headers(),
+  ]);
+  // El enlace usa el dominio por el que entró el usuario (local o producción).
+  const host = cabeceras.get("x-forwarded-host") ?? cabeceras.get("host");
+  const origen = host ? `${cabeceras.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https")}://${host}` : process.env.NEXT_PUBLIC_SITE_URL ?? "";
   const tarifa = tarifaVigente(negocio, recibo);
   const tarifaManual = !recibo?.tarifa_kwh && negocio?.tarifa_manual_kwh ? negocio.tarifa_manual_kwh : null;
   const usos = aparatos.map(usoDeFila);
@@ -86,17 +98,31 @@ export default async function MiNegocioPage() {
   const filasConConsumo = ranking.filas.filter((f) => f.kwhMes > 0);
   const principal = filasConConsumo[0];
   const consejos = principal ? consejosPara(principal.aparato, tarifa) : [];
+  const estadisticas = calcularEstadisticas(
+    recibos.map((r) => ({ id: r.id, mes: r.mes, consumoKwh: r.consumo_kwh, valor: r.valor, creadoEn: r.creado_en }))
+  );
+  // Meta del aparato: el que más pesa entre los que tienen un ahorro cuantificable
+  // (a una nevera no se le sugiere usarla menos horas).
+  const ajustable = filasConConsumo
+    .map((f) => ({ nombre: f.aparato.nombre, consejo: consejosPara(f.aparato, tarifa).find((c) => c.ahorroMes != null && c.ahorroMes > 0) }))
+    .find((x) => x.consejo);
+  const metas = calcularMetas(
+    estadisticas,
+    tarifa,
+    ajustable?.consejo ? { nombre: ajustable.nombre, texto: ajustable.consejo.texto, ahorroMes: ajustable.consejo.ahorroMes! } : null
+  );
   const maxBarra = recibo?.consumo_kwh ? Math.max(recibo.consumo_kwh, ranking.kwhAparatos) : principal?.kwhMes ?? 1;
   const veredicto = negocio?.resultado_veredicto as Veredicto | null;
   const perfilCompleto = Boolean(negocio?.tipo_negocio && negocio.departamento && negocio.horario && negocio.conexion);
 
   return (
     <>
-      <Navbar />
+      <Navbar cuenta={{ nombre: negocio?.nombre ?? null }} />
       <main className="flex-1 bg-cream-50 py-10 sm:py-12">
         <Container className="max-w-3xl">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sun-600">SolarIA Control</p>
               <h1 className="text-2xl font-semibold tracking-tight text-ink-950">{negocio?.nombre || "Mi negocio"}</h1>
               <p className="truncate text-sm text-ink-950/65">{correo}</p>
             </div>
@@ -162,24 +188,9 @@ export default async function MiNegocioPage() {
                 <summary className={`${botonSecundario} cursor-pointer list-none [&::-webkit-details-marker]:hidden`}>
                   {recibo ? "Actualizar recibo" : "Escribir mi recibo"}
                 </summary>
-                <form action={actualizarRecibo} className="mt-4 grid gap-3 sm:grid-cols-3">
-                  <label>
-                    <span className={etiqueta}>Consumo del mes (kWh)</span>
-                    <input name="consumo_kwh" inputMode="decimal" required className={campo} />
-                  </label>
-                  <label>
-                    <span className={etiqueta}>Valor pagado ($)</span>
-                    <input name="valor" inputMode="numeric" required className={campo} />
-                  </label>
-                  <label>
-                    <span className={etiqueta}>Mes del recibo</span>
-                    <input name="mes" type="month" defaultValue={new Date().toISOString().slice(0, 7)} className={campo} />
-                  </label>
-                  <div className="sm:col-span-3">
-                    <button type="submit" className={botonPrimario}>Guardar recibo</button>
-                    <p className={ayuda}>Cada actualización queda guardada como un recibo nuevo.</p>
-                  </div>
-                </form>
+                <div className="mt-4">
+                  <FormularioRecibo />
+                </div>
               </details>
 
               {!recibo?.tarifa_kwh && (
@@ -193,6 +204,8 @@ export default async function MiNegocioPage() {
                 </form>
               )}
             </section>
+
+            <Estadisticas est={estadisticas} metas={metas} />
 
             <section aria-labelledby="t-perfil" className={tarjeta}>
               <h2 id="t-perfil" className={tituloTarjeta}>Tu negocio</h2>
@@ -336,6 +349,12 @@ export default async function MiNegocioPage() {
               <p className="mt-1 mb-4 text-sm text-ink-950/75">Mira cuánto subiría tu recibo con un aparato nuevo. No se guarda.</p>
               <Simulador />
             </section>
+
+            <TarjetaInvitar
+              enlace={invitacion.codigo ? enlaceInvitacion(origen, invitacion.codigo) : null}
+              aperturas={invitacion.aperturas}
+              cuentas={invitacion.cuentas}
+            />
 
             <section aria-labelledby="t-datos" className="rounded-xl border border-ink-950/10 bg-cream-100/60 p-5 text-sm text-ink-950/80">
               <h2 id="t-datos" className="font-semibold text-ink-950">Tus datos</h2>

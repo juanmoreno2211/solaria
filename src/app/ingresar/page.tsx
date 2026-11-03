@@ -2,13 +2,16 @@ import type { Metadata } from "next";
 import { Navbar } from "@/components/layout/Navbar";
 import { Container } from "@/components/ui/Container";
 import { FormularioIngreso } from "./FormularioIngreso";
+import { normalizarCodigo } from "@/lib/invitaciones/codigo";
 
 export const metadata: Metadata = {
   title: "Ingresar — SolarIA",
 };
 
 export default async function IngresarPage({ searchParams }: PageProps<"/ingresar">) {
-  const { siguiente, error } = await searchParams;
+  const { siguiente, error, invitacion, modo } = await searchParams;
+  // El registro directo sigue sin código; con ?invitacion= la cuenta se atribuye al socio.
+  const codigo = normalizarCodigo(invitacion);
   return (
     <>
       <Navbar />
@@ -21,6 +24,8 @@ export default async function IngresarPage({ searchParams }: PageProps<"/ingresa
           <FormularioIngreso
             siguiente={typeof siguiente === "string" ? siguiente : undefined}
             error={typeof error === "string" ? error : undefined}
+            invitacion={codigo ?? undefined}
+            modoInicial={codigo || modo === "registro" ? "registrarse" : "ingresar"}
           />
         </Container>
       </main>

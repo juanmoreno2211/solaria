@@ -13,6 +13,7 @@ import { simularAparato, type ResultadoSimulacion } from "@/lib/aparatos/simulad
 import { CONEXIONES, HORARIOS, TIPOS_NEGOCIO, VEREDICTOS, esOpcion } from "@/lib/negocio/opciones";
 import type { Veredicto } from "@/lib/savings/types";
 import { cargarMiNegocio, tarifaVigente } from "./datos";
+import { generarCodigo } from "@/lib/invitaciones/codigo";
 
 function texto(formData: FormData, campo: string, max = 120): string | null {
   const valor = String(formData.get(campo) ?? "").trim().slice(0, max);
@@ -101,6 +102,16 @@ export async function actualizarRecibo(formData: FormData) {
 
   const { error } = await supabase.from("recibos").insert({ consumo_kwh: consumo || null, valor: valor || null, mes });
   if (error) console.error("[mi-negocio] no se pudo guardar el recibo", error.message);
+  revalidatePath("/mi-negocio");
+}
+
+/** Borra todos los recibos de un mes: si quedara uno anterior del mismo mes, volvería a aparecer. */
+export async function borrarRecibo(formData: FormData) {
+  const supabase = await clienteConSesion();
+  const mes = texto(formData, "mes", 10);
+  if (!mes || !/^\d{4}-\d{2}-01$/.test(mes)) return;
+  const { error } = await supabase.from("recibos").delete().eq("mes", mes);
+  if (error) console.error("[mi-negocio] no se pudo borrar el recibo", error.message);
   revalidatePath("/mi-negocio");
 }
 
@@ -256,4 +267,29 @@ export async function simular(nuevo: UsoAparato): Promise<RespuestaSimulacion> {
     aparato
   );
   return { ok: true, resultado };
+}
+
+/** "Invitar a mi socio": un enlace por cuenta. Si ya existe, no crea otro. */
+export async function crearInvitacion() {
+  const supabase = await clienteConSesion();
+  const { data: existente } = await supabase.from("invitaciones").select("codigo").not("codigo", "is", null).maybeSingle();
+  if (existente) return;
+
+  // Con 50 bits un choque es casi imposible; si pasa, se intenta con otro código.
+  for (let intento = 0; intento < 3; intento++) {
+    const codigo = generarCodigo();
+    const { error } = await supabase.from("invitaciones").insert({ codigo });
+    if (!error) {
+      await registrarEventoCuenta(supabase, "invitacion_creada", { codigo });
+      break;
+    }
+    if (error.code !== "23505") {
+      console.error("[invitaciones] no se pudo crear", error.message);
+      break;
+    }
+    // 23505 también salta si otra pestaña ya creó el enlace de esta cuenta.
+    const { data: ya } = await supabase.from("invitaciones").select("codigo").not("codigo", "is", null).maybeSingle();
+    if (ya) break;
+  }
+  revalidatePath("/mi-negocio");
 }
