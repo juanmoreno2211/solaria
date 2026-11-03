@@ -1,4 +1,5 @@
-import { ArrowUp, HardHat, MessageCircle, ReceiptText } from "lucide-react";
+import { ArrowRight, ArrowUp, ChartColumn, FlaskConical, HardHat, MessageCircle, ReceiptText, Target } from "lucide-react";
+import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { Reveal } from "@/components/ui/Reveal";
 import { ImagenSubida } from "@/components/ui/ImagenSubida";
@@ -37,6 +38,79 @@ function pasos(fotoDisponible: boolean): Paso[] {
       Icono: HardHat,
     },
   ];
+}
+
+const CONTROL = [
+  { Icono: ReceiptText, texto: "Guarda tus recibos mes a mes y mira cómo cambia tu consumo." },
+  { Icono: ChartColumn, texto: "Descubre qué aparatos pesan más en tu recibo y cuánto te cuesta cada uno." },
+  { Icono: Target, texto: "Recibe metas con el ahorro estimado en pesos, calculadas con tus propios datos." },
+  { Icono: FlaskConical, texto: "Simula un aparato nuevo antes de comprarlo y mira si los paneles empiezan a convenirte." },
+];
+
+/** Barras de ejemplo para la ilustración: no son datos de nadie. */
+const BARRAS_EJEMPLO = [62, 70, 58, 80, 66, 52];
+
+/** SolarIA Control: la zona con cuenta para ver en qué gasta el negocio. */
+function SolariaControl() {
+  return (
+    <Reveal>
+      <div className="mt-20 overflow-hidden rounded-2xl bg-ink-950 text-white sm:mt-24">
+        <div className="grid gap-10 p-6 sm:p-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+          <div>
+            <p className="inline-flex items-center gap-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-sun-300">
+              <span aria-hidden className="h-px w-6 bg-sun-300/60" />
+              Nuevo · SolarIA Control
+            </p>
+            <h3 className="mt-4 max-w-[22ch] text-balance text-2xl font-bold leading-tight tracking-[-0.02em] sm:text-3xl">
+              Controla tu consumo, aunque todavía no necesites paneles
+            </h3>
+            <p className="mt-3 max-w-[48ch] text-sm leading-relaxed text-white/75 sm:text-base">
+              Crea tu cuenta gratis y lleva el control de la energía de tu negocio. Sirve para cualquier negocio, le convenga o no la energía solar.
+            </p>
+            <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+              {CONTROL.map(({ Icono, texto }) => (
+                <li key={texto} className="flex gap-3 text-sm leading-relaxed text-white/85">
+                  <Icono className="mt-0.5 h-4 w-4 shrink-0 text-sun-300" aria-hidden="true" />
+                  {texto}
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/mi-negocio"
+              className="mt-8 inline-flex min-h-11 items-center gap-2 rounded-md bg-white px-5 text-sm font-semibold text-ink-950 transition-colors hover:bg-cream-100"
+            >
+              Controla tu consumo
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </div>
+
+          {/* Ilustración en CSS (sin imagen) del panel de estadísticas. */}
+          <div aria-hidden="true" className="rounded-xl bg-white/[0.05] p-5">
+            <p className="text-xs font-medium text-white/60">kWh por mes · ejemplo</p>
+            <div className="mt-4 flex h-32 items-end gap-2">
+              {BARRAS_EJEMPLO.map((h, i) => (
+                <div
+                  key={i}
+                  className={i === BARRAS_EJEMPLO.length - 1 ? "flex-1 rounded-t bg-sun-400" : "flex-1 rounded-t bg-white/25"}
+                  style={{ height: `${h}%` }}
+                />
+              ))}
+            </div>
+            <div className="mt-4 space-y-2">
+              {[["Nevera", 78], ["Aire acondicionado", 54], ["Luces", 22]].map(([nombre, ancho]) => (
+                <div key={nombre}>
+                  <div className="text-xs text-white/70">{nombre}</div>
+                  <div className="mt-1 h-2 rounded-full bg-white/10">
+                    <div className="h-full rounded-full bg-sun-400" style={{ width: `${ancho}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </Reveal>
+  );
 }
 
 /**
@@ -117,6 +191,8 @@ export function HowItWorks({ fotoDisponible }: { fotoDisponible: boolean }) {
             Calcular mi ahorro
           </a>
         </div>
+
+        <SolariaControl />
       </Container>
     </section>
   );

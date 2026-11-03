@@ -21,6 +21,9 @@ import {
 } from "./StepProperty";
 import { PanelResumen, type PasoCalculadora } from "./PanelResumen";
 import { ResultsView } from "./ResultsView";
+import { GuardarResultado } from "./GuardarResultado";
+import { InvitarSocio } from "./InvitarSocio";
+import type { ResultadoPendiente } from "@/lib/negocio/resultado-pendiente";
 import { LoadingState } from "./LoadingState";
 import { StepQuote } from "./StepQuote";
 import type { AnalisisResultado } from "@/lib/savings/types";
@@ -136,6 +139,23 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
       ? { tipo: "consulta", proveedor: proveedorDirectorio }
       : proveedorElegido === CONTACTO_SOLARIA_ID ? { tipo: "consulta" } : undefined;
 
+
+  // Lo que se lleva a Mi negocio desde el resultado: solo números y códigos, nunca la foto.
+  const resultadoPendiente: ResultadoPendiente | null = data
+    ? {
+        consumoKwh: Number(recibo.consumoMensualKwh) || null,
+        valor: Number(recibo.valorPagadoMensual) || null,
+        tipoNegocio: negocio.tipoNegocio,
+        departamento: negocio.departamento,
+        municipio: negocio.municipio || undefined,
+        horario: negocio.horario,
+        conexion: negocio.conexion,
+        veredicto: data.resultado.veredicto,
+        kwp: paneles?.kwpRequeridos ?? null,
+        ahorroMensual: paneles?.ahorroMensualEstimado ?? null,
+        retornoMeses: paneles?.retornoMeses ?? null,
+      }
+    : null;
 
   const cardRef = useRef<HTMLDivElement>(null);
   const primerRender = useRef(true);
@@ -363,6 +383,8 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
               />
             )}
 
+            {step === "resultado" && resultadoPendiente && <InvitarSocio datos={resultadoPendiente} />}
+
             {step === "resultado" && data && (
               <ResultsView
                 resultado={data.resultado}
@@ -373,6 +395,7 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
                 onInteresSinProveedor={handleInteresSinProveedor}
               />
             )}
+            {step === "resultado" && resultadoPendiente && <GuardarResultado datos={resultadoPendiente} />}
 
             {step === "cotizacion" && destinoCotizacion && data && paneles && (
               <StepQuote

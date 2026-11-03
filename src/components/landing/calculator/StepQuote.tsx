@@ -17,6 +17,7 @@ import {
 export type { DatosCotizacion };
 import { buildWhatsAppLink, WHATSAPP_NUMBER_DISPLAY } from "@/lib/whatsapp";
 import { anios } from "./ProveedorCard";
+import { PedirContacto } from "./PedirContacto";
 
 function Nodo({ icono, label, activo }: { icono: React.ReactNode; label: string; activo: boolean }) {
   return (
@@ -145,7 +146,7 @@ export function StepQuote({ destino, datos, onBack, onReset, onAbrirWhatsApp }: 
     <div>
       <h3 data-step-title tabIndex={-1} className="text-lg font-bold text-ink-950 outline-none">Tu cotización con SolarIA</h3>
       <p className="mt-1 max-w-[62ch] text-sm leading-relaxed text-ink-800/60">
-        {proveedor ? `Revisaremos contigo la opción de ${proveedor}, su atención en tu zona y los pasos para cotizar.` : "Te ayudamos a revisar tu solución y encontrar un proveedor que pueda atender tu negocio."} Escríbenos por WhatsApp con los datos que ya ingresaste.
+        {proveedor ? `Revisaremos contigo la opción de ${proveedor}, su atención en tu zona y los pasos para cotizar.` : "Te ayudamos a revisar tu solución y encontrar un proveedor que pueda atender tu negocio."} Escríbenos por WhatsApp o déjanos tu celular y te contactamos.
       </p>
 
       <dl className="mt-6 grid grid-cols-1 gap-4 border-y border-ink-950/8 py-4 sm:grid-cols-3">
@@ -170,7 +171,7 @@ export function StepQuote({ destino, datos, onBack, onReset, onAbrirWhatsApp }: 
           <Autorizacion destino={destino} autorizado={autorizado} onCambiar={setAutorizado} />
           <h4 className="mt-6 text-sm font-semibold text-ink-950">Qué pasa después</h4>
           <ol className="mt-2 space-y-2 text-sm leading-relaxed text-ink-800/70">
-            <li>1. Envías el mensaje al agente de SolarIA desde tu WhatsApp.</li>
+            <li>1. Nos escribes por WhatsApp o nos dejas tu celular para que te contactemos.</li>
             <li>2. Revisamos tus datos, la ubicación y la solución que necesitas.</li>
             <li>3. Te orientamos sobre disponibilidad, propuesta y visita técnica{proveedor ? ` para evaluar la opción de ${proveedor}` : " con un proveedor adecuado"}.</li>
           </ol>
@@ -178,17 +179,32 @@ export function StepQuote({ destino, datos, onBack, onReset, onAbrirWhatsApp }: 
         <VistaChat mensaje={mensaje} />
       </div>
 
-      <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Button type="button" variant="ghost" onClick={onBack}>Atrás</Button>
-        <a href={buildWhatsAppLink(mensaje)} target="_blank" rel="noopener noreferrer"
-          onClick={() => { setAbierto(true); onAbrirWhatsApp(ref); }}
-          className="inline-flex items-center justify-center gap-2 rounded-md bg-sun-500 px-6 py-3 text-[0.95rem] font-semibold text-white transition-colors hover:bg-sun-600">
-          <MessageCircle className="h-4 w-4" aria-hidden="true" />Contactar a SolarIA por WhatsApp
-        </a>
+      {/* Dos caminos: escribir tú por WhatsApp o que SolarIA te contacte. */}
+      <h4 className="mt-8 text-base font-bold text-ink-950">¿Cómo prefieres seguir?</h4>
+      <div className="mt-3 grid items-start gap-4 md:grid-cols-2">
+        <div className="rounded-xl border border-ink-950/10 bg-white p-5">
+          <p className="flex items-center gap-2 text-base font-bold text-ink-950">
+            <MessageCircle className="h-5 w-5 text-ink-800" aria-hidden="true" />
+            Escribir por WhatsApp
+          </p>
+          <p className="mt-1 text-sm text-ink-950/75">Te abrimos WhatsApp con el mensaje listo para enviarlo tú.</p>
+          <div className="pt-4">
+            <a href={buildWhatsAppLink(mensaje)} target="_blank" rel="noopener noreferrer"
+              onClick={() => { setAbierto(true); onAbrirWhatsApp(ref); }}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-sun-500 px-6 py-3 text-[0.95rem] font-semibold text-white transition-colors hover:bg-sun-600">
+              <MessageCircle className="h-4 w-4" aria-hidden="true" />Contactar a SolarIA por WhatsApp
+            </a>
+            <p className="mt-3 text-xs text-ink-800/50" aria-live="polite">
+              {abierto ? `Abrimos WhatsApp en otra pestaña. Si no se abrió, escríbenos al ${WHATSAPP_NUMBER_DISPLAY}.` : "Se abre WhatsApp con el mensaje listo. Puedes revisarlo antes de enviarlo. Compartir datos con proveedores es opcional."}
+            </p>
+          </div>
+        </div>
+        <PedirContacto destino={destino} datos={datos} compartirConProveedor={autorizado} referencia={ref} />
       </div>
-      <p className="mt-3 text-right text-xs text-ink-800/50" aria-live="polite">
-        {abierto ? `Abrimos WhatsApp en otra pestaña. Si no se abrió, escríbenos al ${WHATSAPP_NUMBER_DISPLAY}.` : "Se abre WhatsApp con el mensaje listo. Puedes revisarlo antes de enviarlo. Compartir datos con proveedores es opcional."}
-      </p>
+
+      <div className="mt-6">
+        <Button type="button" variant="ghost" onClick={onBack}>Atrás</Button>
+      </div>
       {abierto && <div className="mt-6 border-t border-ink-950/8 pt-5"><Button type="button" variant="ghost" onClick={onReset}><RotateCcw className="h-4 w-4" aria-hidden="true" />Empezar de nuevo</Button></div>}
     </div>
   );

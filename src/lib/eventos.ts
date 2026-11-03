@@ -8,6 +8,7 @@ export const EVENTOS = [
   "cotizacion_pedida",
   "interes_sin_proveedor",
   "whatsapp_abierto",
+  "contacto_pedido",
 ] as const;
 
 export type Evento = (typeof EVENTOS)[number];

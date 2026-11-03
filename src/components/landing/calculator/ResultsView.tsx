@@ -21,7 +21,7 @@ import { PestanasResultado as Pestanas, type PestanaResultado as Pestana } from 
 const VEREDICTO: Record<Veredicto, { titulo: string; color: string }> = {
   conviene: { titulo: "Te conviene pedir cotización", color: "text-leaf-400" },
   comparar: { titulo: "Puede convenirte: compara con calma", color: "text-sun-300" },
-  por_ahora_no: { titulo: "Por ahora no te lo recomendamos", color: "text-ember-400" },
+  por_ahora_no: { titulo: "Todavía no lo necesitas, pero te ayudamos a ver dónde ahorrar", color: "text-ember-400" },
   sin_proveedores: { titulo: "Aún no hay un proveedor para tu caso", color: "text-sun-300" },
 };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Sun } from "lucide-react";
+import { Store, Sun } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import clsx from "clsx";
@@ -14,8 +14,38 @@ const LINKS = [
   { href: "/mision", label: "Nuestra misión" },
 ];
 
-export function Navbar() {
+/** Nombre que muestra el botón de la cuenta: el del negocio, o "Mi negocio" si aún no lo escribió. */
+function useCuenta(cuenta?: { nombre: string | null }) {
+  const [detectada, setDetectada] = useState<{ nombre: string | null } | null>(null);
+
+  useEffect(() => {
+    // La página ya sabe quién es (p. ej. Mi negocio): no hay nada que consultar.
+    if (cuenta) return;
+    // Sin cookie de sesión no se carga Supabase: la landing sigue liviana.
+    if (!document.cookie.includes("-auth-token")) return;
+    let vigente = true;
+    import("@/lib/supabase/client")
+      .then(async ({ createClient }) => {
+        const supabase = createClient();
+        // Solo decide el texto del botón; los datos los protege la RLS en el servidor.
+        const { data } = await supabase.auth.getSession();
+        if (!data.session) return;
+        const { data: negocio } = await supabase.from("negocios").select("nombre").maybeSingle();
+        if (vigente) setDetectada({ nombre: negocio?.nombre ?? null });
+      })
+      .catch(() => {});
+    return () => {
+      vigente = false;
+    };
+  }, [cuenta]);
+
+  return cuenta ?? detectada;
+}
+
+export function Navbar({ cuenta }: { cuenta?: { nombre: string | null } } = {}) {
   const [scrolled, setScrolled] = useState(false);
+  const sesion = useCuenta(cuenta);
+  const etiquetaCuenta = sesion?.nombre?.trim() || "Mi negocio";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -54,6 +84,22 @@ export function Navbar() {
             </Link>
           ))}
         </nav>
+
+        {/* Siempre visible, también en el celular; sin sesión lleva a /ingresar. */}
+        <Link
+          href="/mi-negocio"
+          aria-label={sesion ? `Tu cuenta: ${etiquetaCuenta}` : undefined}
+          title={sesion ? etiquetaCuenta : undefined}
+          className={clsx(
+            "inline-flex min-h-11 max-w-[11rem] items-center gap-2 rounded-md px-4 text-sm font-semibold transition-colors sm:max-w-[16rem]",
+            sesion
+              ? "bg-ink-950 text-white hover:bg-ink-800"
+              : "border border-ink-950/20 text-ink-950 hover:border-ink-950/40 hover:bg-ink-950/[0.03]"
+          )}
+        >
+          {sesion && <Store className="h-4 w-4 shrink-0" aria-hidden="true" />}
+          <span className="truncate">{etiquetaCuenta}</span>
+        </Link>
       </Container>
     </header>
   );

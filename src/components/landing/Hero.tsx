@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ArrowRight, Store } from "lucide-react";
+import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 
@@ -81,6 +82,13 @@ export function Hero() {
               <ArrowRight className="h-4 w-4" />
             </Button>
           </a>
+
+          <Link
+            href="/mi-negocio"
+            className="inline-flex min-h-11 items-center justify-center rounded-md border border-white/40 px-6 py-3 text-[0.95rem] font-semibold text-white transition-colors hover:border-white/70 hover:bg-white/10"
+          >
+            Controla tu consumo
+          </Link>
 
           <div className="flex items-center gap-8">
             <a
