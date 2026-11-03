@@ -42,7 +42,8 @@ export async function proxy(request: NextRequest) {
 function redirigirAIngreso(request: NextRequest) {
   const destino = request.nextUrl.clone();
   destino.pathname = "/ingresar";
-  destino.search = `?siguiente=${encodeURIComponent(request.nextUrl.pathname)}`;
+  // Conserva la query (p. ej. ?invitar=1) para volver al mismo lugar después de ingresar.
+  destino.search = `?siguiente=${encodeURIComponent(request.nextUrl.pathname + request.nextUrl.search)}`;
   return NextResponse.redirect(destino);
 }
 

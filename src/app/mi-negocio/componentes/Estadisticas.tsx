@@ -1,7 +1,9 @@
 import { formatCOP, formatDecimal, formatNumber } from "@/lib/format";
 import type { Estadisticas as Datos, Meta } from "@/lib/recibos/estadisticas";
 import { actualizarRecibo, borrarRecibo } from "../actions";
-import { ayuda, botonPrimario, botonSecundario, campo, etiqueta, tarjeta, tituloTarjeta } from "./estilos";
+import { ayuda, botonPrimario, botonSecundario, campo, etiqueta } from "./estilos";
+import clsx from "clsx";
+import { ChartColumn, Gauge, Minus, Target, TrendingDown, TrendingUp, Trophy, Zap, type LucideIcon } from "lucide-react";
 
 const pesos = (v: number) => formatCOP(Math.round(v / 100) * 100);
 
@@ -16,15 +18,31 @@ function mesLargo(mes: string): string {
 function cambio(pct: number | null, sube: string, baja: string): string {
   if (pct == null) return "—";
   if (Math.abs(pct) < 0.5) return "igual";
-  return `${pct > 0 ? sube : baja} ${formatDecimal(Math.abs(pct))} %`;
+  return `${pct > 0 ? sube : baja} ${formatDecimal(Math.abs(pct))} %`.trim();
 }
 
-function Tile({ label, valor, nota }: { label: string; valor: string; nota?: string }) {
+/** En consumo y pesos, subir es malo (brasa) y bajar es bueno (hoja). */
+function tono(pct: number | null): "sube" | "baja" | "igual" | null {
+  if (pct == null) return null;
+  return Math.abs(pct) < 0.5 ? "igual" : pct > 0 ? "sube" : "baja";
+}
+
+const FLECHA = { sube: TrendingUp, baja: TrendingDown, igual: Minus };
+const COLOR = { sube: "text-ember-600", baja: "text-leaf-700", igual: "text-ink-950/70" };
+
+function Tile({ Icono, label, valor, nota, cambio: estado }: { Icono: LucideIcon; label: string; valor: string; nota?: string; cambio?: ReturnType<typeof tono> }) {
+  const Flecha = estado ? FLECHA[estado] : null;
   return (
-    <div className="rounded-lg bg-cream-50 p-3">
-      <dt className="text-xs font-medium text-ink-950/65">{label}</dt>
-      <dd className="mt-0.5 text-lg font-semibold tracking-tight text-ink-950 tabular-nums">{valor}</dd>
-      {nota && <dd className="text-xs text-ink-950/65">{nota}</dd>}
+    <div className="rounded-xl bg-cream-50 p-3.5 ring-1 ring-ink-950/5">
+      <dt className="flex items-center gap-1.5 text-xs font-medium text-ink-950/75">
+        <Icono className="h-3.5 w-3.5 text-sun-600" aria-hidden="true" />
+        {label}
+      </dt>
+      <dd className={clsx("mt-1 flex items-center gap-1 text-base font-bold leading-snug tracking-tight tabular-nums", estado ? COLOR[estado] : "text-ink-950")}>
+        {Flecha && <Flecha className="h-4 w-4 shrink-0" aria-hidden="true" />}
+        {valor}
+      </dd>
+      {nota && <dd className="text-xs text-ink-950/75">{nota}</dd>}
     </div>
   );
 }
@@ -61,19 +79,25 @@ export function Estadisticas({ est, metas }: { est: Datos; metas: Meta[] }) {
       ? null
       : Math.abs(est.tendenciaKwhMes) < est.promedioKwh * 0.02
         ? "Estable"
-        : `${est.tendenciaKwhMes > 0 ? "Sube" : "Baja"} ~${formatDecimal(Math.abs(est.tendenciaKwhMes))} kWh por mes`;
+        : `${est.tendenciaKwhMes > 0 ? "+" : "−"}${formatDecimal(Math.abs(est.tendenciaKwhMes))} kWh/mes`;
 
   return (
-    <section aria-labelledby="t-estadisticas" className={tarjeta}>
-      <h2 id="t-estadisticas" className={tituloTarjeta}>Estadísticas de consumo</h2>
-      <p className="mt-1 text-sm text-ink-950/75">
-        Agrega los recibos de varios meses para ver cómo cambia tu consumo y ponerte metas.
-      </p>
+    <section aria-labelledby="t-estadisticas">
+      <h3 id="t-estadisticas" className="flex items-center gap-2 text-base font-bold text-ink-950">
+        <ChartColumn className="h-5 w-5 text-sun-600" aria-hidden="true" />
+        Historial de tu consumo
+      </h3>
+      <p className="mt-0.5 text-sm text-ink-950/75">Agrega recibos de varios meses para ver cómo cambia.</p>
 
       {conKwh.length > 0 && (
-        <figure className="mt-5">
-          <figcaption className="mb-2 text-xs font-medium text-ink-950/65">
-            kWh por mes{est.promedioKwh != null && conKwh.length > 1 ? ` · la línea es tu promedio (${Math.round(est.promedioKwh)} kWh)` : ""}
+        <figure className="mt-4 rounded-xl bg-cream-50 p-3 ring-1 ring-ink-950/5 sm:p-4">
+          <figcaption className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-medium text-ink-950/70">
+            <span>kWh por mes</span>
+            <span className="inline-flex items-center gap-1.5"><span aria-hidden className="h-2.5 w-2.5 rounded-sm bg-sun-500" />Último mes</span>
+            {est.mejorMes && <span className="inline-flex items-center gap-1.5"><span aria-hidden className="h-2.5 w-2.5 rounded-sm bg-leaf-500" />Mejor mes</span>}
+            {est.promedioKwh != null && conKwh.length > 1 && (
+              <span className="inline-flex items-center gap-1.5"><span aria-hidden className="w-4 border-t-2 border-dashed border-ink-950/45" />Promedio ({Math.round(est.promedioKwh)} kWh)</span>
+            )}
           </figcaption>
           <div className="relative flex h-44 items-end gap-1.5 border-b border-ink-950/15 sm:gap-3" aria-hidden="true">
             {est.promedioKwh != null && conKwh.length > 1 && (
@@ -88,7 +112,7 @@ export function Estadisticas({ est, metas }: { est: Datos; metas: Meta[] }) {
                 <div key={m.mes} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end">
                   <span className="mb-1 text-[10px] font-semibold tabular-nums text-ink-950/75 sm:text-xs">{formatNumber(Math.round(m.consumoKwh!))}</span>
                   <div
-                    className={ultimo ? "w-full max-w-10 rounded-t bg-sun-600" : "w-full max-w-10 rounded-t bg-ink-950/30"}
+                    className={ultimo ? "w-full max-w-10 rounded-t-md bg-sun-500" : est.mejorMes?.mes === m.mes ? "w-full max-w-10 rounded-t-md bg-leaf-500" : "w-full max-w-10 rounded-t-md bg-ink-700/35"}
                     style={{ height: `${Math.max(2, (m.consumoKwh! / max) * 85)}%` }}
                   />
                 </div>
@@ -97,7 +121,7 @@ export function Estadisticas({ est, metas }: { est: Datos; metas: Meta[] }) {
           </div>
           <div className="mt-1 flex gap-1.5 sm:gap-3" aria-hidden="true">
             {conKwh.map((m) => (
-              <span key={m.mes} className="min-w-0 flex-1 truncate text-center text-[10px] text-ink-950/65 sm:text-xs">{mesCorto(m.mes)}</span>
+              <span key={m.mes} className="min-w-0 flex-1 truncate text-center text-[10px] text-ink-950/75 sm:text-xs">{mesCorto(m.mes)}</span>
             ))}
           </div>
           {/* La gráfica es decorativa para lectores de pantalla; esta tabla lleva los datos. */}
@@ -116,17 +140,27 @@ export function Estadisticas({ est, metas }: { est: Datos; metas: Meta[] }) {
       {est.meses.length > 0 && (
         <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Tile
+            Icono={Zap}
             label="Promedio al mes"
             valor={est.promedioKwh != null ? `${formatNumber(Math.round(est.promedioKwh))} kWh` : "—"}
             nota={est.promedioValor != null ? pesos(est.promedioValor) : undefined}
           />
           <Tile
+            Icono={ChartColumn}
             label="Contra el mes anterior"
             valor={cambio(est.cambioKwhPct, "Subió", "Bajó")}
+            cambio={tono(est.cambioKwhPct)}
             nota={est.cambioValorPct != null ? `En pesos: ${cambio(est.cambioValorPct, "subió", "bajó")}` : undefined}
           />
-          <Tile label="Tendencia" valor={tendencia ?? "—"} nota={tendencia ? undefined : "Con 3 meses o más"} />
           <Tile
+            Icono={TrendingUp}
+            label="Tendencia"
+            valor={tendencia ?? "—"}
+            cambio={tendencia == null ? null : tendencia === "Estable" ? "igual" : est.tendenciaKwhMes! > 0 ? "sube" : "baja"}
+            nota={tendencia == null ? "Con 3 meses o más" : tendencia === "Estable" ? undefined : est.tendenciaKwhMes! > 0 ? "Tu consumo sube" : "Tu consumo baja"}
+          />
+          <Tile
+            Icono={Gauge}
             label="Tu tarifa"
             valor={est.ultimo?.tarifa != null ? `${formatCOP(Math.round(est.ultimo.tarifa))}/kWh` : "—"}
             nota={est.cambioTarifaPct != null ? `Desde tu primer recibo: ${cambio(est.cambioTarifaPct, "subió", "bajó")}` : undefined}
@@ -135,30 +169,50 @@ export function Estadisticas({ est, metas }: { est: Datos; metas: Meta[] }) {
       )}
 
       {est.mejorMes && est.peorMes && (
-        <p className="mt-3 text-sm text-ink-950/80">
-          Tu mejor mes fue {mesLargo(est.mejorMes.mes)} ({formatNumber(Math.round(est.mejorMes.consumoKwh!))} kWh) y el más alto,{" "}
-          {mesLargo(est.peorMes.mes)} ({formatNumber(Math.round(est.peorMes.consumoKwh!))} kWh).
+        <p className="mt-4 flex gap-2 text-sm text-ink-950/80">
+          <Trophy className="mt-0.5 h-4 w-4 shrink-0 text-leaf-700" aria-hidden="true" />
+          <span>Tu mejor mes fue {mesLargo(est.mejorMes.mes)} ({formatNumber(Math.round(est.mejorMes.consumoKwh!))} kWh) y el más alto,{" "}
+          {mesLargo(est.peorMes.mes)} ({formatNumber(Math.round(est.peorMes.consumoKwh!))} kWh).</span>
         </p>
       )}
 
       {metas.length > 0 && (
         <div className="mt-6 border-t border-ink-950/10 pt-4">
-          <h3 className="text-sm font-semibold text-ink-950">Tus metas</h3>
-          <ul className="mt-3 space-y-3">
-            {metas.map((m) => (
-              <li key={m.id} className="rounded-lg border border-ink-950/10 p-3">
-                <p className="font-semibold text-ink-950">{m.titulo}</p>
-                <p className="mt-0.5 text-sm text-ink-950/80">{m.detalle}</p>
-                {/* La meta del aparato ya dice su ahorro en el detalle. */}
-                {m.ahorroMes != null && m.id !== "aparato" && (
-                  <p className="mt-1 text-sm font-semibold text-leaf-700">Si la cumples: ~{pesos(m.ahorroMes)} al mes (estimado)</p>
-                )}
-              </li>
-            ))}
+          <h3 className="flex items-center gap-2 text-base font-bold text-ink-950">
+            <Target className="h-5 w-5 text-sun-600" aria-hidden="true" />
+            Tus metas
+          </h3>
+          <ul className="mt-3 grid gap-3">
+            {metas.map((m) => {
+              const ultimo = est.ultimo?.consumoKwh ?? null;
+              // Barra: el objetivo como parte del consumo actual (cuánto hay que bajar se ve como el hueco).
+              const progreso = m.objetivoKwh != null && ultimo ? Math.min(100, (m.objetivoKwh / ultimo) * 100) : null;
+              return (
+                <li key={m.id} className="rounded-xl border border-ink-950/10 bg-white p-4">
+                  <p className="font-bold text-ink-950">{m.titulo}</p>
+                  <p className="mt-1 text-sm text-ink-950/80">{m.detalle}</p>
+                  {progreso != null && m.id !== "mantener" && (
+                    <div className="mt-3" aria-hidden="true">
+                      <div className="relative h-2.5 rounded-full bg-ember-500/20">
+                        <div className="h-full rounded-full bg-leaf-500" style={{ width: `${progreso}%` }} />
+                      </div>
+                      <div className="mt-1 flex justify-between text-[11px] text-ink-950/75">
+                        <span>Meta: {formatNumber(Math.round(m.objetivoKwh!))} kWh</span>
+                        <span>Hoy: {formatNumber(Math.round(ultimo!))} kWh</span>
+                      </div>
+                    </div>
+                  )}
+                  {/* La meta del aparato ya dice su ahorro en el detalle. */}
+                  {m.ahorroMes != null && m.id !== "aparato" && (
+                    <p className="mt-2 inline-flex rounded-full bg-leaf-500/15 px-2.5 py-1 text-sm font-bold text-leaf-700">
+                      Ahorras ~{pesos(m.ahorroMes)} al mes (estimado)
+                    </p>
+                  )}
+                </li>
+              );
+            })}
           </ul>
-          <p className={`${ayuda} mt-3`}>
-            Metas calculadas con tus recibos y tus aparatos: diferencia de kWh × tu tarifa. Los recibos pueden cubrir periodos de distinto número de días.
-          </p>
+          <p className={`${ayuda} mt-3`}>Ahorro de cada meta: kWh de diferencia × tu tarifa.</p>
         </div>
       )}
 

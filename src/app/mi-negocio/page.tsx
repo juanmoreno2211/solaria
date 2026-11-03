@@ -1,32 +1,35 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import clsx from "clsx";
+import { Check, ChevronDown, FlaskConical, Lightbulb, MapPin, Receipt, ShieldCheck, Store } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Container } from "@/components/ui/Container";
 import { createClient } from "@/lib/supabase/server";
 import { salir } from "@/app/ingresar/actions";
 import { DATOS_DEPARTAMENTO } from "@/lib/geo/departamentos";
 import { REGION_LABELS } from "@/lib/geo/regions";
-import { aparatoDelCatalogo } from "@/lib/aparatos/catalogo";
+import { CATALOGO_APARATOS, aparatoDelCatalogo } from "@/lib/aparatos/catalogo";
 import { rankingAparatos, type UsoAparato } from "@/lib/aparatos/calculo";
-import { consejosPara } from "@/lib/aparatos/consejos";
+import { consejosPara, type Consejo } from "@/lib/aparatos/consejos";
+import { calcularEstadisticas, calcularMetas } from "@/lib/recibos/estadisticas";
+import { enlaceInvitacion } from "@/lib/invitaciones/enlace";
 import { formatCOP, formatDecimal, formatNumber } from "@/lib/format";
-import { CONEXIONES, HORARIOS, TEXTO_VEREDICTO, TIPOS_NEGOCIO, etiqueta as etiquetaDe } from "@/lib/negocio/opciones";
+import { CONEXIONES, HORARIOS, TEXTO_VEREDICTO, TIPOS_NEGOCIO, esOpcion, etiqueta as etiquetaDe } from "@/lib/negocio/opciones";
 import type { Region } from "@/lib/config/pricing";
 import type { Veredicto } from "@/lib/savings/types";
-import { guardarPerfil, guardarTarifa } from "./actions";
+import { actualizarRecibo, guardarPerfil, guardarTarifa } from "./actions";
 import { cargarMiInvitacion, cargarMiNegocio, tarifaVigente, type AparatoFila } from "./datos";
-import { TarjetaInvitar } from "./componentes/TarjetaInvitar";
-import { enlaceInvitacion } from "@/lib/invitaciones/enlace";
-import { headers } from "next/headers";
 import { ImportarResultado } from "./componentes/ImportarResultado";
-import { FormularioAparato } from "./componentes/FormularioAparato";
-import { FilaAparato } from "./componentes/FilaAparato";
-import { Simulador } from "./componentes/Simulador";
+import { AgregarAparato } from "./componentes/AgregarAparato";
+import { TarjetaAparato } from "./componentes/TarjetaAparato";
 import { RankingVisto } from "./componentes/RankingVisto";
+import { Simulador } from "./componentes/Simulador";
+import { TarjetaInvitar } from "./componentes/TarjetaInvitar";
+import { AbrirSeccion } from "./componentes/AbrirSeccion";
 import { Estadisticas, FormularioRecibo } from "./componentes/Estadisticas";
-import { calcularEstadisticas, calcularMetas } from "@/lib/recibos/estadisticas";
-import { ayuda, botonPrimario, botonSecundario, campo, etiqueta, tarjeta, tituloTarjeta } from "./componentes/estilos";
+import { botonPrimario, botonSecundario, campo, etiqueta, tarjeta, tarjetaAcordeon } from "./componentes/estilos";
 
 export const metadata: Metadata = {
   title: "Mi negocio — SolarIA",
@@ -36,6 +39,10 @@ const DEPARTAMENTOS = Object.keys(DATOS_DEPARTAMENTO).sort((a, b) => a.localeCom
 
 /** Estimados en pesos redondeados a centenas. */
 const pesos = (v: number) => formatCOP(Math.round(v / 100) * 100);
+
+/** Acordeón cerrado: el resumen es un botón grande con su flecha. */
+const resumen =
+  "flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-5 py-3 text-base font-bold text-ink-950 [&::-webkit-details-marker]:hidden";
 
 function mesTexto(fecha: string): string {
   return new Intl.DateTimeFormat("es-CO", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(fecha));
@@ -68,11 +75,67 @@ function deReferencia(a: AparatoFila): boolean {
 
 function Dato({ label, children, nota }: { label: string; children: React.ReactNode; nota?: string }) {
   return (
-    <div>
-      <dt className="text-xs font-medium text-ink-950/65">{label}</dt>
-      <dd className="mt-0.5 text-lg font-semibold tracking-tight text-ink-950 tabular-nums">{children}</dd>
-      {nota && <dd className="text-xs text-ink-950/60">{nota}</dd>}
+    <div className="rounded-xl bg-cream-50 p-3 ring-1 ring-ink-950/5">
+      <dt className="text-xs font-medium text-ink-950/75">{label}</dt>
+      <dd className="mt-0.5 text-base font-bold tracking-tight text-ink-950 tabular-nums">{children}</dd>
+      {nota && <dd className="text-xs text-ink-950/75">{nota}</dd>}
     </div>
+  );
+}
+
+/** ① Agrega 2 aparatos → ② Mira en qué gastas → ③ Mira dónde ahorrar. */
+function FranjaProgreso({ aparatos, etapa, sinRecibo }: { aparatos: number; etapa: 1 | 2; sinRecibo: boolean }) {
+  const pasos = [
+    { n: 1, texto: "Agrega 2 aparatos", nota: `${Math.min(aparatos, 2)} de 2` },
+    { n: 2, texto: "Mira en qué gastas", nota: sinRecibo ? "Escribe tu recibo" : undefined },
+    { n: 3, texto: "Mira dónde ahorrar", nota: undefined },
+  ];
+  return (
+    <nav aria-label="Tu avance" className="rounded-2xl border border-ink-950/10 bg-white p-3 sm:p-4">
+      <ol className="grid grid-cols-3 gap-2">
+        {pasos.map((p) => {
+          const hecho = p.n < etapa;
+          const actual = p.n === etapa;
+          return (
+            <li key={p.n} aria-current={actual ? "step" : undefined} className="flex flex-col items-center gap-1.5 text-center">
+              <span
+                className={clsx(
+                  "flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold",
+                  hecho && "bg-leaf-700 text-white",
+                  actual && "bg-sun-400 text-ink-950 ring-4 ring-sun-400/30",
+                  !hecho && !actual && "bg-cream-100 text-ink-950/75"
+                )}
+              >
+                {hecho ? <Check className="h-4 w-4" aria-hidden="true" /> : p.n}
+              </span>
+              <span className={clsx("text-xs leading-tight sm:text-sm", actual ? "font-bold text-ink-950" : "text-ink-950/75")}>
+                {p.texto}
+                {hecho && <span className="sr-only"> (hecho)</span>}
+              </span>
+              {p.nota && actual && <span className="text-xs font-semibold text-ember-600">{p.nota}</span>}
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
+  );
+}
+
+/** Formulario corto para quien aún no tiene recibo (mes actual por defecto). */
+function ReciboRapido() {
+  return (
+    <form action={actualizarRecibo} className="mt-3 grid grid-cols-2 gap-2">
+      <input type="hidden" name="mes" value={new Date().toISOString().slice(0, 7)} />
+      <label>
+        <span className="mb-1 block text-xs font-semibold text-ink-950">Consumo (kWh)</span>
+        <input name="consumo_kwh" inputMode="decimal" required className={campo} />
+      </label>
+      <label>
+        <span className="mb-1 block text-xs font-semibold text-ink-950">Valor ($)</span>
+        <input name="valor" inputMode="numeric" required className={campo} />
+      </label>
+      <button type="submit" className={`${botonPrimario} col-span-2`}>Guardar recibo</button>
+    </form>
   );
 }
 
@@ -81,23 +144,35 @@ export default async function MiNegocioPage() {
   // proxy.ts ya redirige, pero la página no depende de eso para proteger los datos.
   const { data: sesion } = await supabase.auth.getClaims();
   if (!sesion?.claims) redirect("/ingresar?siguiente=/mi-negocio");
-  const correo = typeof sesion.claims.email === "string" ? sesion.claims.email : "";
 
-  const [{ negocio, recibo, recibos, aparatos }, invitacion, cabeceras] = await Promise.all([
+  const [{ negocio, recibo, recibos, aparatos }, invitacion, cabeceras, { count: vecesRanking }] = await Promise.all([
     cargarMiNegocio(supabase),
     cargarMiInvitacion(supabase),
     headers(),
+    // Solo para la franja de progreso: ¿ya vio sus aparatos con porcentajes?
+    supabase.from("eventos").select("id", { count: "exact", head: true }).eq("evento", "ranking_visto"),
   ]);
   // El enlace usa el dominio por el que entró el usuario (local o producción).
   const host = cabeceras.get("x-forwarded-host") ?? cabeceras.get("host");
   const origen = host ? `${cabeceras.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https")}://${host}` : process.env.NEXT_PUBLIC_SITE_URL ?? "";
+
   const tarifa = tarifaVigente(negocio, recibo);
   const tarifaManual = !recibo?.tarifa_kwh && negocio?.tarifa_manual_kwh ? negocio.tarifa_manual_kwh : null;
-  const usos = aparatos.map(usoDeFila);
-  const ranking = rankingAparatos(usos, tarifa, recibo?.consumo_kwh ?? null);
+  const consumoRecibo = recibo?.consumo_kwh ?? null;
+  const ranking = rankingAparatos(aparatos.map(usoDeFila), tarifa, consumoRecibo);
   const filasConConsumo = ranking.filas.filter((f) => f.kwhMes > 0);
   const principal = filasConConsumo[0];
-  const consejos = principal ? consejosPara(principal.aparato, tarifa) : [];
+  const conPorcentajes = consumoRecibo != null && consumoRecibo > 0;
+  // Barras: parte del recibo si lo hay; si no, relativas al aparato que más gasta.
+  const baseBarra = conPorcentajes ? Math.max(consumoRecibo, ranking.kwhAparatos) : principal?.kwhMes ?? 1;
+
+  // Dónde ahorrar: el consejo con ahorro en pesos del aparato que más pesa entre
+  // los que se pueden ajustar (a una nevera no se le pide usarla menos horas).
+  // Si ninguno tiene ahorro cuantificable, el primer consejo del que más pesa.
+  const todosConsejos = filasConConsumo.flatMap((f) => consejosPara(f.aparato, tarifa).map((c) => ({ aparato: f.aparato.nombre, consejo: c })));
+  const consejoPrincipal = todosConsejos.find((x) => x.consejo.ahorroMes != null && x.consejo.ahorroMes > 0) ?? todosConsejos[0];
+  const masConsejos: { aparato: string; consejo: Consejo }[] = todosConsejos.filter((x) => x !== consejoPrincipal).slice(0, 5);
+
   const estadisticas = calcularEstadisticas(
     recibos.map((r) => ({ id: r.id, mes: r.mes, consumoKwh: r.consumo_kwh, valor: r.valor, creadoEn: r.creado_en }))
   );
@@ -111,109 +186,250 @@ export default async function MiNegocioPage() {
     tarifa,
     ajustable?.consejo ? { nombre: ajustable.nombre, texto: ajustable.consejo.texto, ahorroMes: ajustable.consejo.ahorroMes! } : null
   );
-  const maxBarra = recibo?.consumo_kwh ? Math.max(recibo.consumo_kwh, ranking.kwhAparatos) : principal?.kwhMes ?? 1;
+
   const veredicto = negocio?.resultado_veredicto as Veredicto | null;
-  const perfilCompleto = Boolean(negocio?.tipo_negocio && negocio.departamento && negocio.horario && negocio.conexion);
+  const tipoNegocio = esOpcion(TIPOS_NEGOCIO, negocio?.tipo_negocio) ? negocio.tipo_negocio : null;
+  const mostrarProgreso = !(aparatos.length >= 2 && (vecesRanking ?? 0) > 0);
 
   return (
     <>
       <Navbar cuenta={{ nombre: negocio?.nombre ?? null }} />
-      <main className="flex-1 bg-cream-50 py-10 sm:py-12">
-        <Container className="max-w-3xl">
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+      <main className="flex-1 bg-cream-50 pb-16 pt-8 sm:pt-12">
+        <Container className="max-w-2xl">
+          {/* Encabezado compacto. */}
+          <header className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sun-600">SolarIA Control</p>
-              <h1 className="text-2xl font-semibold tracking-tight text-ink-950">{negocio?.nombre || "Mi negocio"}</h1>
-              <p className="truncate text-sm text-ink-950/65">{correo}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-ember-600">SolarIA Control</p>
+              <h1 className="mt-1 text-2xl font-bold tracking-[-0.02em] text-ink-950 sm:text-3xl">{negocio?.nombre || "Mi negocio"}</h1>
+              {(negocio?.municipio || negocio?.departamento || tipoNegocio) && (
+                <ul className="mt-2 flex flex-wrap gap-1.5 text-xs font-semibold text-ink-950">
+                  {(negocio?.municipio || negocio?.departamento) && (
+                    <li className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 ring-1 ring-ink-950/10">
+                      <MapPin className="h-3 w-3" aria-hidden="true" />
+                      {negocio?.municipio || negocio?.departamento}
+                    </li>
+                  )}
+                  {tipoNegocio && <li className="rounded-full bg-white px-2.5 py-1 ring-1 ring-ink-950/10">{etiquetaDe(TIPOS_NEGOCIO, tipoNegocio)}</li>}
+                </ul>
+              )}
+              <p className="mt-1 text-sm text-ink-950/80">
+                {recibo ? (
+                  <>
+                    Último recibo:{" "}
+                    <span className="font-semibold text-ink-950 tabular-nums">
+                      {[recibo.consumo_kwh != null && `${formatNumber(recibo.consumo_kwh)} kWh`, recibo.valor != null && formatCOP(recibo.valor)].filter(Boolean).join(" · ")}
+                    </span>
+                    {" · "}
+                  </>
+                ) : (
+                  "Sin recibo todavía · "
+                )}
+                <AbrirSeccion destino="mi-recibo" className="inline-flex min-h-11 items-center font-semibold text-ink-950 underline underline-offset-4">
+                  {recibo ? "Editar" : "Escribirlo"}
+                </AbrirSeccion>
+              </p>
             </div>
             <form action={salir}>
-              <button type="submit" className={botonSecundario}>Salir</button>
+              <button type="submit" className="min-h-11 rounded-md px-3 text-sm font-semibold text-ink-950/80 hover:bg-ink-950/5">Salir</button>
             </form>
+          </header>
+
+          <div className="mt-4">
+            <ImportarResultado />
           </div>
 
-          <ImportarResultado />
+          <div className="space-y-5">
+            {mostrarProgreso && <FranjaProgreso aparatos={aparatos.length} etapa={aparatos.length < 2 ? 1 : 2} sinRecibo={!conPorcentajes} />}
 
-          <div className="space-y-6">
-            {veredicto && (
-              <section aria-labelledby="t-resultado" className="rounded-xl bg-ink-950 p-5 text-white sm:p-6">
-                <h2 id="t-resultado" className="text-xs font-semibold text-white/70">
-                  Tu resultado de la calculadora
-                  {negocio?.resultado_guardado_en && ` · ${new Intl.DateTimeFormat("es-CO", { dateStyle: "medium" }).format(new Date(negocio.resultado_guardado_en))}`}
-                </h2>
-                <p className="mt-2 text-xl font-semibold tracking-tight text-sun-300">{TEXTO_VEREDICTO[veredicto]}</p>
-                <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
-                  {negocio?.resultado_kwp != null && (
-                    <div>
-                      <dt className="text-xs text-white/70">Sistema base</dt>
-                      <dd className="text-lg font-semibold tabular-nums">{formatDecimal(negocio.resultado_kwp)} kWp</dd>
+            {/* Tus aparatos: el bloque principal. */}
+            <section aria-labelledby="t-aparatos" className={tarjeta}>
+              <h2 id="t-aparatos" className="text-xl font-bold tracking-[-0.01em] text-ink-950">Tus aparatos</h2>
+              <p className="mt-0.5 text-sm text-ink-950/75">
+                {aparatos.length > 0 ? "Del que más cuesta al que menos." : "Mira cuánto gasta cada uno."}
+              </p>
+
+              <div className="mt-4">
+                <AgregarAparato hayAparatos={aparatos.length > 0} />
+              </div>
+
+              {aparatos.length > 0 && (
+                <>
+                  {!conPorcentajes && (
+                    <div className="mt-5 rounded-xl bg-sun-400/15 p-4">
+                      <p className="text-sm font-semibold text-ink-950">Escribe tu último recibo para ver el costo en pesos.</p>
+                      <ReciboRapido />
                     </div>
                   )}
-                  {negocio?.resultado_ahorro_mensual != null && (
-                    <div>
-                      <dt className="text-xs text-white/70">Ahorro al mes</dt>
-                      <dd className="text-lg font-semibold tabular-nums">{pesos(negocio.resultado_ahorro_mensual)}</dd>
-                    </div>
-                  )}
-                  <div>
-                    <dt className="text-xs text-white/70">Retorno</dt>
-                    <dd className="text-lg font-semibold tabular-nums">{retornoTexto(negocio?.resultado_retorno_meses ?? null)}</dd>
+
+                  <div className="mt-5">
+                    {/* ranking_visto: cuando la lista con porcentajes entra en pantalla. */}
+                    {conPorcentajes && <RankingVisto aparatos={aparatos.length} />}
+                    <ol className="space-y-3">
+                      {ranking.filas.map((f, i) => (
+                        <TarjetaAparato
+                          key={f.aparato.id}
+                          aparato={f.aparato.fila}
+                          kwhMes={f.kwhMes}
+                          costoMes={f.costoMes}
+                          porcentaje={f.porcentajeRecibo}
+                          anchoBarra={(f.kwhMes / baseBarra) * 100}
+                          primero={i === 0 && f.kwhMes > 0}
+                          deReferencia={deReferencia(f.aparato.fila)}
+                          generaEnergia={Boolean(aparatoDelCatalogo(f.aparato.tipo)?.generaEnergia)}
+                        />
+                      ))}
+                    </ol>
                   </div>
-                </dl>
-                <p className="mt-4 text-xs text-white/70">Estimado de la calculadora con los supuestos de ese día. La cifra final la da el instalador.</p>
-                {(veredicto === "conviene" || veredicto === "comparar") && (
-                  <Link href="/#calculadora" className="mt-4 inline-flex min-h-11 items-center justify-center rounded-md bg-white px-5 text-sm font-semibold text-ink-950 hover:bg-cream-100">
-                    Pedir cotización
-                  </Link>
+
+                  {ranking.porcentajeExplicado != null && (
+                    <p className="mt-4 text-sm text-ink-950/80">
+                      Tus aparatos explican <span className="font-bold text-ink-950">{formatDecimal(ranking.porcentajeExplicado)} %</span> de tu consumo.
+                      {ranking.porcentajeExplicado > 100 && " Suman más que tu recibo: revisa las horas o la potencia."}
+                    </p>
+                  )}
+                </>
+              )}
+
+              <details className="mt-4 rounded-xl border border-ink-950/10">
+                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-4 text-sm font-semibold text-ink-950 [&::-webkit-details-marker]:hidden">
+                  ¿Cómo se calcula?
+                  <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                </summary>
+                <div className="space-y-2 px-4 pb-4 text-sm text-ink-950/80">
+                  <p>kWh al mes = potencia en kW × horas al día × días al mes × parte del tiempo a plena potencia × cantidad.</p>
+                  <p>
+                    Costo al mes = kWh × tu tarifa{tarifa ? ` (${formatCOP(Math.round(tarifa))}/kWh)` : ""}, que sale de tu recibo (valor ÷ kWh) o de la que escribas.
+                    Todo es estimado.
+                  </p>
+                  <p>“Parte del tiempo a plena potencia”: una nevera o un aire prenden y apagan el compresor; un bombillo o un computador trabajan el 100 %.</p>
+                  <p>“Valor de referencia” quiere decir que usamos los valores del catálogo y no los de tu equipo. Corrígelos con la placa o la etiqueta energética.</p>
+                  <p className="font-semibold text-ink-950">Fuentes del catálogo</p>
+                  <ul className="space-y-1">
+                    {CATALOGO_APARATOS.map((a) => (
+                      <li key={a.tipo}><span className="font-semibold text-ink-950">{a.nombre}:</span> {a.fuente}</li>
+                    ))}
+                  </ul>
+                </div>
+              </details>
+            </section>
+
+            {consejoPrincipal && (
+              <section aria-labelledby="t-ahorro" className="rounded-2xl bg-leaf-500/10 p-5 ring-1 ring-leaf-600/20 sm:p-6">
+                <h2 id="t-ahorro" className="flex items-center gap-2 text-lg font-bold text-ink-950">
+                  <Lightbulb className="h-5 w-5 text-leaf-700" aria-hidden="true" />
+                  Dónde ahorrar
+                </h2>
+                <p className="mt-2 text-base text-ink-950">{consejoPrincipal.consejo.texto}</p>
+                {masConsejos.length > 0 && (
+                  <details className="mt-2">
+                    <summary className="inline-flex min-h-11 cursor-pointer list-none items-center text-sm font-semibold text-ink-950 underline underline-offset-4 [&::-webkit-details-marker]:hidden">
+                      Ver más consejos
+                    </summary>
+                    <ul className="mt-1 space-y-2 text-sm text-ink-950/85">
+                      {masConsejos.map((m) => (
+                        <li key={`${m.aparato}-${m.consejo.id}`} className="flex gap-2">
+                          <span aria-hidden="true" className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-leaf-700" />
+                          {m.consejo.texto}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
                 )}
               </section>
             )}
 
-            <section aria-labelledby="t-recibo" className={tarjeta}>
-              <h2 id="t-recibo" className={tituloTarjeta}>Mi recibo</h2>
-              {recibo ? (
-                <>
-                  <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                    <Dato label="Consumo">{recibo.consumo_kwh != null ? `${formatNumber(recibo.consumo_kwh)} kWh` : "—"}</Dato>
-                    <Dato label="Valor">{recibo.valor != null ? formatCOP(recibo.valor) : "—"}</Dato>
-                    <Dato label="Tarifa" nota="valor ÷ kWh">{recibo.tarifa_kwh != null ? `${formatCOP(Math.round(recibo.tarifa_kwh))}/kWh` : "—"}</Dato>
-                    <Dato label="Mes">{mesTexto(recibo.mes)}</Dato>
-                  </dl>
-                  {recibo.origen === "calculadora" && <p className={ayuda}>Datos que escribiste en la calculadora.</p>}
-                </>
-              ) : (
-                <p className="mt-2 text-sm text-ink-950/75">Escribe los datos de tu último recibo de luz para calcular cuánto te cuesta cada aparato.</p>
-              )}
+            <details className={tarjetaAcordeon}>
+              <summary className={resumen}>
+                <span className="flex items-center gap-2.5">
+                  <FlaskConical className="h-5 w-5 text-ink-800" aria-hidden="true" />
+                  ¿Y si agrego un aparato?
+                </span>
+                <ChevronDown className="h-5 w-5 shrink-0" aria-hidden="true" />
+              </summary>
+              <div className="px-5 pb-5">
+                <p className="mb-4 text-sm text-ink-950/75">Mira cuánto subiría tu recibo. No se guarda.</p>
+                <Simulador />
+              </div>
+            </details>
 
-              <details className="group mt-4" open={!recibo}>
-                <summary className={`${botonSecundario} cursor-pointer list-none [&::-webkit-details-marker]:hidden`}>
-                  {recibo ? "Actualizar recibo" : "Escribir mi recibo"}
-                </summary>
-                <div className="mt-4">
-                  <FormularioRecibo />
+            <TarjetaInvitar
+              enlace={invitacion.codigo ? enlaceInvitacion(origen, invitacion.codigo) : null}
+              aperturas={invitacion.aperturas}
+              cuentas={invitacion.cuentas}
+            />
+
+            {/* Todo lo del recibo, cerrado por defecto. */}
+            <details id="mi-recibo" className={clsx(tarjetaAcordeon, "scroll-mt-24")}>
+              <summary className={resumen}>
+                <span className="flex items-center gap-2.5">
+                  <Receipt className="h-5 w-5 text-ink-800" aria-hidden="true" />
+                  Mi recibo, historial y metas
+                </span>
+                <ChevronDown className="h-5 w-5 shrink-0" aria-hidden="true" />
+              </summary>
+              <div className="space-y-6 px-5 pb-6">
+                <div>
+                  <h3 className="text-base font-bold text-ink-950">Tu recibo actual</h3>
+                  {recibo ? (
+                    <dl className="mt-3 grid grid-cols-2 gap-2">
+                      <Dato label="Consumo">{recibo.consumo_kwh != null ? `${formatNumber(recibo.consumo_kwh)} kWh` : "—"}</Dato>
+                      <Dato label="Valor">{recibo.valor != null ? formatCOP(recibo.valor) : "—"}</Dato>
+                      <Dato label="Tarifa" nota="valor ÷ kWh">{recibo.tarifa_kwh != null ? `${formatCOP(Math.round(recibo.tarifa_kwh))}/kWh` : "—"}</Dato>
+                      <Dato label="Mes"><span className="first-letter:uppercase">{mesTexto(recibo.mes)}</span></Dato>
+                    </dl>
+                  ) : (
+                    <p className="mt-1 text-sm text-ink-950/75">Todavía no has guardado un recibo.</p>
+                  )}
+                  <div className="mt-4">
+                    <FormularioRecibo boton={recibo ? "Actualizar recibo" : "Guardar recibo"} />
+                  </div>
+                  {!recibo?.tarifa_kwh && (
+                    <form action={guardarTarifa} className="mt-4 border-t border-ink-950/10 pt-4">
+                      <label className="block max-w-xs">
+                        <span className={etiqueta}>O escribe tu tarifa ($ por kWh)</span>
+                        <input name="tarifa_kwh" inputMode="decimal" defaultValue={tarifaManual ?? ""} className={campo} />
+                      </label>
+                      <button type="submit" className={`${botonSecundario} mt-3`}>Guardar tarifa</button>
+                    </form>
+                  )}
                 </div>
-              </details>
 
-              {!recibo?.tarifa_kwh && (
-                <form action={guardarTarifa} className="mt-5 border-t border-ink-950/10 pt-4">
-                  <label className="block max-w-xs">
-                    <span className={etiqueta}>O escribe tu tarifa ($ por kWh)</span>
-                    <input name="tarifa_kwh" inputMode="decimal" defaultValue={tarifaManual ?? ""} className={campo} />
-                  </label>
-                  <button type="submit" className={`${botonSecundario} mt-3`}>Guardar tarifa</button>
-                  {tarifaManual && <p className={ayuda}>Usamos la tarifa que escribiste: {formatCOP(Math.round(tarifaManual))}/kWh.</p>}
-                </form>
-              )}
-            </section>
+                <div className="border-t border-ink-950/10 pt-5">
+                  <Estadisticas est={estadisticas} metas={metas} />
+                </div>
 
-            <Estadisticas est={estadisticas} metas={metas} />
+                {veredicto && (
+                  <div className="border-t border-ink-950/10 pt-5">
+                    <h3 className="text-base font-bold text-ink-950">Tu resultado de la calculadora</h3>
+                    <p className="mt-1 text-sm font-semibold text-ink-950">{TEXTO_VEREDICTO[veredicto]}</p>
+                    <p className="mt-1 text-sm text-ink-950/75">
+                      {[
+                        negocio?.resultado_kwp != null && `Sistema de ${formatDecimal(negocio.resultado_kwp)} kWp`,
+                        negocio?.resultado_ahorro_mensual != null && `ahorro de ~${pesos(negocio.resultado_ahorro_mensual)} al mes`,
+                        `retorno: ${retornoTexto(negocio?.resultado_retorno_meses ?? null)}`,
+                      ].filter(Boolean).join(" · ")}
+                      . Estimado de la calculadora{negocio?.resultado_guardado_en ? ` del ${new Intl.DateTimeFormat("es-CO", { dateStyle: "medium" }).format(new Date(negocio.resultado_guardado_en))}` : ""}.
+                    </p>
+                    {veredicto === "conviene" && (
+                      <Link href="/#calculadora" className={`${botonPrimario} mt-3`}>Pedir cotización</Link>
+                    )}
+                  </div>
+                )}
+              </div>
+            </details>
 
-            <section aria-labelledby="t-perfil" className={tarjeta}>
-              <h2 id="t-perfil" className={tituloTarjeta}>Tu negocio</h2>
-              {negocio?.region && <p className="mt-1 text-sm text-ink-950/65">Región {REGION_LABELS[negocio.region as Region] ?? negocio.region}</p>}
-              <details className="mt-4" open={!perfilCompleto}>
-                <summary className={`${botonSecundario} cursor-pointer list-none [&::-webkit-details-marker]:hidden`}>
-                  {perfilCompleto ? "Editar datos del negocio" : "Completar datos del negocio"}
-                </summary>
+            <details id="datos-negocio" className={clsx(tarjetaAcordeon, "scroll-mt-24")}>
+              <summary className={resumen}>
+                <span className="flex items-center gap-2.5">
+                  <Store className="h-5 w-5 text-ink-800" aria-hidden="true" />
+                  Datos de tu negocio
+                </span>
+                <ChevronDown className="h-5 w-5 shrink-0" aria-hidden="true" />
+              </summary>
+              <div className="px-5 pb-6">
+                <p className="text-sm text-ink-950/75">
+                  {negocio?.region ? `Región ${REGION_LABELS[negocio.region as Region] ?? negocio.region}. ` : ""}Con estos datos simulamos si te convienen los paneles.
+                </p>
                 <form action={guardarPerfil} className="mt-4 grid gap-3 sm:grid-cols-2">
                   <label className="sm:col-span-2">
                     <span className={etiqueta}>Nombre del negocio (opcional)</span>
@@ -255,112 +471,13 @@ export default async function MiNegocioPage() {
                     <button type="submit" className={botonPrimario}>Guardar</button>
                   </div>
                 </form>
-              </details>
-              {perfilCompleto && (
-                <p className="mt-3 text-sm text-ink-950/75">
-                  {etiquetaDe(TIPOS_NEGOCIO, negocio?.tipo_negocio)} · {negocio?.municipio ? `${negocio.municipio}, ` : ""}{negocio?.departamento} · {etiquetaDe(HORARIOS, negocio?.horario)} · {etiquetaDe(CONEXIONES, negocio?.conexion)}
-                </p>
-              )}
-            </section>
+              </div>
+            </details>
 
-            <section aria-labelledby="t-aparatos" className={tarjeta}>
-              <h2 id="t-aparatos" className={tituloTarjeta}>Tus aparatos</h2>
-              {aparatos.length > 0 ? (
-                <ul className="mt-2 divide-y divide-ink-950/10">
-                  {ranking.filas.map((f) => (
-                    <FilaAparato key={f.aparato.id} aparato={f.aparato.fila} kwhMes={f.kwhMes} deReferencia={deReferencia(f.aparato.fila)} />
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-2 text-sm text-ink-950/75">Agrega los aparatos que usas en tu negocio. Empieza por los que pasan más tiempo prendidos.</p>
-              )}
-              <details className="mt-4" open={aparatos.length === 0}>
-                <summary className={`${botonPrimario} cursor-pointer list-none [&::-webkit-details-marker]:hidden`}>Agregar aparato</summary>
-                <div className="mt-4">
-                  <FormularioAparato />
-                </div>
-              </details>
-            </section>
-
-            {filasConConsumo.length > 0 && (
-              <section aria-labelledby="t-ranking" className={tarjeta}>
-                <RankingVisto aparatos={aparatos.length} />
-                <h2 id="t-ranking" className={tituloTarjeta}>En qué gastas más</h2>
-                {ranking.porcentajeExplicado != null ? (
-                  <p className="mt-1 text-sm text-ink-950/80">
-                    Tus aparatos explican <span className="font-semibold text-ink-950">{formatDecimal(ranking.porcentajeExplicado)} %</span> de tu consumo
-                    ({formatDecimal(ranking.kwhAparatos)} de {formatNumber(recibo!.consumo_kwh!)} kWh).
-                  </p>
-                ) : (
-                  <p className="mt-1 text-sm text-ink-950/80">Guarda el consumo de tu recibo para ver qué parte explica cada aparato.</p>
-                )}
-                {ranking.porcentajeExplicado != null && ranking.porcentajeExplicado > 100 && (
-                  <p className="mt-1 text-sm text-ink-950/80">Tus aparatos suman más de lo que marca el recibo: revisa las horas o la potencia de alguno.</p>
-                )}
-
-                <ol className="mt-5 space-y-4">
-                  {filasConConsumo.map((f) => (
-                    <li key={f.aparato.id}>
-                      <div className="flex items-baseline justify-between gap-3 text-sm">
-                        <span className="min-w-0 font-semibold text-ink-950">{f.aparato.cantidad} × {f.aparato.nombre}</span>
-                        <span className="shrink-0 tabular-nums text-ink-950">
-                          {f.costoMes != null ? `~${pesos(f.costoMes)}` : `${formatDecimal(f.kwhMes)} kWh`}
-                          {f.porcentajeRecibo != null && <span className="text-ink-950/65"> · {formatDecimal(f.porcentajeRecibo)} %</span>}
-                        </span>
-                      </div>
-                      <div className="mt-1.5 h-2.5 rounded-full bg-ink-950/8" aria-hidden="true">
-                        <div className="h-full rounded-full bg-sun-500" style={{ width: `${Math.max(1, Math.min(100, (f.kwhMes / maxBarra) * 100))}%` }} />
-                      </div>
-                    </li>
-                  ))}
-                  {ranking.kwhOtros != null && ranking.kwhOtros > 0 && (
-                    <li>
-                      <div className="flex items-baseline justify-between gap-3 text-sm">
-                        <span className="font-semibold text-ink-950/75">Otros</span>
-                        <span className="tabular-nums text-ink-950/75">
-                          {ranking.costoOtros != null ? `~${pesos(ranking.costoOtros)}` : `${formatDecimal(ranking.kwhOtros)} kWh`}
-                          {" · "}{formatDecimal(100 - ranking.porcentajeExplicado!)} %
-                        </span>
-                      </div>
-                      <div className="mt-1.5 h-2.5 rounded-full bg-ink-950/8" aria-hidden="true">
-                        <div className="h-full rounded-full bg-stone-400" style={{ width: `${Math.max(1, (ranking.kwhOtros / maxBarra) * 100)}%` }} />
-                      </div>
-                    </li>
-                  )}
-                </ol>
-                <p className={`${ayuda} mt-4`}>
-                  Costos al mes estimados: potencia × horas × días × parte del tiempo a plena potencia × cantidad × tu tarifa
-                  {tarifa ? ` (${formatCOP(Math.round(tarifa))}/kWh)` : ""}. Los aparatos marcados “valor de referencia” usan cifras del catálogo, no las de tu equipo.
-                </p>
-
-                {consejos.length > 0 && (
-                  <div className="mt-5 border-t border-ink-950/10 pt-4">
-                    <h3 className="text-sm font-semibold text-ink-950">Dónde ahorrar: {principal!.aparato.nombre.toLowerCase()}</h3>
-                    <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-ink-950/85">
-                      {consejos.map((c) => <li key={c.id}>{c.texto}</li>)}
-                    </ul>
-                  </div>
-                )}
-              </section>
-            )}
-
-            <section aria-labelledby="t-simulador" className={tarjeta}>
-              <h2 id="t-simulador" className={tituloTarjeta}>¿Y si agrego…?</h2>
-              <p className="mt-1 mb-4 text-sm text-ink-950/75">Mira cuánto subiría tu recibo con un aparato nuevo. No se guarda.</p>
-              <Simulador />
-            </section>
-
-            <TarjetaInvitar
-              enlace={invitacion.codigo ? enlaceInvitacion(origen, invitacion.codigo) : null}
-              aperturas={invitacion.aperturas}
-              cuentas={invitacion.cuentas}
-            />
-
-            <section aria-labelledby="t-datos" className="rounded-xl border border-ink-950/10 bg-cream-100/60 p-5 text-sm text-ink-950/80">
-              <h2 id="t-datos" className="font-semibold text-ink-950">Tus datos</h2>
-              <p className="mt-1">Guardamos solo tu consumo y tu valor, no la foto de tu recibo.</p>
-              <p className="mt-1">Otras cuentas no pueden ver tus datos. Los usamos para calcular en qué gastas y dónde ahorrar.</p>
-            </section>
+            <p className="flex items-start gap-2 px-1 text-sm text-ink-950/80">
+              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-leaf-700" aria-hidden="true" />
+              Guardamos solo tu consumo y tu valor, no la foto de tu recibo. Otras cuentas no ven tus datos.
+            </p>
           </div>
         </Container>
       </main>

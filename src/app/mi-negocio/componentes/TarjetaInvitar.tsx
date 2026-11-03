@@ -1,13 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import clsx from "clsx";
 import { enlaceWhatsApp } from "@/lib/invitaciones/enlace";
 import { formatNumber } from "@/lib/format";
 import { crearInvitacion } from "../actions";
-import { ayuda, botonPrimario, botonSecundario, campo, tarjeta, tituloTarjeta } from "./estilos";
+import { ayuda, botonPrimario, botonSecundario, campo, tarjeta } from "./estilos";
+import { Copy, MessageCircle, UserPlus } from "lucide-react";
+import { TituloTarjeta } from "./Titulo";
 
 export function TarjetaInvitar({ enlace, aperturas, cuentas }: { enlace: string | null; aperturas: number; cuentas: number }) {
   const [copiado, setCopiado] = useState<"si" | "no" | null>(null);
+  const [destacada, setDestacada] = useState(false);
+  const ref = useRef<HTMLElement>(null);
+
+  // Llegar desde la calculadora (?invitar=1), un aviso o #invitar resalta la tarjeta.
+  useEffect(() => {
+    let temporizador: ReturnType<typeof setTimeout>;
+    const destacar = () => {
+      ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      setDestacada(true);
+      clearTimeout(temporizador);
+      temporizador = setTimeout(() => setDestacada(false), 4000);
+    };
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("invitar") === "1" || window.location.hash === "#invitar") {
+      // Espera a que la página termine de pintarse antes de bajar.
+      temporizador = setTimeout(destacar, 300);
+    }
+    window.addEventListener("solaria:invitar", destacar);
+    return () => {
+      window.removeEventListener("solaria:invitar", destacar);
+      clearTimeout(temporizador);
+    };
+  }, []);
 
   async function copiar() {
     if (!enlace) return;
@@ -22,23 +48,24 @@ export function TarjetaInvitar({ enlace, aperturas, cuentas }: { enlace: string 
   }
 
   return (
-    <section aria-labelledby="t-invitar" className={tarjeta}>
-      <h2 id="t-invitar" className={tituloTarjeta}>Invitar a mi socio</h2>
-      <p className="mt-1 text-sm text-ink-950/75">
-        Comparte tu enlace con otro dueño de negocio para que vea en qué gasta más energía el suyo. No verá tus datos.
-      </p>
+    <section ref={ref} id="invitar" aria-labelledby="t-invitar" className={clsx(tarjeta, "scroll-mt-24 transition-shadow duration-500", destacada && "ring-4 ring-sun-500/60")}>
+      <TituloTarjeta id="t-invitar" Icono={UserPlus} tono="hoja" subtitulo="Comparte tu enlace con otro dueño de negocio. No verá tus datos.">
+        Invitar a mi socio
+      </TituloTarjeta>
 
       {enlace ? (
         <>
           <label className="mt-4 block">
-            <span className="mb-1.5 block text-sm font-semibold text-ink-950">Tu enlace</span>
+            <span className="sr-only">Tu enlace</span>
             <input id="enlace-invitacion" readOnly value={enlace} onFocus={(e) => e.currentTarget.select()} className={campo} />
           </label>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row">
             <a href={enlaceWhatsApp(enlace)} target="_blank" rel="noopener noreferrer" className={botonPrimario}>
+              <MessageCircle className="h-4 w-4" aria-hidden="true" />
               Compartir por WhatsApp
             </a>
             <button type="button" onClick={copiar} className={botonSecundario}>
+              <Copy className="h-4 w-4" aria-hidden="true" />
               Copiar enlace
             </button>
           </div>
@@ -46,21 +73,17 @@ export function TarjetaInvitar({ enlace, aperturas, cuentas }: { enlace: string 
             {copiado === "si" && "Enlace copiado."}
             {copiado === "no" && "No pudimos copiarlo: selecciona el enlace y cópialo a mano."}
           </p>
-          <dl className="mt-4 grid grid-cols-2 gap-3">
-            <div className="rounded-lg bg-cream-50 p-3">
-              <dt className="text-xs font-medium text-ink-950/65">Veces que se abrió</dt>
-              <dd className="text-lg font-semibold tabular-nums text-ink-950">{formatNumber(aperturas)}</dd>
-            </div>
-            <div className="rounded-lg bg-cream-50 p-3">
-              <dt className="text-xs font-medium text-ink-950/65">Cuentas creadas con él</dt>
-              <dd className="text-lg font-semibold tabular-nums text-ink-950">{formatNumber(cuentas)}</dd>
-            </div>
-          </dl>
-          <p className={ayuda}>Contamos una vez cada navegador que abre el enlace; tus propias visitas con tu sesión no cuentan.</p>
+          <p className="mt-2 text-sm text-ink-950/75">
+            Se abrió <span className="font-semibold text-ink-950 tabular-nums">{formatNumber(aperturas)}</span> {aperturas === 1 ? "vez" : "veces"} ·{" "}
+            <span className="font-semibold text-ink-950 tabular-nums">{formatNumber(cuentas)}</span> {cuentas === 1 ? "cuenta creada" : "cuentas creadas"}
+          </p>
         </>
       ) : (
         <form action={crearInvitacion} className="mt-4">
-          <button type="submit" className={botonPrimario}>Invitar a mi socio</button>
+          <button type="submit" className={botonPrimario}>
+            <UserPlus className="h-4 w-4" aria-hidden="true" />
+            Invitar a mi socio
+          </button>
         </form>
       )}
     </section>

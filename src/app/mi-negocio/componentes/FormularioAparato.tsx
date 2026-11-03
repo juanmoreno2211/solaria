@@ -6,6 +6,7 @@ import { DIAS_MES_DEFECTO } from "@/lib/aparatos/calculo";
 import { guardarAparato } from "../actions";
 import type { AparatoFila } from "../datos";
 import { botonPrimario } from "./estilos";
+import { AvisoInvitar } from "./AvisoInvitar";
 import { CamposAparato, VALORES_VACIOS, valoresDeCatalogo, type ValoresAparato } from "./CamposAparato";
 
 function valoresDeFila(a: AparatoFila): ValoresAparato {
@@ -24,6 +25,7 @@ function valoresDeFila(a: AparatoFila): ValoresAparato {
 /** Agregar (sin `aparato`) o editar un aparato guardado. */
 export function FormularioAparato({ aparato, onListo }: { aparato?: AparatoFila; onListo?: () => void }) {
   const idBase = useId();
+  const [agregado, setAgregado] = useState(false);
   const [valores, setValores] = useState<ValoresAparato>(() =>
     aparato ? valoresDeFila(aparato) : valoresDeCatalogo("nevera")
   );
@@ -32,7 +34,10 @@ export function FormularioAparato({ aparato, onListo }: { aparato?: AparatoFila;
     <form
       action={async (formData) => {
         await guardarAparato(formData);
-        if (!aparato) setValores({ ...VALORES_VACIOS, ...valoresDeCatalogo("nevera") });
+        if (!aparato) {
+          setValores({ ...VALORES_VACIOS, ...valoresDeCatalogo("nevera") });
+          setAgregado(true);
+        }
         onListo?.();
       }}
       className="space-y-4"
@@ -42,6 +47,7 @@ export function FormularioAparato({ aparato, onListo }: { aparato?: AparatoFila;
       <button type="submit" className={`${botonPrimario} w-full sm:w-auto`}>
         {aparato ? "Guardar cambios" : "Agregar aparato"}
       </button>
+      {agregado && <AvisoInvitar />}
     </form>
   );
 }
