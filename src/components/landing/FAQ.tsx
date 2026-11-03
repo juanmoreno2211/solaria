@@ -10,27 +10,26 @@ import clsx from "clsx";
 const PREGUNTAS = [
   {
     q: "¿Para qué tipo de negocios sirve?",
-    a: "Para micronegocios que dependen de la luz: tiendas, supermercados, restaurantes, consultorios, talleres, ferreterías y fincas, entre otros. No está pensado para viviendas.",
+    a: "Está pensado especialmente para microempresas y pequeños negocios en Colombia que dependen de la energía eléctrica: tiendas, supermercados, restaurantes, consultorios, talleres, ferreterías y fincas, entre otros. Aunque nos enfocamos en ellos, cualquier negocio que quiera entender si la energía solar le conviene puede usar SolarIA.",
   },
   {
-    q: "¿Qué tan precisos son los cálculos?",
-    a: "Son estimaciones de referencia hechas con tu consumo, tu región, tu horario y supuestos de precio que todavía estamos validando. Sirven para decidir si vale la pena pedir una cotización; la cifra final la da el proveedor.",
+    q: "¿Qué necesito para calcular mi ahorro?",
+    a: "Solo necesitas el consumo mensual y el valor de tu recibo de luz. Con esa información estimamos tu ahorro potencial, la inversión aproximada y el tiempo en que podrías recuperarla.",
   },
   {
-    q: "¿Voy a tener luz cuando haya cortes?",
-    a: "No con este cálculo. Estimamos el ahorro en tu factura con paneles sin baterías. Para tener luz durante un corte se necesitan baterías, que suben la inversión. Puedes pedírselas al proveedor en la cotización.",
+    q: "¿Qué tan confiable es el resultado?",
+    a: "Es una estimación inicial basada en tu consumo, la radiación solar de tu departamento, tu horario de operación y precios de referencia. Te ayuda a decidir si vale la pena avanzar; la propuesta final la define el proveedor después de revisar tu instalación.",
   },
   {
-    q: "¿Qué pasa con la foto de mi recibo?",
-    a: "Si subes una foto, la enviamos a Google (Gemini) solo para leer el consumo y el valor, y tú confirmas los números antes de seguir. Nosotros no la guardamos, pero en esta versión de prueba Google puede usarla para mejorar sus productos: tapa tu nombre, tu dirección y tu número de cuenta antes de subirla. Si prefieres, escribe los datos a mano.",
+    q: "¿Necesito comprar baterías para mis paneles solares?",
+    a: "No siempre. Los paneles generan energía durante el día y pueden reducir tu recibo por sí solos. Las baterías almacenan esa energía para usarla en la noche o durante cortes de luz. En SolarIA revisamos tu consumo y te recomendamos baterías solo cuando realmente aportan a tu negocio.",
   },
   {
     q: "¿Qué pasa cuando pido una cotización?",
-    a: "Eliges un proveedor, dejas tu nombre, celular y municipio, y marcas la autorización para compartir tus datos y tu estimado con él. Usamos esos datos solo para gestionar tu cotización. Por ahora estamos en una versión de prueba: los proveedores que ves son de ejemplo y tu solicitud la recibe el equipo de SolarIA, que la pasará a un instalador. Pedirla no te obliga a comprar.",
-  },
+    a: "No estás solo. SolarIA te acompaña en cada paso: te ayuda a entender tu resultado, te conecta con proveedores confiables de tu región y hace seguimiento para que recibas una propuesta clara y tomes una decisión con tranquilidad.",  },
   {
-    q: "¿Y si no me conviene?",
-    a: "Te lo decimos. Si tu consumo es bajo o la inversión tarda mucho en pagarse, el resultado dirá \"por ahora no\". Si todavía no hay proveedores en tu región, también te lo diremos.",
+    q: "¿Y si la energía solar no me conviene?",
+    a: "Te lo decimos con claridad. Si tu consumo es bajo, tu horario no aprovecha bien el sol o la inversión tardaría demasiado en recuperarse, el resultado indicará que por ahora no es la mejor opción.",
   },
 ];
 
@@ -43,7 +42,7 @@ export function FAQ() {
         <Reveal>
           <SectionHeading
             eyebrow="Preguntas frecuentes"
-            title="Todo lo que quieres saber antes de empezar"
+            title="Resuelve tus dudas antes de comenzar"
           />
         </Reveal>
 

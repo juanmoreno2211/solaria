@@ -1,0 +1,84 @@
+.location { font-family: inherit; color: #11161f; min-width: 0; }
+.pregunta { margin: 0; font-size: clamp(20px, 2.4vw, 24px); line-height: 1.2; font-weight: 600; letter-spacing: -.035em; color: #11161f; }
+.description { margin: 8px 0 22px; color: #6c6356; font-size: 13px; line-height: 1.7; }
+.locationGrid { display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,1fr); align-items: start; gap: 32px; }
+.mapCanvas { min-width: 0; }
+.mapCanvas :global(.colombia-map-svg) { max-height: 380px !important; overflow: visible; }
+.mapCanvas :global(.map-department):focus-visible { outline: none; stroke: #b56a1d !important; stroke-width: 2.5px !important; }
+.mapCanvas :global(.map-attribution) a { text-decoration: underline; text-underline-offset: 2px; }
+.locationFields { min-width: 0; }
+.locationFields > label { display: block; font-size: 12px; font-weight: 600; margin: 0 0 20px; }
+.locationFields select { display: block; width: 100%; box-sizing: border-box; padding: 13px 12px; margin-top: 8px; border: 1px solid #ded9ce; border-radius: 10px; background: white; color: #11161f; font: inherit; font-size: 14px; line-height: 1.4; }
+.locationFields select:focus-visible, .tableDetails summary:focus-visible { outline: 3px solid #d9842b; outline-offset: 3px; }
+.note { margin: 18px 0 0; color: #6c6356; font-size: 11px; line-height: 1.8; }
+
+/* ConexiÃƒÂ³n y ubicaciÃƒÂ³n del negocio */
+.opcionesConexion { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.tarjetaOpcion { display: flex; align-items: flex-start; gap: 12px; min-width: 0; padding: 16px; border: 1px solid #ded9ce; border-radius: 12px; background: #fff; color: #11161f; text-align: left; font: inherit; cursor: pointer; }
+.tarjetaOpcion:hover { border-color: #bfb4a4; }
+.tarjetaOpcionActiva { border-color: #d9842b; background: #fbf5eb; }
+.tarjetaOpcionActiva:hover { border-color: #d9842b; }
+.iconoOpcion { display: grid; flex: 0 0 32px; width: 32px; height: 32px; place-items: center; border-radius: 10px; background: #f7f1e6; color: #b56a1d; }
+.textoOpcion { display: grid; min-width: 0; gap: 5px; }
+.tituloOpcion { font-size: 13px; font-weight: 600; line-height: 1.45; }
+.descripcionOpcion { color: #6c6356; font-size: 12px; line-height: 1.6; }
+.camposUbicacion { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 16px; margin: 22px 0 26px; }
+.camposUbicacion > div { display: grid; grid-template-rows: auto 1fr auto; min-width: 0; }
+.camposUbicacion label { display: block; color: #11161f; font-size: 12px; font-weight: 600; }
+.ayudaCampo { margin: 5px 0 9px; color: #6c6356; font-size: 12px; line-height: 1.6; }
+.camposUbicacion input, .camposUbicacion select { display: block; box-sizing: border-box; width: 100%; min-width: 0; min-height: 48px; padding: 12px; border: 1px solid #ded9ce; border-radius: 10px; background: #fff; color: #11161f; font: inherit; font-size: 14px; line-height: 1.4; }
+.camposUbicacion input::placeholder { color: #8a8071; }
+.tarjetaOpcion:focus-visible, .camposUbicacion input:focus-visible, .camposUbicacion select:focus-visible { outline: 3px solid #d9842b; outline-offset: 3px; }
+
+/* Sol del departamento */
+.solDato { margin-top: 4px; border: 1px solid #e6e1d8; border-radius: 14px; background: #fff; }
+.solVelo { padding: 18px; }
+.solPrincipal { display: flex; align-items: flex-start; gap: 12px; }
+.solIcono { display: grid; flex: 0 0 36px; width: 36px; height: 36px; place-items: center; border-radius: 11px; background: #f7f1e6; color: #b56a1d; }
+.solTexto { min-width: 0; }
+.solDato p { margin: 0; font-size: 13px; line-height: 1.65; color: #4b4943; }
+.solDato .solEtiqueta { color: #6c6356; font-size: 11.5px; }
+.solDato .solCifra { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; margin: 5px 0 4px; color: #11161f; font-size: 40px; font-weight: 600; line-height: 1.1; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.solUnidad { color: #746b5f; font-size: 11px; font-weight: 500; line-height: 1.5; letter-spacing: 0; }
+.solDato .solSubtitulo { color: #6c6356; font-size: 11.5px; }
+.solDetalle { margin-top: 16px; padding-top: 13px; border-top: 1px solid #eeebe5; }
+.solDetalle b { color: #11161f; font-weight: 600; }
+.solDato .solRango { margin-top: 9px; color: #746b5f; font-size: 11px; line-height: 1.65; }
+.solVacio { margin: 4px 0 0; padding: 16px; border: 1px solid #e6e1d8; border-radius: 12px; background: #faf8f4; color: #746b5f; font-size: 12px; line-height: 1.7; }
+.aviso { margin: 12px 0 0; color: #746b5f; font-size: 11px; line-height: 1.75; }
+
+@media (max-width: 640px) {
+  .opcionesConexion, .camposUbicacion { grid-template-columns: 1fr; }
+  .camposUbicacion input, .camposUbicacion select { font-size: 16px; }
+}
+
+/* Ahorro en 20 AÃƒÂ±os */
+.stats { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; margin: 4px 0 10px; }
+.stats dt { font-size: 11px; line-height: 1.6; color: #6c6356; }
+.stats dd { margin: 4px 0 0; font-size: clamp(16px, 2vw, 20px); font-weight: 600; letter-spacing: -.025em; line-height: 1.3; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; color: #11161f; }
+.positive { color: #2f7d50 !important; }
+.negative { color: #a9541f !important; }
+.chart { width: 100%; min-width: 0; height: 260px; margin-top: 14px; }
+.chartCaption { color: #6c6356; font-size: 11px; text-align: center; line-height: 1.6; margin: 2px 0 18px; }
+.supuestos { margin-top: 6px; padding: 16px 18px; border-radius: 10px; background: #faf8f4; }
+.supuestos p { margin: 0 0 10px; font-size: 13px; line-height: 1.7; color: #4b4943; }
+.supuestos p:last-child { margin-bottom: 0; }
+.supuestos b { color: #11161f; font-weight: 600; }
+.tableDetails { margin-top: 16px; }
+.tableDetails summary { color: #9c6224; font-size: 12px; font-weight: 600; cursor: pointer; padding: 5px 0; line-height: 1.6; }
+.tableScroll { overflow-x: auto; max-height: 340px; margin-top: 12px; border: 1px solid #eee8dd; border-radius: 10px; }
+.tableScroll table { width: 100%; border-collapse: collapse; font-size: 11px; font-variant-numeric: tabular-nums; }
+.tableScroll caption { padding: 12px; color: #6c6356; text-align: left; font-size: 10px; line-height: 1.7; }
+.tableScroll th, .tableScroll td { padding: 11px 10px; text-align: right; border-bottom: 1px solid #eee8dd; white-space: nowrap; }
+.tableScroll th { font-weight: 600; }
+.tableScroll thead { background: #faf8f4; color: #6c6356; }
+.tableScroll th:first-child { text-align: left; }
+
+@media (max-width: 640px) {
+  .locationGrid { grid-template-columns: 1fr; gap: 22px; }
+  .locationFields select { font-size: 16px; }
+  .stats { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+  .stats > div:last-child { grid-column: 1 / -1; border-top: 1px solid #eee8dd; padding-top: 12px; }
+  .stats dd { font-size: 17px; }
+  .chart { height: 230px; }
+}

@@ -1,14 +1,20 @@
+import type { TipoOferta } from "@/lib/catalog/types";
 import type { NegocioInput } from "@/lib/savings/types";
 
 /** Lo que el navegador envía a POST /api/cotizaciones. */
 export interface SolicitudCotizacionInput {
   sessionId?: string;
   proveedor: string;
+  /** Plan pedido, si el proveedor vende por planes. */
+  plan?: string;
+  /** Oferta pedida, si el proveedor tiene varias (EPC o PPA). */
+  oferta?: TipoOferta;
   solicitante: { nombre: string; telefono: string; municipio: string };
   consentimiento: boolean;
   negocio: {
     tipo: NegocioInput["tipoNegocio"];
     region: NegocioInput["region"];
+    departamento: string;
     horario: NegocioInput["horario"];
     noPuedeFallar: NegocioInput["cargasCriticas"];
     comoFalla: string;
@@ -41,5 +47,45 @@ export function validarSolicitante(
     errores.municipio = "Escribe el municipio donde está tu negocio.";
   if (!datos.consentimiento)
     errores.consentimiento = `Marca la autorización para que podamos compartir tus datos con ${proveedor}.`;
+  return errores;
+}
+
+/** "Quiero que me contacten": lo que el navegador envía a POST /api/solicitar-contacto. */
+export interface PedidoContactoInput {
+  sessionId?: string;
+  /** Referencia SIA-XXXXXX, la misma del mensaje de WhatsApp. */
+  ref?: string;
+  proveedor?: string | null;
+  plan?: string | null;
+  oferta?: string | null;
+  nombre: string;
+  celular: string;
+  municipio?: string;
+  /** Autoriza que SolarIA lo contacte a ese número. Obligatorio. */
+  consentimiento: boolean;
+  /** Autoriza además compartir sus datos con el proveedor. Opcional. */
+  compartirConProveedor: boolean;
+  negocio?: { tipo?: string; departamento?: string; horario?: string; conexion?: string };
+  estimado?: { consumoKwh?: number; valorFactura?: number; kwp?: number; ahorroMensual?: number; inversion?: number; retornoMeses?: number | null };
+}
+
+export type ErroresContacto = Partial<Record<"nombre" | "celular" | "consentimiento", string>>;
+
+/**
+ * Celular colombiano: 10 dígitos que empiezan por 3. Acepta espacios, guiones
+ * y el indicativo +57. Devuelve los 10 dígitos o null.
+ */
+export function normalizarCelular(valor: string): string | null {
+  let digitos = valor.replace(/\D/g, "");
+  if (digitos.length === 12 && digitos.startsWith("57")) digitos = digitos.slice(2);
+  return /^3\d{9}$/.test(digitos) ? digitos : null;
+}
+
+/** Validación compartida por el formulario y el servidor. */
+export function validarPedidoContacto(datos: { nombre: string; celular: string; consentimiento: boolean }): ErroresContacto {
+  const errores: ErroresContacto = {};
+  if (datos.nombre.trim().length < 2) errores.nombre = "Escribe tu nombre.";
+  if (!normalizarCelular(datos.celular)) errores.celular = "Escribe un celular de 10 dígitos, por ejemplo 310 123 4567.";
+  if (!datos.consentimiento) errores.consentimiento = "Marca la autorización para que podamos contactarte.";
   return errores;
 }

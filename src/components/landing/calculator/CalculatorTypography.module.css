@@ -1,0 +1,4 @@
+.calculator { font-family: var(--font-display), sans-serif; font-weight: 400; }
+.calculator [data-step-title] { font-family: inherit; font-size: clamp(21px, 2vw, 24px); font-weight: 500; line-height: 1.3; letter-spacing: -.025em; text-wrap: balance; }
+.calculator h4 { font-weight: 500; letter-spacing: -.025em; }
+.calculator [aria-label="Progreso"] > li > span:last-child { font-weight: 500; letter-spacing: -.005em; }

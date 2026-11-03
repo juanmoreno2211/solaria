@@ -1,62 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generarRecomendacion } from "@/lib/ai/generateInsight";
+import catalogoJson from "@/lib/catalog/data/catalogo.json";
+import type { CatalogoData } from "@/lib/catalog/types";
 import { calcularAhorro } from "@/lib/savings/calculate";
-import type {
-  AnalisisInput,
-  CargaCritica,
-  NegocioInput,
-  ReciboInput,
-} from "@/lib/savings/types";
+import { validarAnalisis } from "@/lib/savings/validation";
 
 export const runtime = "nodejs";
-
-function toPositivo(value: FormDataEntryValue | null): number | null {
-  if (typeof value !== "string" || value === "") return null;
-  const n = Number(value);
-  return Number.isFinite(n) && n > 0 ? n : null;
-}
 
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
 
-    // Solo números ya confirmados por el usuario: la foto se lee antes, en /api/leer-recibo.
-    const recibo: ReciboInput = {
-      fuente: formData.get("fuente") === "foto" ? "foto" : "manual",
-      consumoMensualKwh: toPositivo(formData.get("consumoMensualKwh")),
-      valorPagadoMensual: toPositivo(formData.get("valorPagadoMensual")),
-    };
-
-    if (!recibo.consumoMensualKwh && !recibo.valorPagadoMensual) {
-      return NextResponse.json(
-        {
-          error:
-            "Necesitamos al menos el consumo en kWh o el valor pagado del recibo para poder calcular tu ahorro.",
-        },
-        { status: 400 }
-      );
+    const validacion = validarAnalisis(formData);
+    if (!validacion.ok) {
+      return NextResponse.json({ error: validacion.error }, { status: 400 });
     }
-
-    const negocio: NegocioInput = {
-      tipoNegocio:
-        (formData.get("tipoNegocio") as NegocioInput["tipoNegocio"]) || "otro",
-      region: (formData.get("region") as NegocioInput["region"]) || "andina",
-      cargasCriticas: formData.getAll("cargasCriticas") as CargaCritica[],
-      horario: (formData.get("horario") as NegocioInput["horario"]) || "dia",
-      fallaLuz: (formData.get("fallaLuz") as NegocioInput["fallaLuz"]) || undefined,
-      legalmenteConstituido:
-        (formData.get("legalmenteConstituido") as NegocioInput["legalmenteConstituido"]) ||
-        undefined,
-    };
-
-    const analisisInput: AnalisisInput = { recibo, negocio };
-    const resultado = calcularAhorro(analisisInput);
+    const analisisInput = validacion.input;
+    // Solo en desarrollo: ?simulados=1 en la página muestra únicamente los
+    // proveedores de ejemplo (para probar la comparación y, en una región que
+    // no cubren, el estado "sin proveedores").
+    const soloSimulados =
+      process.env.NODE_ENV !== "production" && formData.get("simulados") === "1";
+    const resultado = calcularAhorro(
+      analisisInput,
+      soloSimulados
+        ? (catalogoJson as CatalogoData).paneles.filter((p) => p.estadoDatos === "simulado")
+        : undefined
+    );
 
     return NextResponse.json({
       resultado,
       recomendacion: generarRecomendacion(resultado),
     });
   } catch (error) {
+    if (error instanceof RangeError) return NextResponse.json({ error: error.message }, { status: 400 });
     console.error("Error en /api/analizar", error);
     return NextResponse.json(
       { error: "Ocurrió un error al analizar tu información. Intenta de nuevo." },

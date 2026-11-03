@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import { Analytics } from "@/components/Analytics";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { FloatingSun } from "@/components/FloatingSun";
 import "./globals.css";
 
-const display = Plus_Jakarta_Sans({
+const display = DM_Sans({
   variable: "--font-display",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -19,6 +20,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: TITLE,
   description: DESCRIPTION,
+  // Piloto cerrado: muestra nombres de proveedores con datos sin confirmar.
+  robots: { index: false },
   openGraph: {
     title: TITLE,
     description: DESCRIPTION,

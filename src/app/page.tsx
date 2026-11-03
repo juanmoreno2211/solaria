@@ -2,7 +2,10 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Hero } from "@/components/landing/Hero";
 import { HowItWorks } from "@/components/landing/HowItWorks";
+import { Testimonios } from "@/components/landing/Testimonios";
 import { CalculatorSection } from "@/components/landing/calculator/CalculatorSection";
+import { Mission } from "@/components/landing/Mission";
+import { ProblemSolution } from "@/components/landing/ProblemSolution";
 import { FAQ } from "@/components/landing/FAQ";
 import { CTA } from "@/components/landing/CTA";
 
@@ -16,7 +19,10 @@ export default function Home() {
       <main>
         <Hero />
         <CalculatorSection fotoDisponible={fotoDisponible} />
+        <ProblemSolution />
         <HowItWorks fotoDisponible={fotoDisponible} />
+        <Mission />
+        <Testimonios />
         <FAQ />
         <CTA />
       </main>

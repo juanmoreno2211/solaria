@@ -1,0 +1,329 @@
+{
+  "actualizadoEl": "2026-11-01",
+  "proveedores": [
+    {
+      "id": "soluna",
+      "nombre": "Soluna Energía",
+      "url": "https://www.solunaenergia.com/",
+      "rol": "operador_servicio",
+      "soluciones": [
+        "aislado"
+      ],
+      "modelos": [
+        "Energía como servicio prepago"
+      ],
+      "departamentosReferencia": [
+        "Vichada",
+        "La Guajira"
+      ],
+      "alcance": "proyectos_localizados",
+      "contratacion": "servicio_zonal",
+      "descripcion": "Energía solar por servicio en zonas sin red.",
+      "condiciones": "La vinculación depende del proyecto y de la capacidad de servicio disponible. Atención de micronegocios y tarifa: por confirmar.",
+      "notaCobertura": "Publica oficinas en Puerto Carreño y Riohacha. Sol-Kai se desarrolla en comunidades específicas de Uribia; esto no equivale a cobertura de todo el departamento.",
+      "fuentes": [
+        {
+          "titulo": "Modelo de servicio y oficinas de Soluna",
+          "url": "https://www.solunaenergia.com/",
+          "consultadoEl": "2026-11-01"
+        },
+        {
+          "titulo": "FDN: proyecto Sol-Kai con AES y Soluna, septiembre de 2025",
+          "url": "https://cms.fdn.com.co/sites/default/files/2025-09/FDNComunicadoSep2025EnergiaElectricaComunidadesWayuu.pdf",
+          "consultadoEl": "2026-11-01"
+        }
+      ]
+    },
+    {
+      "id": "suncolombia",
+      "nombre": "SunColombia",
+      "url": "https://suncolombia.com/",
+      "rol": "integrador",
+      "soluciones": [
+        "conectado",
+        "hibrido",
+        "aislado",
+        "comunitario"
+      ],
+      "modelos": [
+        "Proyecto a medida"
+      ],
+      "departamentosReferencia": [
+        "La Guajira",
+        "Antioquia"
+      ],
+      "alcance": "nacional_declarado",
+      "contratacion": "directa",
+      "descripcion": "Paneles solares y baterías para empresas y zonas rurales.",
+      "condiciones": "Confirma el tamaño mínimo, la atención de micronegocios, el transporte y el soporte posterior en tu municipio.",
+      "notaCobertura": "Documenta energización rural en La Guajira y un proyecto en el Bajo Cauca antioqueño. Su portafolio declara cobertura nacional; la visita a cada predio debe confirmarse.",
+      "fuentes": [
+        {
+          "titulo": "Proyectos y cobertura declarada",
+          "url": "https://suncolombia.com/proyectos/",
+          "consultadoEl": "2026-11-01"
+        },
+        {
+          "titulo": "Soluciones y energización rural",
+          "url": "https://suncolombia.com/",
+          "consultadoEl": "2026-11-01"
+        },
+        {
+          "titulo": "Ministerio del Interior: proyecto rural Bajo Cauca, abril de 2026",
+          "url": "https://www.mininterior.gov.co/normativas/empresa-suncolombia-s-a-s-sector-energia-proyecto-contrato-objeto-compuesto-no-4620004657-levantamiento-de-informacion-existente-revision-y-ajuste-de-los-disenos-ingenieria-de-detall/",
+          "consultadoEl": "2026-11-01"
+        }
+      ]
+    },
+    {
+      "id": "sonnenergy",
+      "nombre": "Sonnenergy",
+      "url": "https://sonnenergy.com.co/aislados/",
+      "rol": "instalador",
+      "soluciones": [
+        "conectado",
+        "hibrido",
+        "aislado"
+      ],
+      "modelos": [
+        "Compra e instalación a medida"
+      ],
+      "departamentosReferencia": [],
+      "alcance": "por_consultar",
+      "contratacion": "directa",
+      "descripcion": "Sistemas solares con baterías para zonas rurales.",
+      "condiciones": "Solicita dimensionamiento de cargas, autonomía, visita, transporte y mantenimiento; no publica un precio llave en mano aplicable a todos los casos.",
+      "notaCobertura": "Tiene contacto en Bogotá. El portafolio menciona aplicaciones rurales y ZNI, pero no una lista que confirme atención en cada municipio.",
+      "fuentes": [
+        {
+          "titulo": "Sistemas aislados e híbridos",
+          "url": "https://sonnenergy.com.co/aislados/",
+          "consultadoEl": "2026-11-01"
+        },
+        {
+          "titulo": "Servicios residenciales, comerciales y rurales",
+          "url": "https://sonnenergy.com.co/servicios/",
+          "consultadoEl": "2026-11-01"
+        }
+      ]
+    },
+    {
+      "id": "erco",
+      "nombre": "Erco Energy",
+      "url": "https://erco.energy/co",
+      "rol": "integrador",
+      "soluciones": [
+        "conectado",
+        "hibrido",
+        "aislado"
+      ],
+      "modelos": [
+        "Compra",
+        "Leasing",
+        "Arrendamiento",
+        "PPA para empresas"
+      ],
+      "departamentosReferencia": [],
+      "alcance": "nacional_declarado",
+      "contratacion": "directa",
+      "descripcion": "Paneles solares y baterías para viviendas y empresas.",
+      "condiciones": "El PPA, la financiación y sus mínimos dependen del estudio comercial. No se asigna un descuento ni una tasa que la empresa no haya cotizado.",
+      "notaCobertura": "Declara cobertura nacional. En predios apartados se deben confirmar logística, visita, mantenimiento y atención del segmento.",
+      "fuentes": [
+        {
+          "titulo": "Portafolio y cobertura declarada",
+          "url": "https://erco.energy/co",
+          "consultadoEl": "2026-11-01"
+        },
+        {
+          "titulo": "Modalidades de compra y financiación",
+          "url": "https://erco.energy/co/solar/financing",
+          "consultadoEl": "2026-11-01"
+        }
+      ]
+    },
+    {
+      "id": "sunvolt",
+      "nombre": "Sunvolt",
+      "url": "https://sunvolt.com.co/",
+      "rol": "instalador",
+      "soluciones": [
+        "conectado"
+      ],
+      "modelos": [
+        "EPC: compra del sistema",
+        "PPA sujeto a estudio"
+      ],
+      "departamentosReferencia": [],
+      "alcance": "por_consultar",
+      "contratacion": "directa",
+      "descripcion": "Paneles solares para empresas, instituciones y copropiedades.",
+      "condiciones": "Precio, potencia mínima, descuento del PPA y plazo contractual requieren una propuesta del proveedor. El PPA no equivale a un subsidio.",
+      "notaCobertura": "Confirma atención en tu municipio. No se extiende su oferta conectada a un caso sin red o con necesidad de respaldo sin evidencia adicional.",
+      "fuentes": [
+        {
+          "titulo": "EPC conectado a la red",
+          "url": "https://sunvolt.com.co/epc/",
+          "consultadoEl": "2026-11-01"
+        },
+        {
+          "titulo": "Modelo PPA",
+          "url": "https://sunvolt.com.co/ppa/",
+          "consultadoEl": "2026-11-01"
+        }
+      ]
+    },
+    {
+      "id": "celsia",
+      "nombre": "Celsia",
+      "url": "https://www.celsia.com/es/energiasolarparaempresasypymes/",
+      "rol": "integrador",
+      "soluciones": [
+        "conectado"
+      ],
+      "modelos": [
+        "Compra y financiación sujeta a estudio"
+      ],
+      "departamentosReferencia": [],
+      "alcance": "por_consultar",
+      "contratacion": "directa",
+      "consumoMinimoExclusivoKwh": 800,
+      "descripcion": "Diseño e instalación solar para empresas y pymes.",
+      "condiciones": "La página dirige la oferta a consumos superiores a 800 kWh/mes. Las condiciones de financiación y disponibilidad deben confirmarse para cada negocio.",
+      "notaCobertura": "No se asume cobertura del predio ni atención a sistemas aislados a partir de esta oferta para pymes.",
+      "fuentes": [
+        {
+          "titulo": "Solar para empresas y pymes: condición de consumo",
+          "url": "https://www.celsia.com/es/energiasolarparaempresasypymes/",
+          "consultadoEl": "2026-11-01"
+        }
+      ]
+    },
+    {
+      "id": "autosolar",
+      "nombre": "AutoSolar Colombia",
+      "url": "https://autosolar.co/kits-solares-aislada",
+      "rol": "equipos",
+      "soluciones": [
+        "conectado",
+        "hibrido",
+        "aislado"
+      ],
+      "modelos": [
+        "Equipos y kits",
+        "Instalación cotizada por separado"
+      ],
+      "departamentosReferencia": [],
+      "alcance": "nacional_declarado",
+      "contratacion": "equipos",
+      "descripcion": "Kits solares y baterías; instalación por consultar.",
+      "condiciones": "El precio de un kit no es el costo total instalado. Confirma envío hasta el predio, instalación, legalización si aplica y servicio técnico.",
+      "notaCobertura": "Publica posibilidad de desplazar instaladores en Colombia; acceso, fletes y atención de cada localidad se cotizan.",
+      "fuentes": [
+        {
+          "titulo": "Kits solares aislados",
+          "url": "https://autosolar.co/kits-solares-aislada",
+          "consultadoEl": "2026-11-01"
+        },
+        {
+          "titulo": "Plantas solares: costos adicionales y desplazamiento de instaladores",
+          "url": "https://autosolar.co/kits-solares/planta-solar",
+          "consultadoEl": "2026-11-01"
+        },
+        {
+          "titulo": "Kits solares híbridos",
+          "url": "https://autosolar.co/kits-solares-hibridos",
+          "consultadoEl": "2026-11-01"
+        }
+      ]
+    },
+    {
+      "id": "tekton",
+      "nombre": "TEKTON Soluciones",
+      "url": "https://www.tektonsoluciones.com/energia-solar/",
+      "rol": "instalador",
+      "soluciones": [
+        "conectado",
+        "hibrido",
+        "aislado"
+      ],
+      "modelos": [
+        "Diseño, suministro e instalación"
+      ],
+      "departamentosReferencia": [],
+      "alcance": "por_consultar",
+      "contratacion": "directa",
+      "descripcion": "Instalación de sistemas solares conectados, híbridos y aislados.",
+      "condiciones": "Confirma experiencia en tu tipo de negocio, autonomía, cobertura, visita técnica y mantenimiento en la localidad.",
+      "notaCobertura": "El portafolio no confirma una lista de municipios atendidos. La compatibilidad técnica no garantiza cobertura local.",
+      "fuentes": [
+        {
+          "titulo": "Portafolio de energía solar",
+          "url": "https://www.tektonsoluciones.com/energia-solar/",
+          "consultadoEl": "2026-11-01"
+        }
+      ]
+    },
+    {
+      "id": "hg-ingenieria",
+      "nombre": "HG Ingeniería y Construcciones",
+      "url": "https://hgingenieria.com.co/",
+      "rol": "integrador",
+      "soluciones": [
+        "conectado",
+        "hibrido",
+        "aislado",
+        "comunitario"
+      ],
+      "modelos": [
+        "Proyecto colectivo o de gran escala"
+      ],
+      "departamentosReferencia": [
+        "Chocó"
+      ],
+      "alcance": "por_consultar",
+      "contratacion": "proyecto_colectivo",
+      "descripcion": "Proyectos comunitarios de energía solar con baterías.",
+      "condiciones": "Su sitio indica foco en proyectos de inversión superior a $500 millones. Se muestra para proyectos agrupados, no como instalador recomendado automáticamente a una tienda.",
+      "notaCobertura": "La experiencia en Unguía prueba un proyecto específico; no confirma atención a cualquier municipio del Chocó.",
+      "fuentes": [
+        {
+          "titulo": "Foco comercial y tamaño de proyectos",
+          "url": "https://hgingenieria.com.co/",
+          "consultadoEl": "2026-11-01"
+        },
+        {
+          "titulo": "Proyecto híbrido de Unguía y operación local",
+          "url": "https://hgingenieria.com.co/2024/01/05/el-dia-que-el-sol-saco-de-la-penumbra-a-unguia-choco/",
+          "consultadoEl": "2026-11-01"
+        }
+      ]
+    }
+  ],
+  "recursos": [
+    {
+      "nombre": "IPSE",
+      "url": "https://ipse.gov.co/",
+      "rol": "Estructuración y orientación de soluciones energéticas para ZNI; consulta proyectos y canales institucionales. No es una cotización comercial.",
+      "fuente": "https://ipse.gov.co/normatividad/"
+    },
+    {
+      "nombre": "GENSA",
+      "url": "https://www.gensa.com.co/",
+      "rol": "Actor de generación y ejecución de proyectos. La participación depende del proyecto y de los mecanismos de acceso; no se presenta como una oferta disponible para cualquier negocio.",
+      "fuente": "https://gensa.com.co/wp-content/uploads/2026/03/Informe-Sostenibilidad-2025-final.pdf"
+    },
+    {
+      "nombre": "DISPAC",
+      "url": "https://dispac.com.co/",
+      "rol": "Empresa de servicios públicos y actor de electrificación. Consulta su ámbito y proyectos; no se infiere una oferta comercial nacional de paneles.",
+      "fuente": "https://dispac.com.co/"
+    },
+    {
+      "nombre": "Financiera de Desarrollo Nacional",
+      "url": "https://www.fdn.com.co/",
+      "rol": "Estructura y financia infraestructura. Participa en Sol-Kai; no es instalador ni confirma financiación individual para micronegocios.",
+      "fuente": "https://cms.fdn.com.co/sites/default/files/2025-09/FDNComunicadoSep2025EnergiaElectricaComunidadesWayuu.pdf"
+    }
+  ]
+}

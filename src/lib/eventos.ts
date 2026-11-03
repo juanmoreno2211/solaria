@@ -7,14 +7,14 @@ export const EVENTOS = [
   "clic_pedir_cotizacion",
   "cotizacion_pedida",
   "interes_sin_proveedor",
+  "whatsapp_abierto",
+  "contacto_pedido",
 ] as const;
 
 export type Evento = (typeof EVENTOS)[number];
 
-/** Detalles sin datos personales: región, tipo de negocio, cifras, proveedor. */
 export type DetalleEvento = Record<string, string | number | boolean | null | undefined>;
 
-/** Registra un evento de la métrica. Nunca lanza ni interrumpe al usuario. */
 export function registrarEvento(evento: Evento, detalle: DetalleEvento = {}): void {
   try {
     fetch("/api/eventos", {
@@ -29,6 +29,5 @@ export function registrarEvento(evento: Evento, detalle: DetalleEvento = {}): vo
       keepalive: true,
     }).catch(() => {});
   } catch {
-    // Ignorado a propósito: medir no puede romper la experiencia.
   }
 }

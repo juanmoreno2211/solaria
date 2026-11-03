@@ -1,3 +1,4 @@
+import { REGION_DEPARTMENTS } from "@/lib/geo/regions";
 import type { Horario } from "@/lib/savings/types";
 
 /**
@@ -27,12 +28,15 @@ export const HORAS_SOL_PICO: Record<Region, number> = {
 
 export const REGIONES: { value: Region; label: string }[] = [
   { value: "caribe", label: "Caribe (Atlántico, Magdalena, La Guajira, Cesar, Córdoba, Sucre, Bolívar)" },
-  { value: "andina", label: "Andina (Bogotá, Antioquia, Santanderes, Eje Cafetero, Tolima, Huila)" },
+  { value: "andina", label: "Andina (Bogotá, Cundinamarca, Antioquia, Santanderes, Eje Cafetero, Tolima, Huila)" },
   { value: "pacifico", label: "Pacífico (Valle, Cauca, Nariño, Chocó)" },
   { value: "orinoquia", label: "Orinoquía (Meta, Casanare, Arauca, Vichada)" },
   { value: "amazonia", label: "Amazonía (Caquetá, Putumayo, Amazonas, Guaviare)" },
   { value: "insular", label: "Insular (San Andrés y Providencia)" },
 ];
+
+/** Departamentos de las seis regiones del modelo; Bogotá D.C. se incluye como selección. */
+export const DEPARTAMENTOS: Partial<Record<Region, string[]>> = REGION_DEPARTMENTS;
 
 /**
  * Tarifa comercial estimada COP/kWh, solo cuando el recibo no trae el valor
@@ -64,10 +68,63 @@ export const COBERTURA_POR_HORARIO: Record<Horario, number> = {
 /** Mantenimiento anual como fracción de la inversión. */
 export const MANTENIMIENTO_ANUAL = 0.015;
 
+/**
+ * Un plan fijo aplica si cubre al menos esta fracción del sistema necesario
+ * (plan un poco más chico que lo necesario). Supuesto por validar.
+ */
+export const PLAN_COBERTURA_MINIMA = 0.8;
+
+/**
+ * Un plan fijo aplica si el negocio aprovecha al menos esta fracción de su
+ * potencia (si no, pagaría un plan demasiado grande). Supuesto por validar.
+ */
+export const PLAN_USO_MINIMO = 0.5;
+
+/**
+ * Supuestos que se muestran tal cual al usuario (sin controles para moverlos).
+ * Revisa estos valores cada trimestre.
+ */
+export const SUPUESTOS = {
+  /**
+   * Inflación aproximada. Las cifras van en pesos de hoy: la tarifa y el
+   * mantenimiento suben a este ritmo, así que no cambian en la gráfica.
+   * Hipótesis del simulador; no es una lectura actual del IPC ni un pronóstico.
+   */
+  inflacionAnual: 0.06,
+  /** Crédito de libre inversión de referencia (efectivo anual). Verificar con bancos. */
+  tasaCreditoEA: 0.195,
+  plazoCreditoAnios: 5,
+  /** Potencia de panel para traducir kWp a número de paneles. */
+  wattsPanel: 550,
+};
+
 /** Umbrales de la recomendación. Supuestos por validar. */
 export const UMBRALES_RECOMENDACION = {
   retornoConvieneAnios: 6,
   retornoCompararAnios: 9,
   consumoMinimoKwh: 150,
   ahorroMinimoFraccion: 0.15,
+};
+
+/**
+ * Estimación del equipo para Sunvolt (no son datos de Sunvolt; todo por
+ * confirmar). Deben coincidir con su entrada en catalogo.json.
+ *
+ * | Parámetro                   | Valor            | De dónde sale                                                 |
+ * |-----------------------------|------------------|---------------------------------------------------------------|
+ * | Precio del EPC              | $6.000.000/kWp   | Entre la guía pública (≈ $2,3 a $4,2 M/kWp) y la referencia   |
+ * |                             |                  | de Erco (≈ $8 M/kWp). Antes era $4.000.000                    |
+ * | Tamaño mínimo del EPC       | 2 kWp            | Supuesto                                                      |
+ * | Financiación del EPC        | ninguna          | No hay dato ("a confirmar")                                   |
+ * | Descuento del PPA           | 15 %             | Supuesto: Sunvolt solo dice "a menor costo que la red"        |
+ * | Tamaño mínimo del PPA       | 3 kWp            | Supuesto: los PPA suelen pedir un consumo mínimo              |
+ * | Contrato PPA e instalación  | "a confirmar"    | No hay dato                                                   |
+ *
+ * Fuente: sunvolt.com.co, revisado el 2026-10-13.
+ */
+export const SUNVOLT_ESTIMACION = {
+  precioEpcPorKwp: 6_000_000,
+  kwpMinEpc: 2,
+  descuentoPpaSobreRed: 0.15,
+  kwpMinPpa: 3,
 };

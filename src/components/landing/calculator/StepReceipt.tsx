@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Camera, FileText, ImageUp, Loader2, ShieldAlert } from "lucide-react";
+import clsx from "clsx";
 import { FieldLabel, OptionCard, TextInput } from "./ui";
+import { Desplegable } from "./Desplegable";
+import { Marca, ReciboEjemplo, type CampoRecibo } from "./ReciboEjemplo";
 import { Button } from "@/components/ui/Button";
 import { formatCOP, formatNumber } from "@/lib/format";
 import { AVISO_FOTO_RECIBO } from "@/lib/config/avisos";
@@ -17,7 +20,6 @@ export interface ReciboFormState {
   imageFile: File | null;
   lectura: "sin_foto" | "leyendo" | "leido" | "error";
   mensajeLectura: string | null;
-  /** Lo que leyó la IA, para saber si el usuario lo corrigió. */
   leido: { consumo: string; valor: string } | null;
   consumoMensualKwh: string;
   valorPagadoMensual: string;
@@ -35,7 +37,6 @@ export function reciboInicial(fotoDisponible: boolean): ReciboFormState {
   };
 }
 
-/** De dónde salen los números confirmados: de la foto leída o escritos a mano. */
 export function fuenteNumeros(r: ReciboFormState): "foto" | "manual" {
   return r.fuente === "foto" && r.lectura === "leido" ? "foto" : "manual";
 }
@@ -57,6 +58,55 @@ function textoLeido(consumo: string, valor: string): string {
   return `Leímos ${partes.join(" y ")}${faltante ? `, pero no ${faltante}` : ""}. ¿Es correcto?`;
 }
 
+function soloDigitos(texto: string): string {
+  return texto.replace(/\D/g, "").replace(/^0+(?=\d)/, "").slice(0, 12);
+}
+
+function conPuntos(digitos: string): string {
+  return digitos ? Number(digitos).toLocaleString("es-CO") : "";
+}
+
+/** Campo numérico con una unidad al lado ($ o kWh), para que no haya dudas de qué escribir. */
+function CampoNumero({
+  valor,
+  onCambio,
+  unidad,
+  lado,
+  ...props
+}: {
+  valor: string;
+  onCambio: (digitos: string) => void;
+  unidad: string;
+  lado: "izquierda" | "derecha";
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange">) {
+  return (
+    <div className="relative">
+      <span
+        aria-hidden
+        className={clsx(
+          "pointer-events-none absolute top-1/2 -translate-y-1/2 text-sm text-ink-800/40",
+          lado === "izquierda" ? "left-4" : "right-4"
+        )}
+      >
+        {unidad}
+      </span>
+      <TextInput
+        {...props}
+        type="text"
+        inputMode="numeric"
+        autoComplete="off"
+        value={conPuntos(valor)}
+        onChange={(e) => onCambio(soloDigitos(e.target.value))}
+        className={clsx("tabular-nums", lado === "izquierda" ? "pl-8" : "pr-14")}
+      />
+    </div>
+  );
+}
+
+/**
+ * Los dos campos, con un recibo de ejemplo al lado que marca dónde está cada
+ * dato. Al escribir en un campo, su número se ilumina en el recibo.
+ */
 function CamposNumeros({
   value,
   onChange,
@@ -64,30 +114,63 @@ function CamposNumeros({
   value: ReciboFormState;
   onChange: React.Dispatch<React.SetStateAction<ReciboFormState>>;
 }) {
+  const [foco, setFoco] = useState<CampoRecibo>(null);
+
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      <div>
-        <FieldLabel>Consumo del mes (kWh)</FieldLabel>
-        <TextInput
-          type="number"
-          inputMode="numeric"
-          min={0}
-          placeholder="Ej. 720"
-          value={value.consumoMensualKwh}
-          onChange={(e) => onChange((v) => ({ ...v, consumoMensualKwh: e.target.value }))}
-        />
+    <div className="grid gap-6 md:grid-cols-2 md:items-start md:gap-8">
+      <div className="space-y-5">
+        <div>
+          <FieldLabel>
+            <span className="inline-flex items-center gap-2">
+              <Marca n={1} activa={foco === "consumo"} />
+              Consumo del mes (kWh)
+            </span>
+          </FieldLabel>
+          <CampoNumero
+            unidad="kWh"
+            lado="derecha"
+            placeholder="Ej. 365"
+            aria-label="Consumo del mes en kWh"
+            valor={value.consumoMensualKwh}
+            onFocus={() => setFoco("consumo")}
+            onBlur={() => setFoco(null)}
+            onCambio={(d) => onChange((v) => ({ ...v, consumoMensualKwh: d }))}
+          />
+          <p className="mt-1.5 text-xs leading-relaxed text-ink-800/50">
+            Busca el número junto a «kWh». Usa el del mes, no el promedio.
+          </p>
+        </div>
+        <div>
+          <FieldLabel>
+            <span className="inline-flex items-center gap-2">
+              <Marca n={2} activa={foco === "valor"} />
+              Valor de la energía (pesos)
+            </span>
+          </FieldLabel>
+          <CampoNumero
+            unidad="$"
+            lado="izquierda"
+            placeholder="Ej. 285.000"
+            aria-label="Valor de la energía en pesos"
+            valor={value.valorPagadoMensual}
+            onFocus={() => setFoco("valor")}
+            onBlur={() => setFoco(null)}
+            onCambio={(d) => onChange((v) => ({ ...v, valorPagadoMensual: d }))}
+          />
+          <p className="mt-1.5 text-xs leading-relaxed text-ink-800/50">
+            Si tu recibo también cobra aseo o alumbrado público, usa solo el total de energía.
+          </p>
+        </div>
       </div>
-      <div>
-        <FieldLabel>Valor pagado (pesos)</FieldLabel>
-        <TextInput
-          type="number"
-          inputMode="numeric"
-          min={0}
-          placeholder="Ej. 760000"
-          value={value.valorPagadoMensual}
-          onChange={(e) => onChange((v) => ({ ...v, valorPagadoMensual: e.target.value }))}
-        />
+
+      <div className="hidden md:block md:pt-1">
+        <ReciboEjemplo resaltado={foco} />
       </div>
+      <Desplegable titulo="¿Dónde encuentro estos datos en mi recibo?" variante="plano" className="md:hidden">
+        <div className="px-2 pt-2">
+          <ReciboEjemplo resaltado={foco} />
+        </div>
+      </Desplegable>
     </div>
   );
 }
@@ -178,12 +261,12 @@ export function StepReceipt({
   return (
     <div>
       <h3 data-step-title tabIndex={-1} className="text-lg font-bold text-ink-950 outline-none">
-        Tu recibo de luz
+        Tu consumo de energía
       </h3>
       <p className="mt-1 text-sm text-ink-800/60">
         {fotoDisponible
-          ? "Sube una foto o escribe el consumo y el valor pagado. Si solo tienes uno de los dos, también sirve."
-          : "Escribe el consumo y el valor pagado de tu recibo. Si solo tienes uno de los dos, también sirve."}
+          ? "Sube una foto o escribe dos datos de tu recibo: el consumo del mes y el valor de la energía. Si solo tienes uno, también es suficiente."
+          :"Ingresa los dos datos a continuación. Si solo cuentas con uno, también es suficiente."}
       </p>
 
       {fotoDisponible && (
@@ -199,7 +282,7 @@ export function StepReceipt({
             selected={value.fuente === "manual"}
             onClick={() => onChange((v) => ({ ...v, fuente: "manual" }))}
             title="Escribir a mano"
-            description="Consumo y valor pagado"
+            description="Consumo y valor de la energía"
             icon={<FileText className="h-4 w-4" />}
           />
         </div>
@@ -281,7 +364,7 @@ export function StepReceipt({
           {value.lectura === "error" && (
             <div className="mt-5">
               <p role="alert" className="text-base font-semibold text-ink-950">
-                No pudimos leer la foto. Escribe tu consumo y el valor de tu recibo
+                No pudimos leer la foto. Escribe el consumo y el valor de la energía.
               </p>
               {value.mensajeLectura && (
                 <p className="mb-4 mt-1 text-xs text-ink-800/55">{value.mensajeLectura}</p>
