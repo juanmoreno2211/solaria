@@ -12,7 +12,6 @@ const LINKS = [
   { href: "/#como-funciona", label: "Cómo funciona" },
   { href: "/#preguntas", label: "Preguntas frecuentes" },
   { href: "/mision", label: "Nuestra misión" },
-  { href: "/mi-negocio", label: "Mi negocio" },
 ];
 
 export function Navbar() {
@@ -55,6 +54,14 @@ export function Navbar() {
             </Link>
           ))}
         </nav>
+
+        {/* Siempre visible, también en el celular; sin sesión lleva a /ingresar. */}
+        <Link
+          href="/mi-negocio"
+          className="inline-flex min-h-11 items-center rounded-md border border-ink-950/20 px-4 text-sm font-semibold text-ink-950 transition-colors hover:border-ink-950/40 hover:bg-ink-950/[0.03]"
+        >
+          Mi negocio
+        </Link>
       </Container>
     </header>
   );

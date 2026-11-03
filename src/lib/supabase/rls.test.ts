@@ -44,10 +44,12 @@ describe.skipIf(!URL_SUPABASE || !CLAVE_PUBLICA)("RLS: cada cuenta solo ve sus f
   const admin = CLAVE_SECRETA ? createClient(URL_SUPABASE!, CLAVE_SECRETA, sinSesion) : null;
   let a: Cuenta;
   let b: Cuenta;
-  const deA: Record<"negocio" | "aparato" | "invitacion", string> & { evento: number } = {
+  const TABLAS = ["negocios", "aparatos", "eventos", "invitaciones", "recibos"];
+  const deA: Record<"negocio" | "aparato" | "invitacion" | "recibo", string> & { evento: number } = {
     negocio: "",
     aparato: "",
     invitacion: "",
+    recibo: "",
     evento: 0,
   };
 
@@ -74,6 +76,10 @@ describe.skipIf(!URL_SUPABASE || !CLAVE_PUBLICA)("RLS: cada cuenta solo ve sus f
     const invitacion = await a.db.from("invitaciones").insert({ correo: "socio@example.com" }).select("id").single();
     if (invitacion.error) throw invitacion.error;
     deA.invitacion = invitacion.data.id;
+
+    const recibo = await a.db.from("recibos").insert({ consumo_kwh: 300, valor: 270_000 }).select("id, tarifa_kwh").single();
+    if (recibo.error) throw recibo.error;
+    deA.recibo = recibo.data.id;
   }, 30_000);
 
   afterAll(async () => {
@@ -83,7 +89,7 @@ describe.skipIf(!URL_SUPABASE || !CLAVE_PUBLICA)("RLS: cada cuenta solo ve sus f
   });
 
   it("A ve sus propias filas", async () => {
-    for (const tabla of ["negocios", "aparatos", "eventos", "invitaciones"]) {
+    for (const tabla of TABLAS) {
       const { data, error } = await a.db.from(tabla).select("id, user_id");
       expect(error, tabla).toBeNull();
       expect(data, tabla).toHaveLength(1);
@@ -92,7 +98,7 @@ describe.skipIf(!URL_SUPABASE || !CLAVE_PUBLICA)("RLS: cada cuenta solo ve sus f
   });
 
   it("B no ve ninguna fila de A", async () => {
-    for (const tabla of ["negocios", "aparatos", "eventos", "invitaciones"]) {
+    for (const tabla of TABLAS) {
       const todas = await b.db.from(tabla).select("id");
       expect(todas.error, tabla).toBeNull();
       expect(todas.data, tabla).toEqual([]);
@@ -107,12 +113,15 @@ describe.skipIf(!URL_SUPABASE || !CLAVE_PUBLICA)("RLS: cada cuenta solo ve sus f
   it("B no puede editar ni borrar filas de A", async () => {
     const editado = await b.db.from("negocios").update({ nombre: "Robado" }).eq("id", deA.negocio).select();
     expect(editado.data).toEqual([]);
+    const reciboEditado = await b.db.from("recibos").update({ valor: 1 }).eq("id", deA.recibo).select();
+    expect(reciboEditado.data).toEqual([]);
 
     const borrados = [
       await b.db.from("negocios").delete().eq("id", deA.negocio).select(),
       await b.db.from("aparatos").delete().eq("id", deA.aparato).select(),
       await b.db.from("eventos").delete().eq("id", deA.evento).select(),
       await b.db.from("invitaciones").delete().eq("id", deA.invitacion).select(),
+      await b.db.from("recibos").delete().eq("id", deA.recibo).select(),
     ];
     for (const r of borrados) expect(r.data).toEqual([]);
 
@@ -120,6 +129,9 @@ describe.skipIf(!URL_SUPABASE || !CLAVE_PUBLICA)("RLS: cada cuenta solo ve sus f
     expect(data?.nombre).toBe("Tienda de A");
     const { data: aparatos } = await a.db.from("aparatos").select("id");
     expect(aparatos).toHaveLength(1);
+    const { data: recibo } = await a.db.from("recibos").select("valor, tarifa_kwh").eq("id", deA.recibo).single();
+    expect(Number(recibo?.valor)).toBe(270_000);
+    expect(Number(recibo?.tarifa_kwh)).toBe(900);
   });
 
   it("B no puede crear filas a nombre de A", async () => {
@@ -127,6 +139,7 @@ describe.skipIf(!URL_SUPABASE || !CLAVE_PUBLICA)("RLS: cada cuenta solo ve sus f
       await b.db.from("negocios").insert({ user_id: a.id, nombre: "Falso" }),
       await b.db.from("eventos").insert({ user_id: a.id, evento: "falso" }),
       await b.db.from("invitaciones").insert({ user_id: a.id, correo: "x@example.com" }),
+      await b.db.from("recibos").insert({ user_id: a.id, consumo_kwh: 1, valor: 1 }),
       // Tampoco colgar un aparato del negocio de A, ni con su user_id ni con el propio.
       await b.db.from("aparatos").insert({ user_id: a.id, negocio_id: deA.negocio, nombre: "Falso" }),
       await b.db.from("aparatos").insert({ negocio_id: deA.negocio, nombre: "Falso" }),
@@ -139,7 +152,7 @@ describe.skipIf(!URL_SUPABASE || !CLAVE_PUBLICA)("RLS: cada cuenta solo ve sus f
 
   it("sin sesión no se ve nada", async () => {
     const anonimo = createClient(URL_SUPABASE!, CLAVE_PUBLICA!, sinSesion);
-    for (const tabla of ["negocios", "aparatos", "eventos", "invitaciones"]) {
+    for (const tabla of TABLAS) {
       const { data } = await anonimo.from(tabla).select("id");
       expect(data ?? [], tabla).toEqual([]);
     }

@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { rutaSegura } from "@/lib/supabase/redireccion";
+import { registrarEventoCuenta } from "@/lib/supabase/eventos";
 
 export type EstadoIngreso = { error?: string; mensaje?: string };
 
@@ -49,6 +50,8 @@ export async function registrarse(_: EstadoIngreso, formData: FormData): Promise
 
   // Con confirmación de correo activa no hay sesión hasta abrir el enlace.
   if (!data.session) return { mensaje: "Te enviamos un correo. Abre el enlace para activar tu cuenta." };
+  // Sin confirmación de correo ya hay sesión; si no, el evento se guarda al confirmar.
+  await registrarEventoCuenta(supabase, "cuenta_creada");
   redirect(siguiente);
 }
 

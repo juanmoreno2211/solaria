@@ -21,6 +21,7 @@ import {
 } from "./StepProperty";
 import { PanelResumen, type PasoCalculadora } from "./PanelResumen";
 import { ResultsView } from "./ResultsView";
+import { GuardarResultado } from "./GuardarResultado";
 import { LoadingState } from "./LoadingState";
 import { StepQuote } from "./StepQuote";
 import type { AnalisisResultado } from "@/lib/savings/types";
@@ -371,6 +372,23 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
                 onCambiarDatos={() => setStep("negocio")}
                 onPedirCotizacion={handlePedirCotizacion}
                 onInteresSinProveedor={handleInteresSinProveedor}
+              />
+            )}
+            {step === "resultado" && data && (
+              <GuardarResultado
+                datos={{
+                  consumoKwh: Number(recibo.consumoMensualKwh) || null,
+                  valor: Number(recibo.valorPagadoMensual) || null,
+                  tipoNegocio: negocio.tipoNegocio,
+                  departamento: negocio.departamento,
+                  municipio: negocio.municipio || undefined,
+                  horario: negocio.horario,
+                  conexion: negocio.conexion,
+                  veredicto: data.resultado.veredicto,
+                  kwp: paneles?.kwpRequeridos ?? null,
+                  ahorroMensual: paneles?.ahorroMensualEstimado ?? null,
+                  retornoMeses: paneles?.retornoMeses ?? null,
+                }}
               />
             )}
 
