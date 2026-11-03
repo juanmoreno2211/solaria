@@ -12,6 +12,7 @@ const LINKS = [
   { href: "/#como-funciona", label: "Cómo funciona" },
   { href: "/#preguntas", label: "Preguntas frecuentes" },
   { href: "/mision", label: "Nuestra misión" },
+  { href: "/mi-negocio", label: "Mi negocio" },
 ];
 
 export function Navbar() {
