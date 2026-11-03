@@ -236,4 +236,23 @@ describe.skipIf(!URL_SUPABASE || !CLAVE_PUBLICA)("RLS: cada cuenta solo ve sus f
     const sinCuenta = await anonimo.rpc("atribuir_invitacion", { p_codigo: deA.codigo });
     expect(sinCuenta.data === true).toBe(false);
   }, 30_000);
+  it("solicitudes de contacto: cualquiera las crea con la función, nadie las lee", async () => {
+    const anonimo = createClient(URL_SUPABASE!, CLAVE_PUBLICA!, sinSesion);
+    const valida = { nombre: "Prueba RLS", celular: "3101234567", consentimiento: true, ref: "SIA-PRUEBA" };
+
+    const creada = await anonimo.rpc("crear_solicitud_contacto", { p: valida });
+    expect(creada.error).toBeNull();
+    expect(typeof creada.data).toBe("string");
+    expect((await b.db.rpc("crear_solicitud_contacto", { p: valida })).error).toBeNull();
+
+    // La base de datos rechaza un celular inválido o sin autorización.
+    expect((await anonimo.rpc("crear_solicitud_contacto", { p: { ...valida, celular: "123" } })).error).not.toBeNull();
+    expect((await anonimo.rpc("crear_solicitud_contacto", { p: { ...valida, consentimiento: false } })).error).not.toBeNull();
+
+    // Nadie las lee ni las escribe directamente: ni anónimos ni cuentas.
+    for (const cliente of [anonimo, a.db, b.db]) {
+      expect((await cliente.from("solicitudes_contacto").select("*")).data ?? []).toEqual([]);
+      expect((await cliente.from("solicitudes_contacto").insert(valida)).error).not.toBeNull();
+    }
+  });
 });
