@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import clsx from "clsx";
-import { Trophy } from "lucide-react";
+import { Trophy, Zap } from "lucide-react";
+import { riesgoDe } from "@/lib/aparatos/riesgo";
 import { formatCOP, formatDecimal } from "@/lib/format";
 import { borrarAparato } from "../actions";
 import type { AparatoFila } from "../datos";
@@ -35,6 +36,7 @@ export function TarjetaAparato({
   generaEnergia: boolean;
 }) {
   const [editando, setEditando] = useState(false);
+  const riesgo = riesgoDe(aparato.tipo_catalogo);
 
   return (
     <li className={clsx("rounded-2xl border bg-white p-4", primero ? "border-sun-500 shadow-[0_8px_24px_-16px_rgba(181,106,29,0.6)]" : "border-ink-950/10")}>
@@ -55,6 +57,17 @@ export function TarjetaAparato({
               </span>
             )}
           </div>
+          {riesgo && riesgo !== "bajo" && (
+            <p
+              className={clsx(
+                "mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold",
+                riesgo === "alto" ? "bg-red-50 text-red-700" : "bg-cream-100 text-ink-950"
+              )}
+            >
+              <Zap className="h-3 w-3" aria-hidden="true" />
+              Si se va y vuelve la luz: riesgo {riesgo} de dañarse
+            </p>
+          )}
 
           {generaEnergia ? (
             <p className="mt-1 text-sm text-ink-950/75">Genera energía con combustible: no suma a tu recibo.</p>
