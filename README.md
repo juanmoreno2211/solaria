@@ -158,9 +158,9 @@ La respuesta también trae `ms`, el tiempo que tardó la consulta. Si Supabase n
 
 Grupo 5:
 
-- Valentina Rojas
 - Juan Andrés Moreno
 - Juan Felipe Hortúa
 - Isabela Archbold
 - Sergio Soler
 - José Rodríguez
+- Valentina Rojas
