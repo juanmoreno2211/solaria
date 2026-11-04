@@ -1,3 +1,5 @@
+import type { RiesgoCorte } from "./riesgo";
+
 /**
  * Aparatos comunes en un micronegocio con valores de referencia. El usuario
  * puede corregir potencia, factor de ciclo y horas; si conoce el consumo de la
@@ -26,6 +28,8 @@ export interface AparatoCatalogo {
   horasDia: number;
   /** De dónde sale cada valor. Lo que no tiene fuente dice "estimación del equipo, por verificar". */
   fuente: string;
+  /** Riesgo de dañarse cuando se va y vuelve la luz (estimación del equipo, por verificar). */
+  riesgoCorte?: RiesgoCorte;
   /** Genera energía en vez de consumirla de la red: no suma al recibo. */
   generaEnergia?: boolean;
 }
@@ -36,6 +40,7 @@ const POR_VERIFICAR = "estimación del equipo, por verificar";
 export const CATALOGO_APARATOS: AparatoCatalogo[] = [
   {
     tipo: "nevera",
+    riesgoCorte: "alto",
     nombre: "Nevera",
     potenciaW: 725,
     factorCiclo: 1 / 3,
@@ -44,6 +49,7 @@ export const CATALOGO_APARATOS: AparatoCatalogo[] = [
   },
   {
     tipo: "congelador",
+    riesgoCorte: "alto",
     nombre: "Congelador",
     potenciaW: 300,
     factorCiclo: 0.4,
@@ -52,6 +58,7 @@ export const CATALOGO_APARATOS: AparatoCatalogo[] = [
   },
   {
     tipo: "aire",
+    riesgoCorte: "alto",
     nombre: "Aire acondicionado",
     potenciaW: 1100,
     factorCiclo: 0.5,
@@ -60,6 +67,7 @@ export const CATALOGO_APARATOS: AparatoCatalogo[] = [
   },
   {
     tipo: "computador",
+    riesgoCorte: "medio",
     nombre: "Computador o caja registradora",
     potenciaW: 120,
     factorCiclo: 1,
@@ -68,6 +76,7 @@ export const CATALOGO_APARATOS: AparatoCatalogo[] = [
   },
   {
     tipo: "camaras",
+    riesgoCorte: "medio",
     nombre: "Cámara de seguridad",
     potenciaW: 5,
     factorCiclo: 1,
@@ -76,6 +85,7 @@ export const CATALOGO_APARATOS: AparatoCatalogo[] = [
   },
   {
     tipo: "luces",
+    riesgoCorte: "bajo",
     nombre: "Bombillo LED",
     potenciaW: 10,
     factorCiclo: 1,
@@ -84,6 +94,7 @@ export const CATALOGO_APARATOS: AparatoCatalogo[] = [
   },
   {
     tipo: "ventilador",
+    riesgoCorte: "bajo",
     nombre: "Ventilador",
     potenciaW: 55,
     factorCiclo: 1,
@@ -92,6 +103,7 @@ export const CATALOGO_APARATOS: AparatoCatalogo[] = [
   },
   {
     tipo: "datafono",
+    riesgoCorte: "medio",
     nombre: "Datáfono",
     potenciaW: 5,
     factorCiclo: 1,
