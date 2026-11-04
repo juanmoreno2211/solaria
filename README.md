@@ -64,6 +64,39 @@ npm run lint    # eslint
 
 ## Base de datos
 
+### Qué es Supabase y para qué lo usamos
+
+Supabase es una base de datos PostgreSQL en la nube que además maneja las cuentas de usuario. En SolarIA se usa para:
+
+- **Las cuentas de “Mi negocio”**: registro e ingreso con correo y contraseña (Supabase Auth).
+- **Guardar los datos de cada negocio**: perfil, aparatos, recibos, invitaciones y eventos de uso.
+- **Guardar las solicitudes de contacto**: es una copia de las que también van a la hoja de Google.
+
+Toda tabla tiene activada la seguridad por fila (RLS). Las tablas de cada cuenta tienen una columna `user_id` y unas reglas que solo dejan leer, crear, editar y borrar las filas propias. Un visitante sin sesión no ve ninguna. Si se borra la cuenta, se borran también sus filas.
+
+### Qué tablas tiene
+
+| Tabla | Qué guarda |
+| --- | --- |
+| `negocios` | El perfil del negocio (uno por cuenta): nombre, tipo, departamento, municipio, región, horario, conexión a la red, tarifa escrita a mano y el último resultado de la calculadora (veredicto, kWp, ahorro mensual y meses de retorno). |
+| `aparatos` | Los aparatos del negocio: nombre, cantidad, potencia, horas al día, días al mes, factor de ciclo, tipo de catálogo y consumo de la etiqueta energética. Con esto se arma el ranking de qué gasta más. |
+| `recibos` | El historial del recibo: consumo (kWh), valor, mes y origen (manual o desde la calculadora). La tarifa por kWh se calcula sola a partir de esos dos números. La foto del recibo no se guarda. |
+| `invitaciones` | El enlace de invitación de cada cuenta (`/i/[codigo]`) y su estado. |
+| `aperturas` | Cuántas veces se abrió cada enlace de invitación, una por navegador. Ningún cliente la lee ni la escribe directamente. |
+| `atribuciones` | Qué cuenta nueva llegó por qué invitación. El invitado solo puede ver su propia fila. |
+| `eventos` | Los eventos de uso (por ejemplo, `aparato_registrado`, `ranking_visto` o `invitacion_abierta`), que alimentan las métricas. |
+| `solicitudes_contacto` | Los pedidos de “Quiero que me contacten”: nombre, celular, municipio, proveedor, plan, si autorizó compartir con el proveedor, un resumen del negocio y del estimado, y el estado (nueva, contactada o descartada). Ningún cliente la lee: el equipo la ve en el panel de Supabase. |
+
+Hay también unas funciones en la base de datos para lo que no se puede hacer directamente sobre las tablas sin romper la privacidad:
+
+- `invitacion_valida`: dice si un enlace de invitación existe.
+- `registrar_apertura`: cuenta que se abrió un enlace.
+- `atribuir_invitacion`: asocia una cuenta nueva a la invitación por la que llegó.
+- `resumen_mis_invitaciones`: devuelve al dueño solo los totales de sus invitaciones.
+- `crear_solicitud_contacto`: valida y guarda una solicitud de contacto, incluso si quien la envía no tiene sesión.
+
+### Cómo montarla
+
 1. Crea un proyecto en [Supabase](https://supabase.com).
 2. En **Project Settings → API** copia la URL del proyecto y la clave publicable a `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` en `.env.local`.
 3. En el **SQL Editor** corre las migraciones de `supabase/migrations`, una por una y en este orden:
