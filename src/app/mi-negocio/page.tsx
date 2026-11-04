@@ -13,6 +13,7 @@ import { REGION_LABELS } from "@/lib/geo/regions";
 import { CATALOGO_APARATOS, aparatoDelCatalogo } from "@/lib/aparatos/catalogo";
 import { rankingAparatos, type UsoAparato } from "@/lib/aparatos/calculo";
 import { consejosPara, type Consejo } from "@/lib/aparatos/consejos";
+import { resumenRiesgo } from "@/lib/aparatos/riesgo";
 import { calcularEstadisticas, calcularMetas } from "@/lib/recibos/estadisticas";
 import { enlaceInvitacion } from "@/lib/invitaciones/enlace";
 import { formatCOP, formatDecimal, formatNumber } from "@/lib/format";
@@ -169,6 +170,7 @@ export default async function MiNegocioPage() {
   const consumoRecibo = recibo?.consumo_kwh ?? null;
   const ranking = rankingAparatos(aparatos.map(usoDeFila), tarifa, consumoRecibo);
   const filasConConsumo = ranking.filas.filter((f) => f.kwhMes > 0);
+  const riesgoCorte = resumenRiesgo(aparatos.map((a) => a.tipo_catalogo));
   const principal = filasConConsumo[0];
   const conPorcentajes = consumoRecibo != null && consumoRecibo > 0;
   // Barras: parte del recibo si lo hay; si no, relativas al aparato que más gasta.
@@ -297,6 +299,7 @@ export default async function MiNegocioPage() {
                     </ol>
                   </div>
 
+                  {riesgoCorte && <p className="mt-4 text-sm font-semibold text-ink-950">{riesgoCorte}</p>}
                   {ranking.porcentajeExplicado != null && (
                     <p className="mt-4 text-sm text-ink-950/80">
                       Tus aparatos explican <span className="font-bold text-ink-950">{formatDecimal(ranking.porcentajeExplicado)} %</span> de tu consumo.
@@ -316,6 +319,10 @@ export default async function MiNegocioPage() {
                   <p>
                     Costo al mes = kWh × tu tarifa{tarifa ? ` (${formatCOP(Math.round(tarifa))}/kWh)` : ""}, que sale de tu recibo (valor ÷ kWh) o de la que escribas.
                     Todo es estimado.
+                  </p>
+                  <p>
+                    Riesgo si se va y vuelve la luz: sale del tipo de aparato. Los que tienen compresor (nevera, congelador, aire) sufren más con el pico de voltaje
+                    cuando vuelve la luz; los electrónicos, menos. Es una estimación del equipo, por verificar.
                   </p>
                   <p>“Parte del tiempo a plena potencia”: una nevera o un aire prenden y apagan el compresor; un bombillo o un computador trabajan el 100 %.</p>
                   <p>“Valor de referencia” quiere decir que usamos los valores del catálogo y no los de tu equipo. Corrígelos con la placa o la etiqueta energética.</p>
