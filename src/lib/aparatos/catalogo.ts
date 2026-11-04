@@ -42,10 +42,10 @@ export const CATALOGO_APARATOS: AparatoCatalogo[] = [
     tipo: "nevera",
     riesgoCorte: "alto",
     nombre: "Nevera",
-    potenciaW: 725,
-    factorCiclo: 1 / 3,
+    potenciaW: 150,
+    factorCiclo: 0.4,
     horasDia: 24,
-    fuente: `Potencia y factor de ciclo: ${VT} (nevera de 16 pies³; el compresor trabaja cerca de un tercio del tiempo). Horas: ${POR_VERIFICAR}.`,
+    fuente: `Consumo total (≈ 43 kWh al mes): dentro del rango de 30 a 60 kWh al mes para una nevera promedio que El Cronista atribuye a entidades del sector energético en Colombia. Potencia y factor de ciclo: ${POR_VERIFICAR}. Una nevera exhibidora de bebidas gasta bastante más: usa su etiqueta energética.`,
   },
   {
     tipo: "congelador",
