@@ -173,8 +173,8 @@ export default async function MiNegocioPage() {
   const riesgoCorte = resumenRiesgo(aparatos.map((a) => a.tipo_catalogo));
   const principal = filasConConsumo[0];
   const conPorcentajes = consumoRecibo != null && consumoRecibo > 0;
-  // Barras: parte del recibo si lo hay; si no, relativas al aparato que más gasta.
-  const baseBarra = conPorcentajes ? Math.max(consumoRecibo, ranking.kwhAparatos) : principal?.kwhMes ?? 1;
+  // Barras: parte del recibo si lo hay (los aparatos nunca pasan de él); si no, relativas al aparato que más gasta.
+  const baseBarra = conPorcentajes ? consumoRecibo : principal?.kwhMes ?? 1;
 
   // Dónde ahorrar: el consejo con ahorro en pesos del aparato que más pesa entre
   // los que se pueden ajustar (a una nevera no se le pide usarla menos horas).
@@ -300,11 +300,18 @@ export default async function MiNegocioPage() {
                   </div>
 
                   {riesgoCorte && <p className="mt-4 text-sm font-semibold text-ink-950">{riesgoCorte}</p>}
-                  {ranking.porcentajeExplicado != null && (
+                  {ranking.ajustadoAlRecibo && consumoRecibo != null ? (
                     <p className="mt-4 text-sm text-ink-950/80">
-                      Tus aparatos explican <span className="font-bold text-ink-950">{formatDecimal(ranking.porcentajeExplicado)} %</span> de tu consumo.
-                      {ranking.porcentajeExplicado > 100 && " Suman más que tu recibo: revisa las horas o la potencia."}
+                      Con estos valores, tus aparatos daban {formatNumber(Math.round(ranking.kwhAparatos))} kWh, más que los{" "}
+                      {formatNumber(Math.round(consumoRecibo))} kWh de tu recibo. Como el recibo es lo que de verdad se midió, lo repartimos entre tus aparatos
+                      según lo que gasta cada uno. Para afinarlo, corrige las horas o la potencia.
                     </p>
+                  ) : (
+                    ranking.porcentajeExplicado != null && (
+                      <p className="mt-4 text-sm text-ink-950/80">
+                        Tus aparatos explican <span className="font-bold text-ink-950">{formatDecimal(ranking.porcentajeExplicado)} %</span> de tu consumo.
+                      </p>
+                    )
                   )}
                 </>
               )}
@@ -320,6 +327,7 @@ export default async function MiNegocioPage() {
                     Costo al mes = kWh × tu tarifa{tarifa ? ` (${formatCOP(Math.round(tarifa))}/kWh)` : ""}, que sale de tu recibo (valor ÷ kWh) o de la que escribas.
                     Todo es estimado.
                   </p>
+                  <p>Si tus aparatos suman más kWh que tu recibo, repartimos los kWh del recibo entre ellos en la misma proporción: así los porcentajes suman 100 % y el costo no pasa de lo que pagas.</p>
                   <p>
                     Riesgo si se va y vuelve la luz: sale del tipo de aparato. Los que tienen compresor (nevera, congelador, aire) sufren más con el pico de voltaje
                     cuando vuelve la luz; los electrónicos, menos. Es una estimación del equipo, por verificar.

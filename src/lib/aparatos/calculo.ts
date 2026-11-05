@@ -37,6 +37,7 @@ export function costoMes(a: UsoAparato, tarifaKwh: number): number {
 
 export interface FilaRanking<T extends UsoAparato = UsoAparato> {
   aparato: T;
+  /** Si los aparatos suman más que el recibo, ya viene ajustado al recibo. */
   kwhMes: number;
   costoMes: number | null;
   /** Porcentaje de los kWh del recibo; null sin consumo en el recibo. */
@@ -45,39 +46,51 @@ export interface FilaRanking<T extends UsoAparato = UsoAparato> {
 
 export interface Ranking<T extends UsoAparato = UsoAparato> {
   filas: FilaRanking<T>[];
+  /** kWh de los aparatos antes de ajustar al recibo. */
   kwhAparatos: number;
-  /** kWh de los aparatos ÷ kWh del recibo × 100, sin escalar ni topar. */
+  /** kWh de los aparatos ÷ kWh del recibo × 100, antes de ajustar (puede pasar de 100). */
   porcentajeExplicado: number | null;
+  /** true si los aparatos sumaban más que el recibo y se repartió el recibo entre ellos. */
+  ajustadoAlRecibo: boolean;
   /** kWh del recibo que no explican los aparatos (0 si los aparatos suman más). */
   kwhOtros: number | null;
   costoOtros: number | null;
 }
 
-/** Ordena por costo (o kWh) de mayor a menor y compara contra el recibo sin forzar que cuadre. */
+/**
+ * Ordena por kWh de mayor a menor y compara contra el recibo. Si los aparatos
+ * suman más que el recibo, reparte los kWh del recibo en la misma proporción:
+ * el recibo es el dato medido y los valores de referencia son estimados.
+ */
 export function rankingAparatos<T extends UsoAparato>(
   aparatos: T[],
   tarifaKwh: number | null,
   consumoReciboKwh: number | null
 ): Ranking<T> {
-  const filas = aparatos
-    .map((aparato) => {
-      const kwh = kwhMes(aparato);
+  const estimados = aparatos.map((aparato) => ({ aparato, kwh: kwhMes(aparato) }));
+  const kwhAparatos = estimados.reduce((s, e) => s + e.kwh, 0);
+  const hayRecibo = consumoReciboKwh != null && consumoReciboKwh > 0;
+  const ajustadoAlRecibo = hayRecibo && kwhAparatos > consumoReciboKwh;
+  const escala = ajustadoAlRecibo ? consumoReciboKwh / kwhAparatos : 1;
+
+  const filas = estimados
+    .map(({ aparato, kwh: estimado }) => {
+      const kwh = estimado * escala;
       return {
         aparato,
         kwhMes: kwh,
         costoMes: tarifaKwh ? kwh * tarifaKwh : null,
-        porcentajeRecibo: consumoReciboKwh && consumoReciboKwh > 0 ? (kwh / consumoReciboKwh) * 100 : null,
+        porcentajeRecibo: hayRecibo ? (kwh / consumoReciboKwh) * 100 : null,
       };
     })
     .sort((a, b) => b.kwhMes - a.kwhMes);
 
-  const kwhAparatos = filas.reduce((s, f) => s + f.kwhMes, 0);
-  const hayRecibo = consumoReciboKwh != null && consumoReciboKwh > 0;
   const kwhOtros = hayRecibo ? Math.max(0, consumoReciboKwh - kwhAparatos) : null;
   return {
     filas,
     kwhAparatos,
     porcentajeExplicado: hayRecibo ? (kwhAparatos / consumoReciboKwh) * 100 : null,
+    ajustadoAlRecibo,
     kwhOtros,
     costoOtros: kwhOtros != null && tarifaKwh ? kwhOtros * tarifaKwh : null,
   };

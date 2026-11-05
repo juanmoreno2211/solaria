@@ -53,12 +53,18 @@ describe("rankingAparatos", () => {
     expect(r.porcentajeExplicado).toBeCloseTo(85.5, 6);
     expect(r.kwhOtros).toBeCloseTo(58, 6);
     expect(r.costoOtros).toBeCloseTo(52_200, 6);
+    expect(r.ajustadoAlRecibo).toBe(false);
   });
 
-  it("si los aparatos suman más que el recibo, no recorta: pasa de 100 % y otros queda en 0", () => {
+  it("si los aparatos suman más que el recibo, reparte el recibo entre ellos", () => {
     const r = rankingAparatos([nevera, aire], 900, 200);
     expect(r.porcentajeExplicado).toBeCloseTo(153, 6);
     expect(r.kwhOtros).toBe(0);
+    // Se reparte el recibo: los porcentajes suman 100 y la proporción se mantiene.
+    expect(r.ajustadoAlRecibo).toBe(true);
+    expect(r.filas.reduce((s, f) => s + (f.porcentajeRecibo ?? 0), 0)).toBeCloseTo(100, 6);
+    expect(r.filas.reduce((s, f) => s + f.kwhMes, 0)).toBeCloseTo(200, 6);
+    expect(r.filas[0].kwhMes / r.filas[1].kwhMes).toBeCloseTo(174 / 132, 6);
   });
 
   it("sin recibo no hay porcentajes ni costo", () => {
