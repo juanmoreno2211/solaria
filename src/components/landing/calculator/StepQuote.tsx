@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Building2, CheckCheck, MessageCircle, RotateCcw, Sun, User } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowRight, Building2, ChartColumn, CheckCheck, MessageCircle, RotateCcw, Sun, User } from "lucide-react";
 import clsx from "clsx";
 import { Button } from "@/components/ui/Button";
 import { formatCOPMiles, formatDecimal, formatNumber } from "@/lib/format";
@@ -18,6 +19,7 @@ export type { DatosCotizacion };
 import { buildWhatsAppLink, WHATSAPP_NUMBER_DISPLAY } from "@/lib/whatsapp";
 import { anios } from "./ProveedorCard";
 import { PedirContacto } from "./PedirContacto";
+import { guardarPendiente, type ResultadoPendiente } from "@/lib/negocio/resultado-pendiente";
 
 function Nodo({ icono, label, activo }: { icono: React.ReactNode; label: string; activo: boolean }) {
   return (
@@ -127,13 +129,15 @@ function VistaChat({ mensaje }: { mensaje: string }) {
   );
 }
 
-export function StepQuote({ destino, datos, onBack, onReset, onAbrirWhatsApp }: {
+export function StepQuote({ destino, datos, onBack, onReset, onAbrirWhatsApp, resultadoPendiente }: {
   destino: DestinoCotizacion;
   datos: DatosCotizacion;
   onBack: () => void;
   onReset: () => void;
   onAbrirWhatsApp: (ref: string) => void;
+  resultadoPendiente?: ResultadoPendiente | null;
 }) {
+  const router = useRouter();
   const [autorizado, setAutorizado] = useState(false);
   const [abierto, setAbierto] = useState(false);
   const ref = useMemo(() => `SIA-${getSessionId().replace(/[^a-zA-Z0-9]/g, "").slice(0, 6).toUpperCase()}`, []);
@@ -200,6 +204,31 @@ export function StepQuote({ destino, datos, onBack, onReset, onAbrirWhatsApp }: 
           </div>
         </div>
         <PedirContacto destino={destino} datos={datos} compartirConProveedor={autorizado} referencia={ref} />
+      </div>
+
+      {/* Fijo debajo de los dos caminos: mientras esperan, que creen su cuenta y vean en qué gastan. */}
+      <div className="mt-6 flex flex-col gap-4 rounded-2xl border-2 border-sun-500/50 bg-sun-500/[0.08] p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <div className="flex gap-4">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sun-500 text-white" aria-hidden="true">
+            <ChartColumn className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="text-lg font-bold leading-snug text-ink-950">Mientras tanto, mira en qué gastas y qué puedes ahorrar</p>
+            <p className="mt-1 text-sm text-ink-950/80">Crea tu cuenta gratis, revisa qué aparatos pesan más en tu factura y ten un mejor control de tu consumo.</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            if (resultadoPendiente) guardarPendiente(resultadoPendiente);
+            // Registro y, al terminar, a Mi negocio (que toma el resultado guardado).
+            router.push("/ingresar?modo=registro&siguiente=%2Fmi-negocio");
+          }}
+          className="group inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-md bg-ink-950 px-6 text-[0.95rem] font-bold text-white transition-colors hover:bg-ink-800"
+        >
+          Crear mi cuenta
+          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+        </button>
       </div>
 
       <div className="mt-6">

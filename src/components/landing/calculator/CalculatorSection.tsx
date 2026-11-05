@@ -419,6 +419,7 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
                 onBack={() => setStep("resultado")}
                 onReset={handleReset}
                 onAbrirWhatsApp={handleAbrirWhatsApp}
+                resultadoPendiente={resultadoPendiente}
               />
             )}
           </div>
