@@ -6,7 +6,8 @@ import { enlaceWhatsApp } from "@/lib/invitaciones/enlace";
 import { formatNumber } from "@/lib/format";
 import { crearInvitacion } from "../actions";
 import { ayuda, botonPrimario, botonSecundario, campo, tarjeta } from "./estilos";
-import { Copy, MessageCircle, UserPlus } from "lucide-react";
+import { Copy, Gift, MessageCircle, UserPlus } from "lucide-react";
+import { TEXTO_BONO_REFERIDO } from "@/lib/config/referidos";
 import { TituloTarjeta } from "./Titulo";
 
 export function TarjetaInvitar({ enlace, aperturas, cuentas }: { enlace: string | null; aperturas: number; cuentas: number }) {
@@ -86,6 +87,11 @@ export function TarjetaInvitar({ enlace, aperturas, cuentas }: { enlace: string 
           </button>
         </form>
       )}
+
+      <p className="mt-4 flex items-start gap-2 rounded-lg bg-sun-500/10 px-3 py-2.5 text-sm text-ink-950/85">
+        <Gift className="mt-0.5 h-4 w-4 shrink-0 text-sun-600" aria-hidden="true" />
+        <span>{TEXTO_BONO_REFERIDO}</span>
+      </p>
     </section>
   );
 }

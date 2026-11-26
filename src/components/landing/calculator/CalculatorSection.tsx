@@ -22,7 +22,6 @@ import {
 import { PanelResumen, type PasoCalculadora } from "./PanelResumen";
 import { ResultsView } from "./ResultsView";
 import { GuardarResultado } from "./GuardarResultado";
-import { InvitarSocio } from "./InvitarSocio";
 import type { ResultadoPendiente } from "@/lib/negocio/resultado-pendiente";
 import { LoadingState } from "./LoadingState";
 import { StepQuote } from "./StepQuote";
@@ -382,8 +381,6 @@ export function CalculatorSection({ fotoDisponible }: { fotoDisponible: boolean 
                 error={errorNegocio}
               />
             )}
-
-            {step === "resultado" && resultadoPendiente && <InvitarSocio datos={resultadoPendiente} />}
 
             {step === "resultado" && data && (
               <ResultsView

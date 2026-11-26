@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, HandCoins } from "lucide-react";
+import { TEXTO_COMISION } from "@/lib/config/comision";
 import { Button } from "@/components/ui/Button";
 import { CONTACTO_SOLARIA_ID } from "@/lib/cotizacion-contacto";
 import type { ProveedorCoincidente } from "@/lib/catalog/types";
@@ -50,6 +51,10 @@ export function DirectorioProveedores({
       <h4 className="text-base font-semibold tracking-tight text-ink-950">Elige una opción para cotizar</h4>
       <p className="mb-4 mt-1 text-sm leading-relaxed text-ink-800/65">
         SolarIA confirma disponibilidad y precio en tu municipio.
+      </p>
+      <p className="-mt-2 mb-4 flex items-start gap-2 text-xs leading-relaxed text-ink-800/60">
+        <HandCoins className="mt-px h-3.5 w-3.5 shrink-0 text-ink-800/50" aria-hidden="true" />
+        <span>{TEXTO_COMISION}</span>
       </p>
 
       {proveedores.length ? (
