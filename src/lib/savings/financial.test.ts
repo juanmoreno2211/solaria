@@ -34,10 +34,17 @@ describe("presupuesto según tamaño y alcance", () => {
     const i = respaldo(); i.negocio.finanzas = { mantenimientoAnualCOP: 900000 };
     const f = financiero(i); expect(f.mantenimientoAnual).toBe(900000); expect(f.proyeccion!.rows[1].mantenimiento).toBe(900000);
   });
-  it("sin las cargas ni un costo completo de reposición no inventa un presupuesto híbrido completo", () => {
+  it("sin las cargas estima la batería con horas de respaldo de referencia y lo declara", () => {
     const i = entrada(); i.negocio.conexion = "intermitente";
-    const f = financiero(i); expect(f.estado).toBe("incompleto"); expect(f.inversion).toBeNull(); expect(f.proyeccion).toBeUndefined();
+    const f = financiero(i); expect(f.estado).toBe("estimado"); expect(f.modulosBateria).toBeGreaterThan(0); expect(f.proyeccion).toBeDefined();
+    expect(f.datosSupuestos!.join(" ")).toContain("Batería");
   });
+  it("con la conexión por confirmar estima como red estable y lo declara", () => {
+    const i = entrada(); i.negocio.conexion = "no_se";
+    const f = financiero(i); expect(f.bateria).toBe(0); expect(f.proyeccion).toBeDefined();
+    expect(f.datosSupuestos!.join(" ")).toContain("no se confirmó la conexión");
+  });
+  it("con datos completos no marca supuestos", () => expect(financiero(respaldo()).datosSupuestos).toEqual([]));
   it("admite una cotización completa y reposición cotizada sin inferir la capacidad de la batería", () => {
     const i = entrada(); i.negocio.conexion = "intermitente"; i.negocio.finanzas = { inversionTotalCOP: 30000000, reposicionBateriaCOP: 10000000 };
     const f = financiero(i); expect(f.proyeccion).toBeDefined(); expect(f.capacidadPresupuestadaKwh).toBe(0); expect(f.reposicionBateriaCOP).toBe(10000000);
@@ -65,11 +72,11 @@ describe("proyección completa y recuperación", () => {
     expect(f.proyeccion!.rows[0].netoAcumulado).toBe(-f.inversion!);
   });
   it("la degradación se aplica desde el segundo año sin añadir inflación a los pesos reales", () => {
-    const p = proyectar20Anios({ inversion: 10000, ahorroMensual: 100, mantenimientoAnualCOP: 0 });
+    const p = proyectar20Anios({ inversion: 10000, ahorroMensual: 100, variacionTarifaPct: 0, mantenimientoAnualCOP: 0 });
     expect(p.rows[1].ahorroBruto).toBe(1200); expect(p.rows[2].ahorroBruto).toBe(1194);
   });
   it("no anuncia recuperación definitiva antes de una reposición que vuelve negativo el saldo", () => {
-    const p = proyectar20Anios({ inversion: 1000, ahorroMensual: 100, mantenimientoAnualCOP: 0, degradacionPct: 0, reposiciones: [{ anio:2, costo:5000 }] });
+    const p = proyectar20Anios({ inversion: 1000, ahorroMensual: 100, variacionTarifaPct: 0, mantenimientoAnualCOP: 0, degradacionPct: 0, reposiciones: [{ anio:2, costo:5000 }] });
     expect(p.rows[1].netoAcumulado).toBe(200); expect(p.rows[2].netoAcumulado).toBe(-3600); expect(p.retornoAnios).toBe(5);
   });
   it("tarjeta, proyección y datos de contacto usan las mismas cifras", () => {
@@ -84,10 +91,12 @@ describe("proyección completa y recuperación", () => {
 });
 
 describe("sin red no usa una factura urbana ficticia", () => {
-  it("muestra presupuesto de equipos pero no ahorro si falta gasto sustituible", () => {
-    const i = respaldo(); i.negocio.conexion = "sin_red";
+  it("sin gasto informado estima con planta diésel de referencia, no con la tarifa urbana", () => {
+    const i = respaldo(); i.negocio.conexion = "sin_red"; i.recibo.valorPagadoMensual = null;
     const r = calcularAhorro(i); expect(r.tarifaEstimadaKwh).toBe(0);
-    const f = r.alternativas[0].finanzas!; expect(f.inversion).toBeGreaterThan(0); expect(f.ahorroMensualBase).toBeNull(); expect(f.proyeccion).toBeUndefined();
+    const f = r.alternativas[0].finanzas!; expect(f.inversion).toBeGreaterThan(0);
+    expect(f.costoEnergiaActualCOP).toBe(600 * 1400); expect(f.ahorroMensualBase).toBe(600 * 1400 * .7);
+    expect(f.datosSupuestos!.join(" ")).toContain("planta diésel");
   });
   it("compara el porcentaje indicado del gasto actual, no kWh por tarifa urbana", () => {
     const i = respaldo(); i.negocio.conexion = "sin_red"; i.negocio.finanzas = { costoEnergiaActualCOP:1000000, porcentajeCostoEvitable:70 };

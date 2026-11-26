@@ -42,4 +42,6 @@ export interface AnalisisFinanciero {
   proyeccion?: ProjectionResult;
   parametrosProyeccion?: ProjectionInput;
   supuestos: string[];
+  /** Datos que el usuario no completó y se reemplazaron por un valor de referencia. */
+  datosSupuestos?: string[];
 }

@@ -224,7 +224,7 @@ export function calcularAhorro(
     paneles.inversionEstimadaMin = finanzas.inversionMin!;
     paneles.inversionEstimadaMax = finanzas.inversionMax!;
     paneles.ahorroMensualEstimado = finanzas.ahorroMensualBase;
-    const gastoComparado = energia.conexion === "sin_red" ? input.negocio.finanzas?.costoEnergiaActualCOP ?? 0 : valor;
+    const gastoComparado = energia.conexion === "sin_red" ? finanzas.costoEnergiaActualCOP ?? 0 : valor;
     paneles.ahorroPorcentual = gastoComparado > 0 ? Math.round(finanzas.ahorroMensualBase / gastoComparado * 100) : 0;
     paneles.retornoMeses = finanzas.proyeccion.retornoAnios === null ? null : finanzas.proyeccion.retornoAnios * 12;
     paneles.ahorro5Anios = finanzas.proyeccion.rows[5].netoAcumulado;

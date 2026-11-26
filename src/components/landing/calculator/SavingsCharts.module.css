@@ -2,6 +2,9 @@
 .heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
 .heading > p { margin: 0; font-size: 13px; font-weight: 500; }
 .payback { padding: 5px 9px; border-radius: 6px; background: #f7f5ee; color: #6c6356; font-size: 10px; line-height: 1.6; }
+.estimado { margin-top: 14px; padding: 10px 12px; border-radius: 8px; background: #fbf3e8; color: #6c4a1d; font-size: 11px; line-height: 1.6; }
+.estimado p { margin: 0; }
+.estimado ul { margin: 6px 0 0; padding-left: 16px; list-style: disc; }
 .balance { margin-top: 20px; }
 .balance > p { margin: 0; color: #6c6356; font-size: 12px; line-height: 1.7; }
 .balance > strong { display: block; margin-top: 3px; font-size: clamp(27px, 4vw, 34px); font-weight: 500; line-height: 1.2; letter-spacing: -.045em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
@@ -9,6 +12,10 @@
 .chart { width: 100%; min-width: 0; height: 230px; margin-top: 16px; }
 .chart :global(.recharts-surface):focus { outline: none; }
 .chart :global(.recharts-surface):focus-visible { outline: 2px solid #b56a1d; outline-offset: 2px; border-radius: 4px; }
+.legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; margin: 6px 0 0; padding: 0; list-style: none; color: #6c6356; font-size: 10px; line-height: 1.6; }
+.legend li { display: flex; align-items: center; gap: 6px; }
+.swatchSolid { width: 16px; border-top: 2.5px solid #2f7d50; }
+.swatchDashed { width: 16px; border-top: 1.5px dashed #6c6356; }
 .axisNote { margin: 0; color: #8a8071; font-size: 10px; line-height: 1.7; text-align: center; }
 .explorer { margin-top: 19px; }
 .explorer > div { display: flex; justify-content: space-between; gap: 12px; color: #6c6356; font-size: 11px; line-height: 1.6; }

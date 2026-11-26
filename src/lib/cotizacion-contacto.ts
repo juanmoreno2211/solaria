@@ -37,7 +37,11 @@ export function permisoParaDestino(destino: DestinoCotizacion): string {
 
 /** La referencia genérica de SolarIA no se presenta como precio de la empresa elegida. */
 export function referenciaParaContacto(destino: DestinoCotizacion, datos: DatosCotizacion) {
-  if (datos.energia?.requiereEstudio) return datos.referenciaEconomica?.finanzas?.proyeccion ? datos.referenciaEconomica : undefined;
+  // Un estimado hecho con datos supuestos se muestra en pantalla, pero no se envía al proveedor como referencia.
+  if (datos.energia?.requiereEstudio) {
+    const f = datos.referenciaEconomica?.finanzas;
+    return f?.proyeccion && !f.datosSupuestos?.length ? datos.referenciaEconomica : undefined;
+  }
   return destino.tipo === "oferta" ? destino.oferta : datos.referenciaEconomica;
 }
 

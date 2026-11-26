@@ -160,7 +160,7 @@ describe("proveedor real y de ejemplo", () => {
     expect(frio.inversion).toBe(18_500_000);
     const ahorroBasico = 608_000 * (4 / 4.5);
     expect(frio.ahorroMensual).toBeCloseTo(ahorroBasico, 6);
-    expect(frio.retornoMeses).toBeCloseTo(35.94846520019745, 6);
+    expect(frio.retornoMeses).toBeCloseTo(35.22249395434517, 6);
     expect(frio.financiacion).toBeUndefined();
     expect(frio.primerPago).toBeUndefined();
     expect(frio.simulacionPago?.opciones).toHaveLength(4);
@@ -219,13 +219,13 @@ describe("Sunvolt: EPC y PPA (kWp = 4,5 y ahorro = $608.000)", () => {
     expect(ppa.notaCobertura).toBe("Sunvolt indica cobertura nacional. Por confirmar en tu municipio.");
   });
 
-  it("EPC: inversión de $27.000.000 con ±15 % y retorno ≈ 3,9 años", () => {
+  it("EPC: inversión de $27.000.000 con ±15 % y retorno ≈ 3,8 años", () => {
     expect(epc.aplica).toBe(true);
     expect(epc.inversion).toBe(27_000_000);
     expect(epc.inversionMin).toBeCloseTo(22_950_000, 0);
     expect(epc.inversionMax).toBeCloseTo(31_050_000, 0);
-    expect(epc.retornoMeses).toBeCloseTo(47.388068532139755, 6);
-    expect(epc.retornoMeses! / 12).toBeCloseTo(3.9, 1);
+    expect(epc.retornoMeses).toBeCloseTo(45.96826941980517, 6);
+    expect(epc.retornoMeses! / 12).toBeCloseTo(3.8, 1);
     expect(epc.financiacion).toBeUndefined();
   });
 

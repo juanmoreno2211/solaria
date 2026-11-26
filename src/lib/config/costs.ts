@@ -32,6 +32,16 @@ export function presupuestoSolar(kwp: number) {
 
 export const SUPUESTOS_FINANCIEROS = {
   degradacionAnualPct: 0.5,
+  /**
+   * Cuánto sube la tarifa de energía cada año por encima de la inflación (%).
+   * Supuesto editable: validar con el histórico de tarifas comerciales.
+   */
+  variacionRealTarifaPct: 2,
+  /**
+   * Tasa de descuento real anual (%) para llevar el ahorro futuro a valor presente:
+   * lo que rendiría el dinero en otra inversión, por encima de la inflación. Supuesto editable.
+   */
+  tasaDescuentoRealPct: 6,
   reposicionBateriaAnios: 10,
   /** Margen de presupuesto adicional al sistema sin baterías, no precio de un inversor completo. */
   adecuacionRespaldoPct: 0.2,
@@ -40,4 +50,19 @@ export const SUPUESTOS_FINANCIEROS = {
   limiteRentaLiquida: 0.5,
   plazoDeduccionAnios: 15,
   depreciacionMaximaAnualPct: 33.33,
+} as const;
+
+/**
+ * Valores por defecto para estimar cuando el usuario no completó un dato.
+ * El resultado los lista como supuestos para que se puedan corregir.
+ */
+export const SUPUESTOS_POR_DEFECTO = {
+  /** Red con cortes: horas de respaldo de la demanda media si no se indican las cargas. */
+  horasRespaldoIntermitente: 4,
+  /** Sin red: horas de la demanda media que debe cubrir la batería (noche). */
+  horasRespaldoSinRed: 12,
+  /** Sin red: costo de referencia de generar con planta diésel, COP por kWh (combustible y mantenimiento). */
+  costoDieselCOPkWh: 1_400,
+  /** Sin red: parte del gasto actual en energía que la solar sustituiría. */
+  porcentajeCostoEvitable: 70,
 } as const;

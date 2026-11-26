@@ -1,6 +1,8 @@
-import { presupuestoSolar, REFERENCIAS_COSTOS, SUPUESTOS_FINANCIEROS as S } from "@/lib/config/costs";
+import { presupuestoSolar, REFERENCIAS_COSTOS, SUPUESTOS_FINANCIEROS as S, SUPUESTOS_POR_DEFECTO as D } from "@/lib/config/costs";
 import { COBERTURA_POR_HORARIO, MANTENIMIENTO_ANUAL } from "@/lib/config/pricing";
 import { errorFinanzas } from "./financial-validation";
+import { SUPUESTOS_RESPALDO } from "./energia";
+import { formatCOP, formatDecimal } from "@/lib/format";
 import { proyectar20Anios, type ProjectionInput } from "./projection";
 import type { AnalisisFinanciero } from "./financial-types";
 import type { AnalisisInput, AlternativaResultado, OrientacionEnergetica } from "./types";
@@ -10,14 +12,24 @@ export function calcularFinanzas(input: AnalisisInput, energia: OrientacionEnerg
   const error = errorFinanzas(f);
   if (error) throw new RangeError(error);
   const conBateria = energia.conexion === "intermitente" || energia.conexion === "sin_red";
+  const cotizada = f.inversionTotalCOP !== undefined;
+  // Lo que el usuario no completó se reemplaza por un valor de referencia, y se lista.
+  const datosSupuestos: string[] = [];
+  if (energia.conexion === "no_se") datosSupuestos.push("Como no se confirmó la conexión, se estima como un sistema conectado a una red estable, sin baterías.");
+  let bateriaNominalKwh = energia.bateriaNominalKwh;
+  if (conBateria && !bateriaNominalKwh && !(cotizada && f.reposicionBateriaCOP !== undefined)) {
+    const horas = energia.conexion === "sin_red" ? D.horasRespaldoSinRed : D.horasRespaldoIntermitente;
+    const energiaRespaldoKwh = energia.consumoDiarioKwh / 24 * horas;
+    bateriaNominalKwh = energiaRespaldoKwh / (SUPUESTOS_RESPALDO.profundidadDescarga * SUPUESTOS_RESPALDO.eficiencia);
+    datosSupuestos.push(`Batería: como no se indicaron las cargas, se supone respaldo de ${horas} h de la demanda media (≈ ${formatDecimal(energiaRespaldoKwh)} kWh).`);
+  }
   const solar = presupuestoSolar(Math.max(energia.potenciaSolarBaseKwp, .0001));
   const modulo = REFERENCIAS_COSTOS.bateria;
-  const modulosBateria = conBateria && energia.bateriaNominalKwh ? Math.ceil(energia.bateriaNominalKwh / modulo.capacidadNominalKwh) : 0;
+  const modulosBateria = conBateria && bateriaNominalKwh ? Math.ceil(bateriaNominalKwh / modulo.capacidadNominalKwh) : 0;
   const bateria = modulosBateria * modulo.precioEquipoCOP;
   const adecuacion = conBateria ? solar.base * S.adecuacionRespaldoPct : 0;
   const adicionales = f.costosAdicionalesCOP ?? 0;
   const oferta = !conBateria ? paneles.mejorOferta : undefined;
-  const cotizada = f.inversionTotalCOP !== undefined;
   const base = cotizada ? f.inversionTotalCOP! : oferta ? oferta.inversion + adicionales : solar.base + bateria + adecuacion + adicionales;
   const minimo = cotizada ? base : oferta ? oferta.inversionMin + adicionales : solar.minimo + bateria * .9 + adecuacion * .8 + adicionales;
   const maximo = cotizada ? base : oferta ? oferta.inversionMax + adicionales : solar.maximo + bateria * 1.1 + adecuacion * 1.2 + adicionales;
@@ -27,7 +39,7 @@ export function calcularFinanzas(input: AnalisisInput, energia: OrientacionEnerg
     "Presupuesto de referencia: no es una oferta de un proveedor ni un diseño definitivo.",
     "Los importes se interpretan como desembolso total con impuestos aplicables. No se suma ni se resta automáticamente otro 19 % de IVA.",
     "Los rangos solares son una calibración del simulador por tamaño; no una tarifa nacional ni una cotización verificada.",
-    "Se trabaja en pesos de hoy, con variación real de tarifa 0 % y degradación solar de 0,5 % anual.",
+    `Se trabaja en pesos de hoy. La tarifa sube ${formatDecimal(S.variacionRealTarifaPct)} % al año por encima de la inflación y los paneles pierden ${formatDecimal(S.degradacionAnualPct)} % de rendimiento al año.`,
   ];
   if (cotizada) supuestos.push("Se usa el total instalado ingresado. No se vuelven a sumar baterías, adecuaciones ni adicionales a ese total.");
   else if (conBateria) supuestos.push("La base solar incluye un inversor convencional. Se añade un margen del 20 % de esa base para adecuación de respaldo, no otro inversor completo; este margen requiere cotización.");
@@ -40,20 +52,28 @@ export function calcularFinanzas(input: AnalisisInput, energia: OrientacionEnerg
     modulosBateria, capacidadPresupuestadaKwh: modulosBateria * modulo.capacidadNominalKwh,
     mantenimientoAnual: null, ahorroMensualBase: null, reposicionBateriaCOP, aniosReposicionBateria,
     reposicionInversorCOP: f.reposicionInversorCOP ?? 0, aniosReposicionInversor: f.aniosReposicionInversor ?? 12,
-    simulacionTributaria: false, supuestos,
+    simulacionTributaria: false, supuestos, datosSupuestos,
   };
-  if (energia.conexion === "no_se") return { ...r, motivo: "Primero confirma cómo llega la energía a tu negocio." };
   if (energia.potenciaSolarBaseKwp > 500 && !cotizada) return { ...r, motivo: "Para más de 500 kWp, ingresa un presupuesto instalado o solicita un estudio específico." };
-  if (conBateria && !energia.bateriaNominalKwh && !(cotizada && f.reposicionBateriaCOP !== undefined)) return { ...r, motivo: "Indica potencia media y horas de respaldo para presupuestar la batería, o ingresa una cotización total y su costo de reposición." };
   r.estado = "estimado";
   r.inversion = base; r.inversionMin = minimo; r.inversionMax = maximo;
   r.mantenimientoAnual = f.mantenimientoAnualCOP ?? base * MANTENIMIENTO_ANUAL;
   if (f.mantenimientoAnualCOP === undefined) supuestos.push("Mantenimiento anual: 1,5 % de la inversión total, dentro de un rango de referencia de 1–2 %. No se añade otro mantenimiento porcentual a las baterías.");
   if (energia.conexion === "sin_red") {
-    if (f.costoEnergiaActualCOP === undefined || f.porcentajeCostoEvitable === undefined) return { ...r, motivo: "Para comparar ahorro sin red, indica el costo actual de energía y la parte de ese gasto que se sustituiría. No se usa una tarifa urbana para el diésel." };
-    r.costoEnergiaActualCOP = f.costoEnergiaActualCOP;
-    r.porcentajeCostoEvitable = f.porcentajeCostoEvitable;
-    r.ahorroMensualBase = f.costoEnergiaActualCOP * f.porcentajeCostoEvitable / 100;
+    let costoActual = f.costoEnergiaActualCOP;
+    if (costoActual === undefined) {
+      // Lo que el usuario dijo pagar al mes; si no lo dio, una planta diésel de referencia. Nunca la tarifa urbana.
+      const pagado = input.recibo.valorPagadoMensual;
+      costoActual = pagado && pagado > 0 ? pagado : energia.consumoDiarioKwh * 30 * D.costoDieselCOPkWh;
+      datosSupuestos.push(pagado && pagado > 0
+        ? `Gasto actual en energía: se usa el valor mensual que ingresaste (${formatCOP(costoActual)}).`
+        : `Gasto actual en energía: se supone generación con planta diésel a ${formatCOP(D.costoDieselCOPkWh)} por kWh (≈ ${formatCOP(costoActual)} al mes).`);
+    }
+    const evitable = f.porcentajeCostoEvitable ?? D.porcentajeCostoEvitable;
+    if (f.porcentajeCostoEvitable === undefined) datosSupuestos.push(`Se supone que la solar sustituye el ${evitable} % de ese gasto.`);
+    r.costoEnergiaActualCOP = costoActual;
+    r.porcentajeCostoEvitable = evitable;
+    r.ahorroMensualBase = costoActual * evitable / 100;
     supuestos.push("Sin red: ahorro sobre el gasto y porcentaje sustituible ingresados. No se supone que la generación solar elimina todo el combustible.");
   } else {
     r.ahorroMensualBase = oferta && !cotizada ? oferta.ahorroMensual : valorMensual * COBERTURA_POR_HORARIO[input.negocio.horario];
@@ -65,7 +85,7 @@ export function calcularFinanzas(input: AnalisisInput, energia: OrientacionEnerg
   else supuestos.push("La reposición del inversor no tiene costo confirmado. No se incluye si no se ingresa; el saldo futuro puede ser menor al mostrado.");
   const parametros: ProjectionInput = {
     inversion: base, ahorroMensual: r.ahorroMensualBase, degradacionPct: S.degradacionAnualPct,
-    variacionTarifaPct: 0, mantenimientoAnualCOP: r.mantenimientoAnual, reposiciones,
+    variacionTarifaPct: S.variacionRealTarifaPct, mantenimientoAnualCOP: r.mantenimientoAnual, reposiciones,
   };
   if (f.simularDeduccion) {
     if (f.baseElegibleCOP === undefined || f.tarifaRentaPct === undefined || f.rentaLiquidaAnualCOP === undefined) throw new RangeError("Para simular renta, completa base elegible, tarifa de renta y renta líquida anual.");

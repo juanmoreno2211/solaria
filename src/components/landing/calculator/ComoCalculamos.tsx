@@ -1,3 +1,4 @@
+import { SUPUESTOS_FINANCIEROS } from "@/lib/config/costs";
 import type { ReactNode } from "react";
 import { PERFORMANCE_RATIO, SUPUESTOS } from "@/lib/config/pricing";
 import { formatCOPMiles, formatDecimal, formatNumber } from "@/lib/format";
@@ -20,6 +21,6 @@ export function ComoCalculamos({ resultado, paneles, cifras, horario }: { result
       <Paso n={4} titulo="Qué inversión y costos se usan">{cifras.finanzas ? <FinancialSummary finanzas={cifras.finanzas} /> : <p>Inversión: {formatCOPMiles(cifras.inversion)}. Mantenimiento: {formatCOPMiles(cifras.mantenimientoMensual)} al mes. La propuesta final la confirma el instalador.</p>}</Paso>
       <Paso n={5} titulo="Cómo se obtiene la recuperación">Se acumula el ahorro de cada año y se restan inversión, mantenimiento y reposiciones aplicables.{cifras.finanzas?.simulacionTributaria ? " Se añade el beneficio de renta simulado, sujeto a validación." : " No se suman incentivos tributarios por defecto."} {cifras.retornoMeses === null ? "Con estos datos no se recupera de forma sostenida dentro de los 20 años." : `El balance deja de ser negativo dentro del horizonte tras unos ${formatDecimal(cifras.retornoMeses / 12)} años.`}</Paso>
     </ol>
-    <p className="mt-5 border-t border-ink-950/8 pt-3 text-[11px] leading-[1.8] text-ink-800/55">Los valores están expresados en pesos de hoy. Se supone una inflación de {pct(SUPUESTOS.inflacionAnual)} anual común a tarifa y mantenimiento, por lo que no se añade otra vez al saldo real. Se incluye degradación solar del 0,5 % anual. No se incluyen venta de excedentes ni beneficios fiscales sin los datos necesarios. La propuesta final la define el instalador.</p>
+    <p className="mt-5 border-t border-ink-950/8 pt-3 text-[11px] leading-[1.8] text-ink-800/55">Los valores están expresados en pesos de hoy. Se supone una inflación de {pct(SUPUESTOS.inflacionAnual)} anual, y la tarifa de energía sube además {formatDecimal(SUPUESTOS_FINANCIEROS.variacionRealTarifaPct)} % real cada año. Se incluye degradación solar del {formatDecimal(SUPUESTOS_FINANCIEROS.degradacionAnualPct)} % anual. El valor presente descuenta cada año al {formatDecimal(SUPUESTOS_FINANCIEROS.tasaDescuentoRealPct)} % real. No se incluyen venta de excedentes ni beneficios fiscales sin los datos necesarios. La propuesta final la define el instalador.</p>
   </div>;
 }

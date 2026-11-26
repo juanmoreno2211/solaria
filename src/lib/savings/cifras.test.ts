@@ -23,7 +23,6 @@ describe("Cifras del resultado", () => {
       const p = proyectar20Anios({
         inversion: c.inversion,
         ahorroMensual: c.ahorroMensual,
-        variacionTarifaPct: 0,
         degradacionPct: .5,
       });
       if (c.retornoMeses !== null && c.retornoMeses / 12 <= 20) {

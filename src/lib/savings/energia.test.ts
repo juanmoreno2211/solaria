@@ -24,15 +24,17 @@ describe("solución según la conexión real", () => {
     expect(r.energia?.solucion).toBe("conectado");
     expect(r.energia?.requiereEstudio).toBe(false);
   });
-  it("sin red dimensiona toda la demanda y omite ahorro urbano y retorno", () => {
+  it("sin red dimensiona toda la demanda y estima el ahorro sobre lo pagado, no con la tarifa urbana", () => {
     const i = entrada(); i.negocio.conexion = "sin_red";
     const r = calcularAhorro(i);
     expect(r.energia?.solucion).toBe("aislado");
     expect(r.energia?.potenciaSolarBaseKwp).toBeCloseTo(20 / (r.ubicacion.hsp * .78));
     expect(r.valorPagadoMensual).toBe(0);
     expect(r.tarifaEstimadaKwh).toBe(0);
-    expect(r.alternativas[0].ahorroMensualEstimado).toBe(0);
-    expect(r.alternativas[0].retornoMeses).toBeNull();
+    const f = r.alternativas[0].finanzas!;
+    expect(f.costoEnergiaActualCOP).toBe(i.recibo.valorPagadoMensual);
+    expect(r.alternativas[0].ahorroMensualEstimado).toBe(i.recibo.valorPagadoMensual! * .7);
+    expect(f.datosSupuestos!.length).toBeGreaterThan(0);
     expect(r.alternativas[0].ofertas).toEqual([]);
   });
   it("los cortes llevan a híbrido aunque el consumo sea pequeño", () => {

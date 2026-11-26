@@ -1,10 +1,11 @@
 "use client";
 
 import { useId, useMemo, useState } from "react";
-import { Area, AreaChart, CartesianGrid, ReferenceDot, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis, type TooltipContentProps } from "recharts";
+import { Area, CartesianGrid, ComposedChart, Line, ReferenceDot, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis, type TooltipContentProps } from "recharts";
 import { ChevronDown } from "lucide-react";
 import { formatCOP, formatCOPMiles, formatDecimal } from "@/lib/format";
 import { SUPUESTOS } from "@/lib/config/pricing";
+import { SUPUESTOS_FINANCIEROS } from "@/lib/config/costs";
 import { cuotaCredito, proyeccionDeCifras, type Cifras } from "@/lib/savings/cifras";
 import type { ProjectionRow } from "@/lib/savings/projection";
 import styles from "./SavingsCharts.module.css";
@@ -21,6 +22,7 @@ function DetalleAnio({ active, payload, label }: TooltipContentProps) {
       <p>{Number(label) === 0 ? "Hoy · inversión inicial" : `Año ${label}`}</p>
       <strong>{formatCOP(Math.abs(saldo))}</strong>
       <span>{saldo >= 0 ? "de ahorro neto acumulado" : "aún por recuperar"}</span>
+      {Number(label) > 0 && <span>En valor presente: {formatCOPMiles(row.netoAcumuladoPresente)}</span>}
       {row.reposiciones > 0 && <span>Reposición: {formatCOPMiles(row.reposiciones)}</span>}
       {row.ahorroTributario > 0 && <span>Beneficio de renta simulado: {formatCOPMiles(row.ahorroTributario)}</span>}
     </div>
@@ -41,6 +43,8 @@ export function SavingsCharts({ cifras }: { cifras: Cifras }) {
   const cuota = cuotaCredito(inversion);
   const flujoCredito = ahorroMensual - cuota - mantenimientoMensual;
   const minimo = Math.min(...projection.rows.map((row) => row.netoAcumulado));
+  const ahorroAnio1 = projection.rows[1].ahorroNetoAnual;
+  const ahorroAnio20 = projection.rows[20].ahorroNetoAnual;
   const maximo = Math.max(0, ...projection.rows.map((row) => row.netoAcumulado));
   const corte = maximo / (maximo - minimo) * 100;
   const color = positivo ? "#2f7d50" : "#b56a1d";
@@ -54,6 +58,13 @@ export function SavingsCharts({ cifras }: { cifras: Cifras }) {
         </span>
       </div>
 
+      {cifras.finanzas?.datosSupuestos?.length ? (
+        <div className={styles.estimado} role="note">
+          <p><strong>Estimado con datos de referencia.</strong> Para afinarlo, completa estos datos en Cambiar mis datos:</p>
+          <ul>{cifras.finanzas.datosSupuestos.map((d) => <li key={d}>{d}</li>)}</ul>
+        </div>
+      ) : null}
+
       <div className={styles.balance} aria-live="polite" aria-atomic="true">
         <p>{anio === 0 ? "Inversión inicial" : positivo ? `Ahorro acumulado al año ${anio}` : `Por recuperar al año ${anio}`}</p>
         <strong style={{ color }}>{formatCOPMiles(Math.abs(saldo))}</strong>
@@ -62,7 +73,7 @@ export function SavingsCharts({ cifras }: { cifras: Cifras }) {
 
       <div className={styles.chart}>
         <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-          <AreaChart data={projection.rows} margin={{ top: 14, right: 12, left: 0, bottom: 0 }} accessibilityLayer>
+          <ComposedChart data={projection.rows} margin={{ top: 14, right: 12, left: 0, bottom: 0 }} accessibilityLayer>
             <defs>
               <linearGradient id={`${id}-saldo`} x1="0" y1="0" x2="0" y2="1">
                 <stop offset={`${corte}%`} stopColor="#2f7d50" />
@@ -76,13 +87,18 @@ export function SavingsCharts({ cifras }: { cifras: Cifras }) {
             <ReferenceLine y={0} stroke="#c9c1b4" />
             {projection.retornoAnios !== null && <ReferenceLine x={projection.retornoAnios} stroke="#d2d9d0" strokeDasharray="3 5" />}
             <Area type="linear" dataKey="netoAcumulado" stroke={`url(#${id}-saldo)`} fill={`url(#${id}-saldo)`} fillOpacity={0.09} strokeWidth={2.5} baseValue={0} dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />
+            <Line type="linear" dataKey="netoAcumuladoPresente" stroke="#6c6356" strokeWidth={1.5} strokeDasharray="5 4" dot={false} activeDot={false} isAnimationActive={false} />
             <ReferenceLine x={anio} stroke="#c9c1b4" strokeDasharray="3 5" />
             <ReferenceDot x={anio} y={saldo} r={5} fill={color} stroke="#fff" strokeWidth={2} />
             <Tooltip content={DetalleAnio} cursor={false} isAnimationActive={false} />
-          </AreaChart>
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
       <p className={styles.axisNote}>Años desde la instalación · pesos de hoy · sin crédito</p>
+      <ul className={styles.legend} aria-label="Leyenda">
+        <li><span className={styles.swatchSolid} aria-hidden="true" />Balance acumulado</li>
+        <li><span className={styles.swatchDashed} aria-hidden="true" />En valor presente (descontado al {formatDecimal(projection.tasaDescuentoPct)} %)</li>
+      </ul>
 
       <div className={styles.explorer}>
         <div><label htmlFor={`${id}-anio`}>Desliza para explorar cada año</label><output htmlFor={`${id}-anio`}>{anio === 0 ? "Hoy" : `Año ${anio}`}</output></div>
@@ -92,7 +108,9 @@ export function SavingsCharts({ cifras }: { cifras: Cifras }) {
       </div>
 
       <div className={styles.assumptions}>
-        <p><strong>Incluimos una inflación aproximada de {pct(SUPUESTOS.inflacionAnual)} al año.</strong> Suponemos que la tarifa y los costos suben a ese ritmo, por eso se muestran pesos de hoy. Se descuenta degradación solar del 0,5 % anual y mantenimiento de {formatCOPMiles(mantenimientoMensual * 12)} al año.</p>
+        <p><strong>Por qué no es una línea recta.</strong> Cada año el ahorro cambia: la tarifa de energía sube {formatDecimal(SUPUESTOS_FINANCIEROS.variacionRealTarifaPct)} % por encima de la inflación, mientras los paneles pierden {formatDecimal(SUPUESTOS_FINANCIEROS.degradacionAnualPct)} % de rendimiento y el mantenimiento cuesta {formatCOPMiles(mantenimientoMensual * 12)} al año. El ahorro neto pasa de {formatCOPMiles(ahorroAnio1)} el primer año a {formatCOPMiles(ahorroAnio20)} el año 20.</p>
+        <p>Las cifras están en pesos de hoy: ya descuentan una inflación aproximada de {pct(SUPUESTOS.inflacionAnual)} al año.</p>
+        <p><strong>Valor presente.</strong> Un peso ahorrado dentro de 15 años vale menos que uno hoy, porque ese dinero podría estar rindiendo en otra inversión. La línea punteada descuenta cada año al {formatDecimal(projection.tasaDescuentoPct)} % real anual. Con eso, el valor presente neto a 20 años es {formatCOPMiles(projection.vpn)}{projection.retornoDescontadoAnios === null ? " y la inversión no se recupera dentro del horizonte." : ` y la inversión se recupera en unos ${formatDecimal(projection.retornoDescontadoAnios)} años.`}</p>
         {cifras.finanzas?.reposicionBateriaCOP ? <p>Reposición de baterías: {formatCOPMiles(cifras.finanzas.reposicionBateriaCOP)} cada {cifras.finanzas.aniosReposicionBateria} años, en pesos de hoy.</p> : null}
         {cifras.finanzas?.reposicionInversorCOP ? <p>Reposición del inversor: {formatCOPMiles(cifras.finanzas.reposicionInversorCOP)} en el año {cifras.finanzas.aniosReposicionInversor}.</p> : <p>La reposición del inversor no está incluida si no se ingresa su costo.</p>}
         <p>{cifras.finanzas?.simulacionTributaria ? "El saldo incluye una simulación de deducción de renta, pendiente de validación y certificación UPME." : "No se suman beneficios fiscales automáticamente."} La recuperación indica cuándo el saldo deja de ser negativo dentro del horizonte, considerando los costos futuros.</p>
@@ -115,8 +133,8 @@ export function SavingsCharts({ cifras }: { cifras: Cifras }) {
         <div className={styles.tableScroll}>
           <table>
             <caption>Pesos de hoy. Un balance negativo indica inversión pendiente por recuperar.</caption>
-            <thead><tr><th scope="col">Año</th><th scope="col">Flujo neto del año</th><th scope="col">Reposición</th><th scope="col">Beneficio de renta</th><th scope="col">Balance acumulado</th></tr></thead>
-            <tbody>{projection.rows.map((row) => <tr key={row.anio}><th scope="row">{row.anio === 0 ? "Hoy" : row.anio}</th><td>{formatCOP(row.ahorroNetoAnual)}</td><td>{formatCOP(row.reposiciones)}</td><td>{formatCOP(row.ahorroTributario)}</td><td>{formatCOP(row.netoAcumulado)}</td></tr>)}</tbody>
+            <thead><tr><th scope="col">Año</th><th scope="col">Flujo neto del año</th><th scope="col">Reposición</th><th scope="col">Beneficio de renta</th><th scope="col">Balance acumulado</th><th scope="col">En valor presente</th></tr></thead>
+            <tbody>{projection.rows.map((row) => <tr key={row.anio}><th scope="row">{row.anio === 0 ? "Hoy" : row.anio}</th><td>{formatCOP(row.ahorroNetoAnual)}</td><td>{formatCOP(row.reposiciones)}</td><td>{formatCOP(row.ahorroTributario)}</td><td>{formatCOP(row.netoAcumulado)}</td><td>{formatCOP(row.netoAcumuladoPresente)}</td></tr>)}</tbody>
           </table>
         </div>
       </details>

@@ -20,14 +20,16 @@ describe("POST /api/analizar", () => {
     expect(response.status).toBe(200); expect(f.inversion).toBe(28000000); expect(f.mantenimientoAnual).toBe(900000);
     expect(f.proyeccion.rows[8].reposiciones).toBe(6000000); expect(f.proyeccion.rows[16].reposiciones).toBe(6000000);
   });
-  it("sin red devuelve orientación y proveedores sin inventar retorno ni precio de batería", async () => {
+  it("sin red devuelve orientación, proveedores y un estimado marcado con sus supuestos", async () => {
     const response = await POST(request());
     expect(response.status).toBe(200);
     const { resultado } = await response.json();
     expect(resultado.energia.solucion).toBe("aislado");
     expect(resultado.energia.bateriaNominalKwh).toBeUndefined();
     expect(resultado.proveedores[0].id).toBe("soluna");
-    expect(resultado.alternativas[0].retornoMeses).toBeNull();
+    const f = resultado.alternativas[0].finanzas;
+    expect(f.proyeccion.rows).toHaveLength(21);
+    expect(f.datosSupuestos.join(" ")).toContain("planta diésel");
   });
   it("valida la potencia de respaldo y conserva el municipio", async () => {
     const response = await POST(request({ potenciaCriticaW: "500", horasAutonomia: "4", municipio: "Puerto Carreño" }));
